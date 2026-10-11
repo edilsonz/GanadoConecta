@@ -37,8 +37,6 @@ pendientes de selección.
 
 *Figura. Modelo C4 de nivel 2: contenedores de GanadoConecta.*
 
-[Consultar editable en Draw.io](../../img/GanadoConecta_C4_Nivel_2_Contenedores.drawio)
-
 ## 5. Relaciones principales
 
 | Origen | Destino | Interacción |

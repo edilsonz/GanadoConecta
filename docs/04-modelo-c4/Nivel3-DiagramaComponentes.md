@@ -51,8 +51,6 @@ Los casos de uso no dependerán directamente de sus tecnologías.
 
 *Figura. Modelo C4 de nivel 3: componentes de la API Backend.*
 
-[Consultar editable en Draw.io](../../img/GanadoConecta_C4_Nivel_3_Componentes.drawio)
-
 ## 6. Lectura de las relaciones
 
 La aplicación web consume la API REST mediante HTTPS y JSON.
