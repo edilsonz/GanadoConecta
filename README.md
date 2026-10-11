@@ -86,3 +86,34 @@ el cambio en PostgreSQL.
 Si la información no está en caché o Redis no está disponible,
 el backend consultará PostgreSQL. La caché no almacenará
 historiales privados ni archivos de fotografías.
+
+
+## Sprint 01: Documentación técnica del proyecto
+
+### Objetivo del Sprint
+
+Organizar, revisar y consolidar la documentación técnica de GanadoConecta, estableciendo las bases para el desarrollo del Sistema Inteligente para la Gestión Integral de la Actividad Ganadera.
+
+### Entregables desarrollados
+
+- Análisis del sistema: actores, historias de usuario y requisitos.
+- Identificación de atributos de calidad, restricciones y drivers arquitectónicos.
+- Definición de la arquitectura de software y propuesta tecnológica.
+- Diagramas C4 de contexto, contenedores y componentes (niveles 1, 2 y 3).
+- Diseño interno de los módulos del sistema.
+- Aplicación propuesta de principios SOLID y patrones de diseño.
+- Revisión de la documentación y coherencia arquitectónica.
+
+### Gestión del Sprint
+
+Las actividades del Sprint 01 se organizan mediante un tablero Kanban en Trello, utilizando las columnas:
+
+BACKLOG → SPRINT ACTUAL → EN PROCESO → EN REVISIÓN → TERMINADO.
+
+El tablero permite realizar el seguimiento de actividades, verificar avances y registrar observaciones durante la revisión.
+
+### Estado del Sprint
+
+**Estado:** Documentación técnica preparada para entrega y pendiente de evaluación docente.
+
+La implementación del sistema se desarrollará en etapas posteriores.
