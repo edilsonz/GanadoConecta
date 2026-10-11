@@ -20,6 +20,7 @@ programar actividades, analizar registros y publicar anuncios de venta.
 - Frontend: React.
 - Backend: Java con Spring Boot.
 - Base de datos: PostgreSQL.
+- Caché: Redis para consultas frecuentes del catálogo público.
 - Servicio de IA: Python con FastAPI.
 - Control de versiones: Git y GitHub.
 - Proveedor de notificaciones y almacenamiento de fotografías:
@@ -56,6 +57,26 @@ programar actividades, analizar registros y publicar anuncios de venta.
 - La IA analizará registros históricos; no realizará diagnósticos
   ni sustituirá la evaluación de un profesional veterinario.
 
+## Uso de caché con Redis
+
+- PostgreSQL será la fuente principal de información.
+- Redis almacenará temporalmente resultados de consultas
+  del catálogo público de anuncios.
+- El acceso a Redis se realizará mediante un adaptador
+  que implemente un contrato del núcleo.
+- Las entradas tendrán un tiempo de caducidad definido
+  en la especificación correspondiente.
+- Las claves distinguirán los filtros, la paginación
+  y el orden de los resultados.
+- Se invalidará la caché afectada después de confirmar
+  en PostgreSQL cambios de publicación, edición, pausa,
+  retirada, moderación o venta.
+- Si una invalidación falla, deberá registrarse y reintentarse.
+- Cuando no exista una entrada o Redis no esté disponible,
+  se consultará PostgreSQL.
+- No se almacenarán historiales privados, credenciales
+  ni archivos de fotografías en esta caché.
+
 ## Pruebas obligatorias
 
 ### Pruebas unitarias
@@ -71,6 +92,11 @@ programar actividades, analizar registros y publicar anuncios de venta.
 - Verificar transacciones, conservación del historial y cierre de anuncios.
 - Comprobar los adaptadores de IA y notificaciones mediante entornos
   de prueba o servicios controlados, incluyendo fallos de comunicación.
+- Verificar consultas con y sin datos en caché, caducidad
+  e invalidación después de modificar anuncios.
+- Comprobar que las consultas continúen funcionando
+  cuando Redis no esté disponible.
+- Verificar que una invalidación fallida pueda reintentarse.
 
 ### Pruebas de carga
 
@@ -81,6 +107,9 @@ programar actividades, analizar registros y publicar anuncios de venta.
   de fotografías.
 - Documentar el entorno, volumen de datos, duración, errores
   y tiempos de respuesta de cada prueba.
+- Evaluar consultas con caché vacía y con caché previamente
+  poblada, registrando tiempos de respuesta y errores.
+- Evaluar el comportamiento ante la indisponibilidad de Redis.
 
 ## Verificación y evidencia
 
