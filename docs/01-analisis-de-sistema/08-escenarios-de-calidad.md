@@ -17,6 +17,7 @@ la respuesta esperada y la medida para comprobarla.
 - **Estímulo:** Consultas concurrentes de animales y anuncios.
 - **Entorno:** Entorno de prueba documentado, con 100 usuarios
   concurrentes y un conjunto de datos previamente definido.
+  Se evaluarán por separado la caché vacía y la caché poblada.
 - **Parte afectada:** API de consultas y persistencia.
 - **Respuesta esperada:** El sistema procesa las consultas
   dentro del objetivo de tiempo acordado.
@@ -27,23 +28,31 @@ la respuesta esperada y la medida para comprobarla.
 Se excluyen el procesamiento de IA y la transferencia de fotografías.
 La duración, distribución de solicitudes y tasa máxima aceptable
 de errores se definirán antes de ejecutar la prueba.
+Se registrará la proporción de consultas resueltas mediante Redis.
+El objetivo de AC01 se evaluará en ambos escenarios con Redis
+disponible.
 
-### EC02. Falla de un servicio integrado
+### EC02. Falla de un servicio integrado o de Redis
 
 - **Atributo:** AC02.
-- **Fuente:** Servicio de IA o proveedor de notificaciones.
+- **Fuente:** Servicio de IA, proveedor de notificaciones o Redis.
 - **Estímulo:** Error de comunicación o tiempo de espera agotado.
-- **Entorno:** Sistema operativo con una integración temporalmente
-  no disponible.
-- **Parte afectada:** Adaptadores y tareas de análisis o notificación.
-- **Respuesta esperada:** Se registra el fallo y se aplica
-  la política de reintentos. Las operaciones principales continúan.
+- **Entorno:** Sistema operativo con uno de esos servicios
+  temporalmente no disponible.
+- **Parte afectada:** Adaptadores, tareas y consultas del catálogo.
+- **Respuesta esperada:** Las operaciones principales continúan.
+  Los fallos de IA y notificaciones se registran y se aplica
+  la política de reintentos. Si Redis falla, el catálogo
+  consulta PostgreSQL.
 - **Medida:** Los casos de prueba de registro de animales
   y consulta de historiales y anuncios finalizan correctamente
-  durante la falla simulada.
+  durante cada falla simulada.
 - **Verificación:** Pruebas de integración con fallos controlados.
 
-Este escenario no establece un porcentaje de disponibilidad mensual.
+Se documentará la variación de los tiempos de respuesta
+cuando Redis no esté disponible. No se establece todavía
+un tiempo máximo específico para este escenario de fallo
+ni un porcentaje de disponibilidad mensual.
 
 ### EC03. Crecimiento de datos y solicitudes
 
@@ -141,6 +150,45 @@ se concretarán cuando exista una estructura de código.
 
 La muestra de usuarios, los dispositivos y las metas de tiempo
 y éxito se definirán antes de la evaluación de usabilidad.
+
+### EC09. Actualización de anuncios almacenados en caché
+
+- **Atributos:** AC04 y AC05.
+- **Fuente:** Productor o administrador autorizado.
+- **Estímulo:** Publicación, edición, pausa, retirada, moderación
+  o venta que modifica un anuncio presente en caché.
+- **Entorno:** Redis contiene resultados del catálogo
+  relacionados con el anuncio.
+- **Parte afectada:** Módulo de anuncios, persistencia
+  y adaptador de caché.
+- **Respuesta esperada:** Se confirma primero el cambio
+  en PostgreSQL y después se invalidan las entradas afectadas.
+  La siguiente consulta obtiene información actualizada.
+- **Medida:** Tras una invalidación exitosa, las consultas
+  afectadas reflejan el cambio y no muestran anuncios
+  que hayan dejado de estar habilitados.
+- **Verificación:** Pruebas de integración de cambios
+  e invalidación del catálogo.
+
+Si la invalidación falla, se registrará para reintentarla.
+La especificación deberá definir el tiempo máximo tolerable
+de desactualización y cómo impedir la exposición de información
+que haya dejado de estar autorizada.
+
+### EC10. Caducidad y ausencia de datos en caché
+
+- **Atributos:** AC01 y AC05.
+- **Fuente:** Consulta del catálogo público.
+- **Estímulo:** La entrada solicitada no existe o ha caducado.
+- **Entorno:** Redis disponible y PostgreSQL accesible.
+- **Parte afectada:** Consulta del catálogo y adaptadores
+  de caché y persistencia.
+- **Respuesta esperada:** El backend consulta PostgreSQL,
+  devuelve el resultado y lo almacena temporalmente en Redis.
+- **Medida:** La respuesta coincide con los datos vigentes
+  y la nueva entrada tiene el tiempo de caducidad configurado.
+- **Verificación:** Pruebas de integración y pruebas de carga
+  con caché vacía.
 
 ## 3. Evidencia de evaluación
 

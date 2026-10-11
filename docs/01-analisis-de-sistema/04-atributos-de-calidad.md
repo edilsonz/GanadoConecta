@@ -11,7 +11,7 @@ arquitectónicas y las pruebas.
 | ID | Atributo | Escenario de calidad | Prioridad |
 |---|---|---|---|
 | AC01 | Rendimiento | El 95 % de las consultas de animales y anuncios deberá responder en un máximo de 2 segundos durante una prueba con 100 usuarios concurrentes y un conjunto de datos definido. Se excluyen el procesamiento de IA y la transferencia de fotografías. | Alta |
-| AC02 | Disponibilidad | Ante una falla temporal del servicio de IA o de notificaciones, el sistema deberá permitir continuar con el registro de animales y la consulta de historiales y anuncios. | Alta |
+| AC02 | Disponibilidad | Ante una falla temporal de IA, notificaciones o Redis, el sistema deberá permitir continuar con el registro de animales y la consulta de historiales y anuncios. Si Redis falla, las consultas del catálogo utilizarán PostgreSQL. | Alta |
 | AC03 | Escalabilidad | El sistema deberá permitir aumentar su capacidad conforme crezcan los usuarios, animales, registros, fotografías y solicitudes, sin requerir un rediseño completo. | Media |
 | AC04 | Seguridad | Cada productor deberá acceder únicamente a sus registros privados. Las publicaciones mostrarán solo información autorizada y las funciones administrativas estarán restringidas según los permisos del usuario. | Alta |
 | AC05 | Integridad de datos | Los controles conservarán su asociación con el animal correspondiente. Al registrar una venta, el estado del animal y el cierre de sus anuncios activos deberán actualizarse de manera consistente, conservando el historial. | Alta |
@@ -23,8 +23,8 @@ arquitectónicas y las pruebas.
 
 | Atributo | Forma de verificación |
 |---|---|
-| AC01 | Pruebas de carga que registren el percentil 95 de los tiempos de respuesta, la concurrencia, las solicitudes realizadas y la tasa de errores. |
-| AC02 | Pruebas de integración con fallos y tiempos de espera simulados en IA y notificaciones, comprobando que las operaciones principales continúen disponibles. |
+| AC01 | Pruebas de carga con caché vacía y poblada, registrando el percentil 95 de los tiempos de respuesta, la concurrencia y la tasa de errores. |
+| AC02 | Pruebas de integración con fallos simulados de IA, notificaciones y Redis. Comprobar que las operaciones principales continúen y que el catálogo consulte PostgreSQL cuando Redis no esté disponible. |
 | AC03 | Pruebas con volúmenes crecientes de datos y solicitudes, documentando los límites observados y los recursos utilizados. |
 | AC04 | Pruebas de integración que intenten acceder sin autenticación, con un rol insuficiente o a registros de otro productor. Revisión de los campos expuestos en respuestas públicas. |
 | AC05 | Pruebas unitarias de validaciones y pruebas de integración sobre relaciones y transacciones, incluyendo un fallo durante el registro de una venta. |
@@ -43,10 +43,25 @@ Antes de ejecutar las pruebas de carga se deberán definir y registrar:
 - Configuración de los 100 usuarios concurrentes.
 - Punto de medición de los tiempos de respuesta.
 - Tasa de errores y criterio de aceptación correspondiente.
+- Estado inicial de la caché: vacía o poblada.
+- Tiempo de caducidad configurado y proporción de consultas
+  resueltas mediante Redis.
+- Comportamiento cuando Redis no esté disponible.
 
 El objetivo de 2 segundos corresponde al percentil 95, no al promedio.
 La tasa de errores se evaluará por separado para evitar considerar
 exitosa una prueba con respuestas rápidas pero fallidas.
+Las pruebas con Redis disponible evaluarán el objetivo de AC01
+tanto con caché vacía como poblada.
+
+La prueba con Redis no disponible comprobará la continuidad
+del servicio mediante PostgreSQL y documentará la degradación
+del rendimiento. No se ha definido un tiempo máximo específico
+para este escenario de fallo.
+
+También se comprobará que los cambios en anuncios invaliden
+las entradas afectadas y que las invalidaciones fallidas
+puedan reintentarse.
 
 ## 5. Pruebas obligatorias
 

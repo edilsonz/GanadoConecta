@@ -23,6 +23,7 @@ se verificará mediante revisión del código y pruebas.
 | ADR-08 | Módulo de anuncios con información pública y estados controlados. | DA01, DA02, DA08 | Permite gestionar las publicaciones y su moderación, protegiendo el historial privado de los animales. | Respuestas públicas específicas; estados de borrador, publicado, pausado, retirado y vendido, con un control de moderación diferenciado. |
 | ADR-09 | Tareas persistentes para análisis y notificaciones. | DA03, DA04 | Las solicitudes deben recuperarse y reintentarse después de una falla sin perder las tareas pendientes. | Registro de tareas, estados e intentos en PostgreSQL; ejecución en segundo plano y reintentos limitados con control de duplicados. |
 | ADR-10 | Consultas optimizadas y almacenamiento separado de fotografías. | DA05 | Los listados requieren consultas eficientes y las fotografías necesitan almacenamiento adecuado para archivos. | Paginación e índices en PostgreSQL; fotografías en almacenamiento de archivos u objetos, con referencias y metadatos en la base de datos. |
+| ADR-11 | Redis como caché del catálogo público. | DA01, DA02, DA05, DA06 | Reduce consultas repetidas a PostgreSQL y permite mantener el acceso a la caché detrás de un contrato. | Caché de resultados públicos con caducidad, invalidación tras cambios confirmados y consulta a PostgreSQL cuando no exista una entrada o Redis falle. |
 
 ## 3. Consecuencias y consideraciones
 
@@ -70,13 +71,34 @@ se verificará mediante revisión del código y pruebas.
   de las capacidades del proveedor.
 - Persistir una tarea no garantiza por sí solo su ejecución correcta.
 
+### Caché del catálogo público
+
+- PostgreSQL conservará los datos permanentes y será
+  la fuente principal de información.
+- Redis almacenará temporalmente resultados de consultas
+  del catálogo público.
+- El backend consultará primero la caché. Si no encuentra
+  la información, la obtendrá de PostgreSQL y podrá guardarla
+  en Redis con un tiempo de caducidad.
+- Las claves distinguirán filtros, paginación y orden.
+- Después de confirmar cambios de publicación, edición,
+  pausa, retirada, moderación o venta, se invalidarán
+  las entradas afectadas.
+- Las invalidaciones fallidas se registrarán para reintentarlas.
+- Si Redis no está disponible, las consultas continuarán
+  mediante PostgreSQL, aunque podrían ser más lentas.
+- No se almacenarán historiales privados, credenciales
+  ni archivos de fotografías en esta caché.
+- La caducidad y la estrategia de invalidación se definirán
+  en la especificación del catálogo.
+- La caché puede conservar temporalmente datos anteriores
+  si falla una invalidación. Las operaciones de modificación
+  verificarán el estado vigente en PostgreSQL.
+
 ## 4. Verificación
 
-| Tipo de prueba | Aspectos que comprobará |
-|---|---|
-| Unitarias | Reglas del dominio, validaciones, casos de uso y transiciones de estados. |
-| Integración | API, autenticación, permisos, pertenencia, persistencia, transacciones, tareas y adaptadores. |
-| Carga | Rendimiento de consultas de animales y anuncios conforme a AC01. |
+| Integración | API, autenticación, permisos, pertenencia, persistencia, transacciones, tareas y adaptadores; consultas con y sin caché, caducidad, invalidación y fallos de Redis. |
+| Carga | Rendimiento de consultas de animales y anuncios conforme a AC01, diferenciando caché vacía, caché poblada y Redis no disponible. |
 
 Las pruebas se vincularán con los criterios de aceptación
 de las especificaciones en specs/.
@@ -89,6 +111,8 @@ de las especificaciones en specs/.
 - Método de análisis de IA y datos mínimos necesarios.
 - Configuración del entorno de despliegue.
 
-La incorporación de caché distribuida o la separación de nuevos
-servicios se evaluará según las mediciones y el crecimiento real
-del sistema.
+Redis forma parte de la arquitectura seleccionada para la primera
+versión. Su configuración y beneficio se evaluarán mediante pruebas.
+
+La separación de nuevos servicios se evaluará según las mediciones
+y las necesidades de crecimiento del sistema.

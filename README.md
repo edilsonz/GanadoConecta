@@ -51,6 +51,7 @@ negocio, los casos de uso y los detalles tecnológicos.
 | Interfaz web | React |
 | Backend | Java y Spring Boot |
 | Base de datos | PostgreSQL |
+| Caché | Redis |
 | Servicio de IA | Python y FastAPI |
 | Control de versiones | Git y GitHub |
 
@@ -72,3 +73,16 @@ fotografías están pendientes de selección.
 
 En fase de documentación y diseño arquitectónico.
 La implementación se desarrollará posteriormente.
+
+Se utilizará Redis como caché para consultas frecuentes del catálogo
+público de anuncios. PostgreSQL conservará los datos permanentes
+y será la fuente principal de información.
+
+Los resultados almacenados en caché tendrán un tiempo de caducidad.
+Al publicar, editar, pausar, retirar, moderar o marcar como vendido
+un anuncio, se invalidará la caché afectada después de confirmar
+el cambio en PostgreSQL.
+
+Si la información no está en caché o Redis no está disponible,
+el backend consultará PostgreSQL. La caché no almacenará
+historiales privados ni archivos de fotografías.
