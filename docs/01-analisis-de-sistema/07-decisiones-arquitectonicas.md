@@ -97,6 +97,8 @@ se verificará mediante revisión del código y pruebas.
 
 ## 4. Verificación
 
+| Tipo de prueba prevista | Alcance previsto |
+|---|---|
 | Integración | API, autenticación, permisos, pertenencia, persistencia, transacciones, tareas y adaptadores; consultas con y sin caché, caducidad, invalidación y fallos de Redis. |
 | Carga | Rendimiento de consultas de animales y anuncios conforme a AC01, diferenciando caché vacía, caché poblada y Redis no disponible. |
 
