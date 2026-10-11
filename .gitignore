@@ -1,0 +1,28 @@
+# Configuración local y credenciales
+.env
+.env.*
+!.env.example
+
+# React
+node_modules/
+dist/
+coverage/
+
+# Java / Spring Boot
+target/
+*.class
+*.log
+
+# Python / FastAPI
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Configuración local de editores
+.idea/
