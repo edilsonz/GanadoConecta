@@ -60,6 +60,19 @@ su estado y el cierre de sus anuncios, preservando su historial.
 Las interfaces y abstracciones se incorporarán cuando ayuden
 a separar responsabilidades o dependencias externas.
 
+### 5.1. Aplicación de SOLID en GanadoConecta
+
+| Principio | Ejemplo de aplicación |
+|---|---|
+| Responsabilidad única (SRP) | En Gestión de Ganado, el controlador recibe solicitudes, el caso de uso coordina el registro de animales y el repositorio gestiona su persistencia. |
+| Abierto/cerrado (OCP) | El proveedor de notificaciones podrá reemplazarse mediante un nuevo adaptador sin modificar los casos de uso. |
+| Sustitución de Liskov (LSP) | Los adaptadores que implementen el contrato de almacenamiento de fotografías deberán respetar las mismas condiciones de entrada, salida y manejo de errores. |
+| Segregación de interfaces (ISP) | Los casos de uso utilizarán contratos específicos para consultar animales, almacenar registros o enviar notificaciones, evitando interfaces innecesariamente extensas. |
+| Inversión de dependencias (DIP) | El caso de uso RegistrarAnimal dependerá de un contrato de repositorio, no directamente de PostgreSQL o de una implementación de Spring Data JPA. |
+
+Estos ejemplos representan decisiones propuestas de diseño.
+Su cumplimiento deberá verificarse durante la implementación.
+
 ## 6. Simplicidad y reutilización
 
 Se aplicarán los siguientes criterios:

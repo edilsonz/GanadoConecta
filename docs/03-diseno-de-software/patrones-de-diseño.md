@@ -132,20 +132,24 @@ el acoplamiento entre API, dominio y persistencia.
 Reducir consultas repetidas al catálogo mediante una caché
 que pueda reconstruirse desde PostgreSQL.
 
-### Flujo de consulta
+### Flujo de actualización
 
-1. El caso de uso recibe y valida los filtros.
-2. Construye una clave que incluye filtros, página y orden.
-3. Consulta Redis mediante el contrato CacheCatalogo.
-4. Si existe una entrada válida, utiliza el resultado conforme
-   a las reglas de visibilidad del catálogo.
-5. Si la entrada no existe, expiró o Redis falla,
-   consulta PostgreSQL.
-6. Intenta guardar el resultado público en Redis con un TTL.
-7. Devuelve la respuesta.
+1. El caso de uso valida la operación y modifica
+   los datos correspondientes en PostgreSQL.
+2. En la misma transacción se registra un trabajo
+   pendiente de invalidación de caché.
+3. Se confirma la transacción en PostgreSQL.
+4. Después de la confirmación, se procesa la
+   invalidación de las entradas afectadas en Redis.
+5. Si la invalidación falla, el trabajo permanece
+   pendiente para su posterior reintento.
 
-Un fallo al guardar la caché no debe impedir devolver
-una consulta obtenida correctamente desde PostgreSQL.
+Este mecanismo evita perder solicitudes de
+invalidación cuando Redis no está disponible.
+
+La estrategia definitiva para impedir la exposición
+de anuncios cuya visibilidad fue revocada deberá
+definirse antes de la implementación.
 
 ### Flujo de actualización
 

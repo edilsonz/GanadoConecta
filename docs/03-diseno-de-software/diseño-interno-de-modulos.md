@@ -30,6 +30,33 @@ Los módulos colaboran mediante contratos explícitos.
 Un módulo no debe modificar directamente los datos internos
 de otro sin pasar por la operación que aplica sus reglas.
 
+## 2.1. Estructura propuesta del backend
+
+La siguiente estructura representa la organización prevista del backend de GanadoConecta, desarrollado en Java y Spring Boot bajo un monolito modular y Clean Architecture. No representa código implementado.
+
+backend/
+└── src/main/java/
+    └── ganadoconecta/
+        ├── modulos/
+        │   ├── identidad/
+        │   ├── ganado/
+        │   │   ├── dominio/
+        │   │   ├── aplicacion/
+        │   │   ├── adaptadores/
+        │   │   │   ├── entrada/
+        │   │   │   └── salida/
+        │   │   └── configuracion/
+        │   ├── calendario/
+        │   ├── analisis/
+        │   ├── anuncios/
+        │   ├── administracion/
+        │   └── reportes/
+        └── compartido/
+
+El módulo Ganado se utiliza como ejemplo de organización interna. Los demás módulos seguirán el mismo criterio de separación según sus necesidades.
+El módulo Análisis coordinará la comunicación con el servicio independiente de IA desarrollado en Python y FastAPI.
+Las carpetas, clases e interfaces definitivas se establecerán durante el diseño detallado y la implementación.
+
 ## 3. Identidad y acceso
 
 ### Responsabilidad
