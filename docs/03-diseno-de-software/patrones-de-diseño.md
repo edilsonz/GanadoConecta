@@ -151,14 +151,6 @@ La estrategia definitiva para impedir la exposición
 de anuncios cuya visibilidad fue revocada deberá
 definirse antes de la implementación.
 
-### Flujo de actualización
-
-1. El caso de uso modifica los datos en PostgreSQL.
-2. Confirma la transacción.
-3. Invalida las entradas de catálogo afectadas.
-4. Si la invalidación falla, registra el trabajo pendiente
-   y permite su reintento.
-
 ### Restricciones
 
 - PostgreSQL conserva los datos permanentes.

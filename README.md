@@ -66,7 +66,7 @@ fotografías están pendientes de selección.
 | docs/02-arquitectura-software/ | Propuesta arquitectónica |
 | docs/03-diseno-de-software/ | Diseño interno del software |
 | docs/04-modelo-c4/ | Documentación de los modelos C4 |
-| img/ | Imágenes de los diagramas arquitectónicos y modelos C4
+| img/ | Imágenes de los diagramas arquitectónicos y modelos C4 |
 | tecnologia/ | Propuesta tecnológica |
 
 ## Estado del proyecto
