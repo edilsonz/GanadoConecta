@@ -166,3 +166,20 @@ las notificaciones y el almacenamiento de fotografías.
 Las flechas del diagrama de componentes representan colaboraciones
 durante la ejecución. Las dependencias del código respetarán
 la orientación hacia el núcleo de Clean Architecture.
+
+## 11. Responsabilidades ampliadas aprobadas
+
+| Componente existente | Ampliación | Trazabilidad |
+|---|---|---|
+| Cliente React | PWA, IndexedDB y cola local; estados de sincronización y «Mi ganado». | RF17, AC08, AC09, ADR-12 |
+| API y casos de uso | Sincronización con permisos actuales, versiones y deduplicación; no elude reglas ni crea otro servicio. | RF17, ADR-12 |
+| Usuarios y acceso | Ganaderías y membresías familiares con cuentas individuales. | RF21, ADR-13 |
+| Animales | Registro flexible y masivo, categorías, nacimientos y parentescos. | RF02, RF18, RF20, ADR-14 |
+| Seguimiento | Campañas sanitarias colectivas y registros individuales. | RF04, RF22 |
+| Calendario | Recordatorios colectivos e individuales sin dependencia de IA. | RF07, ADR-09 |
+| Análisis | Conversación autorizada y orientación con fuentes, usando el FastAPI existente. | RF19, ADR-15 |
+| Anuncios | Genealogía autorizada; venta sin transferencia automática. | RF12, RF15, RF18, ADR-14 |
+
+Los nombres de componentes representan responsabilidades lógicas, no nuevos
+microservicios. La figura PNG conserva la versión original y no representa
+todavía estas ampliaciones; no se encontró su fuente editable.

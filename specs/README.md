@@ -15,9 +15,9 @@ nuevas especificaciones. Reorganizar un borrador no implica aprobarlo.
 |---|---|---|---|---|
 | SPEC-01 | [Registro de ganado y sincronización](SPEC-01-registro-ganado-offline/spec.md) | [Plan](SPEC-01-registro-ganado-offline/plan.md) | [Tareas](SPEC-01-registro-ganado-offline/tasks.md) | Propuesta pendiente de revisión; sin implementación |
 
-RF17+, AC09, los roles familiares y el comportamiento offline del borrador
-requieren revisión con la documentación base. Esta organización no aprueba
-requisitos ni decisiones técnicas adicionales.
+RF17–RF22 y AC09 ya están integrados en la documentación base. La SPEC-01
+sigue en borrador: roles concretos, validaciones y contratos requieren revisión.
+La aprobación de capacidades no aprueba todos sus detalles técnicos.
 
 Las rutas entre comillas invertidas en documentos y prompts se interpretan
 desde la raíz del repositorio. Los enlaces Markdown se resuelven desde el

@@ -18,8 +18,8 @@ y modera publicaciones.
 Un interesado podrá contactar al vendedor mediante el medio publicado.
 La negociación, el pago y el transporte se realizarán fuera del sistema.
 
-El reporte de publicaciones estará disponible para usuarios autenticados.
-Un visitante deberá registrarse o iniciar sesión para realizarlo.
+Propuesta pendiente de SPEC: restringir el reporte de publicaciones a usuarios
+autenticados; en ese caso un visitante deberá registrarse o iniciar sesión.
 
 ## 3. Sistema externo
 
@@ -57,3 +57,14 @@ ni funciones específicas dentro de la plataforma.
 El productor podrá registrar información de las atenciones veterinarias.
 La incorporación de un rol veterinario requerirá definir previamente
 sus permisos, funcionalidades y requisitos.
+
+## 7. Acceso familiar aprobado
+
+ACT01 incluye al titular de una ganadería y a sus familiares autorizados con
+cuentas individuales. La pertenencia de animales e historiales se verifica
+por ganadería y permisos de cada integrante. Los nombres editor/lector,
+sus permisos exactos y el procedimiento de invitación/revocación permanecen
+como propuesta de diseño hasta la SPEC de acceso. ACT02 y ACT03 no cambian;
+el administrador no obtiene acceso irrestricto a historiales.
+La IA interna también atenderá consultas conversacionales sobre información
+autorizada y orientación general basada en fuentes, sin diagnosticar ni prescribir.

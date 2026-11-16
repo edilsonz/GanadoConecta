@@ -54,7 +54,7 @@ programar actividades, analizar registros y publicar anuncios de venta.
   dentro de una misma transacción.
 - No incorporar pagos, comisiones, chat interno ni logística
   en el alcance inicial.
-- La IA analizará registros históricos; no realizará diagnósticos
+- La IA analizará registros históricos y ofrecerá conversación autorizada y orientación con fuentes confiables; no realizará diagnósticos ni prescripciones
   ni sustituirá la evaluación de un profesional veterinario.
 
 ## Uso de caché con Redis
@@ -130,3 +130,16 @@ programar actividades, analizar registros y publicar anuncios de venta.
   restricciones, drivers y decisiones.
 - No guardar credenciales ni secretos en el repositorio.
 - Agrupar los commits por bloques de trabajo relacionados.
+
+## Consolidación arquitectónica aprobada
+
+- React será responsivo, PWA y Offline-First, con IndexedDB y sincronización parcial.
+- Cuentas individuales y acceso familiar autorizado por ganadería; verificar permisos, pertenencia, versiones y duplicados al sincronizar.
+- Registro flexible individual y masivo con identidad interna única; nombre, arete y datos adicionales opcionales.
+- Incluir categorías ternera, vaquilla, vaca, ternero, torete y toro; nacimientos, parentescos, genealogía y antecedentes.
+- Seguimiento sanitario individual, campañas colectivas y recordatorios individuales/colectivos independientes de IA.
+- La IA también permite conversación sobre datos autorizados y orientación con fuentes confiables, sin diagnosticar ni prescribir.
+- Genealogía pública solo autorizada; venta sin transferencia automática de fichas entre usuarios.
+- Fotografías mediante adaptador de infraestructura, sin microservicio adicional.
+- Interfaz en español, lenguaje sencillo y «Mi ganado».
+- Consultar docs/05-preparacion-implementacion/05-consolidacion-arquitectonica.md para distinguir decisiones aprobadas de detalles pendientes de SPEC.

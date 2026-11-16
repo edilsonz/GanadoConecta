@@ -170,3 +170,12 @@ todavía están pendientes.
 El entorno de despliegue, las versiones, las herramientas
 de pruebas y los proveedores pendientes se definirán
 en las siguientes etapas.
+
+## 13. Extensión aprobada de capacidades
+
+React incorpora PWA e IndexedDB para trabajo parcial sin red con sincronización
+posterior; el backend revalida permisos, versiones y duplicados. FastAPI también
+atiende conversación autorizada y orientación con fuentes, sin diagnosticar ni
+prescribir. Los recordatorios no dependen de IA. Fotografías conserva su adaptador,
+sin añadir un servicio. Versiones, bibliotecas, modelos y proveedores siguen
+pendientes; no se cambian las tecnologías seleccionadas.

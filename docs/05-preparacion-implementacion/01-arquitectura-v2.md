@@ -1,5 +1,10 @@
 # Arquitectura técnica propuesta — GanadoConecta v2
 
+> **Estado de consolidación:** las 16 decisiones aprobadas por el responsable
+> del proyecto se integran en la [base consolidada](05-consolidacion-arquitectonica.md).
+> Los detalles de este documento que no figuren como aprobados allí siguen
+> siendo propuestas pendientes de SPEC. No hay implementación ni pruebas funcionales.
+
 ## Línea base preservada
 
 Arquitectura cliente-servidor; frontend React; backend Java/Spring Boot **monolito modular** con Clean Architecture; PostgreSQL como fuente principal; Redis para caché del catálogo público; FastAPI como servicio de IA independiente; contratos para notificaciones y archivos. Mantener API REST/HTTPS/JSON, pruebas y tareas persistentes que la documentación original ya define.
@@ -42,7 +47,7 @@ flowchart TB
   CAL --> NOTIF[Proveedor de notificaciones por definir]
 ```
 
-**C4 nivel 2:** indicar almacenamiento local y Service Worker como partes internas del contenedor cliente PWA (o anotaciones asociadas), una relación de sincronización por API y el servicio externo de archivos, si lo presta un tercero. **C4 nivel 3 del backend:** ampliar Usuarios para membresías; Animales para genealogía; Seguimiento para campañas; Análisis para asistente; API para sincronización. Los PNG y fuentes editables originales no se modificaron en este paquete.
+**C4 nivel 2:** indicar almacenamiento local y Service Worker como partes internas del contenedor cliente PWA (o anotaciones asociadas), una relación de sincronización por API y el servicio externo de archivos, si lo presta un tercero. **C4 nivel 3 del backend:** ampliar Usuarios para membresías; Animales para genealogía; Seguimiento para campañas; Análisis para asistente; API para sincronización. Los PNG originales no se modificaron; no se encontraron fuentes editables asociadas en el repositorio.
 
 ## Límites de responsabilidad
 
@@ -72,7 +77,7 @@ flowchart TB
 
 **Análisis inteligente (RF08):** métricas generales, cambios de peso y resumen de campañas a partir de consultas deterministas y datos históricos, con fecha de corte, calidad de datos, fuente y advertencias de limitaciones. No inferir enfermedades a partir de fotos o de un solo dato.
 
-**Asistente (RF19 propuesto):**
+**Asistente (RF19 aprobado; mecanismo detallado propuesto):**
 - Modo «Mis animales»: el backend traduce solicitudes autorizadas en herramientas de solo lectura con filtros forzosos por ganadería/membresía. Los totales y fechas se calculan en la base de datos, no mediante alucinaciones del modelo.
 - Modo «Información ganadera general»: corpus de documentos curados por responsable, con identificación de entidad, fecha y referencia verificable (ej. documentos de SENASA, FAO u organismos técnicos relevantes). Si no hay fuente suficiente, indicar que no se puede verificar.
 - Responder en español, señalar fuente/fecha del dato y limitar conclusiones clínicas. No prescribir dosis ni esquemas; derivar consultas clínicas a veterinario.

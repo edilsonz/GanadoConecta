@@ -204,3 +204,17 @@ Cada ejecución deberá registrar:
 
 Estos escenarios son objetivos de evaluación.
 No representan pruebas ya ejecutadas.
+
+## 4. Escenarios adicionales por verificar
+
+| ID | Atributos | Estímulo y entorno | Respuesta esperada y medida | Prueba prevista |
+|---|---|---|---|---|
+| EC11 | AC09, AC05, AC08 | Dispositivo preparado pierde conexión, crea un registro válido y reconecta con reintentos. | Guardado local visible como pendiente; una sola alta remota y confirmación solo tras respuesta del servidor. | Unitaria, integración y E2E. |
+| EC12 | AC04, AC05, AC09 | Una membresía se revoca o la versión remota cambia antes de sincronizar. | El servidor rechaza la operación sin permiso o informa conflicto; no sobrescribe datos ni revela información ajena. Todos los casos previstos deben respetar este resultado. | Integración y E2E. |
+| EC13 | AC04, AC07 | El asistente recibe una petición de datos ajenos, carece de fuentes o falla su integración. | No entrega datos ajenos ni inventa fuentes o resultados; informa la limitación sin diagnosticar ni prescribir. | Unitarias de permisos e integración con servicio controlado. |
+
+EC04 se amplía: un familiar autorizado puede operar según sus permisos;
+un usuario de otra ganadería o sin membresía vigente no puede hacerlo.
+La revocación remota no garantiza borrar copias de un dispositivo desconectado:
+la política de datos locales debe resolverse antes de implementar RF17.
+No se ejecutó ninguna de estas pruebas; son criterios para las futuras SPEC.

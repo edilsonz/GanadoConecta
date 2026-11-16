@@ -1,5 +1,10 @@
 # Modelo de datos conceptual y reglas — propuesta, no migraciones
 
+> **Estado de consolidación:** las 16 decisiones aprobadas por el responsable
+> del proyecto se integran en la [base consolidada](05-consolidacion-arquitectonica.md).
+> Los detalles de este documento que no figuren como aprobados allí siguen
+> siendo propuestas pendientes de SPEC. No hay implementación ni pruebas funcionales.
+
 ## Entidades centrales
 
 | Entidad | Campos esenciales propuestos | Reglas |

@@ -26,7 +26,7 @@ y conservará los datos permanentes.
 
 | Elemento | Tecnología | Responsabilidad |
 |---|---|---|
-| Aplicación web | React | Presentar formularios, historiales, calendario, reportes y catálogo de anuncios. |
+| Aplicación web | React PWA | Presentar la interfaz responsiva en español y «Mi ganado»; conservar datos autorizados y operaciones pendientes en IndexedDB para trabajo parcial sin red. |
 | Backend principal | Java y Spring Boot | Exponer la API REST, verificar permisos, ejecutar casos de uso y coordinar las operaciones. |
 | Base de datos | PostgreSQL | Conservar usuarios, animales, historiales, actividades, anuncios y tareas persistentes. |
 | Caché | Redis | Almacenar temporalmente resultados de consultas frecuentes del catálogo público para reducir accesos repetidos a PostgreSQL. |
@@ -48,11 +48,11 @@ con backend monolítico modular y servicio propio de IA independiente.*
 
 | Módulo | Responsabilidad | Requisitos relacionados |
 |---|---|---|
-| Usuarios y acceso | Registro, inicio de sesión, perfil, permisos y gestión administrativa de usuarios. | RF01, RF11 |
-| Animales | Registro, edición y consulta individual de animales. | RF02 |
-| Seguimiento ganadero | Historial y registros sanitarios, reproductivos y productivos. | RF03–RF06 |
+| Usuarios y acceso | Cuentas individuales, ganaderías, acceso familiar autorizado y administración de usuarios. | RF01, RF11, RF21 |
+| Animales | Registro flexible individual/masivo, identificación única, categorías, nacimientos y genealogía. | RF02, RF05, RF18, RF20 |
+| Seguimiento ganadero | Historial, controles individuales y campañas colectivas con asociación por animal. | RF03–RF06, RF22 |
 | Calendario y alertas | Actividades programadas, recordatorios y alertas de seguimiento. | RF07, RF09 |
-| Análisis inteligente | Solicitud de análisis y gestión de resultados del servicio de IA. | RF08, RF09 |
+| Análisis inteligente | Análisis y conversación sobre datos autorizados y orientación general con fuentes; sin diagnosticar ni prescribir. | RF08, RF09, RF19 |
 | Reportes | Consulta de reportes sanitarios, reproductivos y productivos y estadísticas básicas autorizadas. | RF10, RF11 |
 | Anuncios | Publicación, búsqueda, estados, contacto autorizado, reportes y moderación. | RF12–RF16 |
 
@@ -168,3 +168,23 @@ Su configuración se ajustará según las mediciones de rendimiento.
 
 La separación de nuevos servicios se evaluará según
 las necesidades de crecimiento del sistema.
+
+## 10. Extensión aprobada para PWA y colaboración
+
+Las decisiones ADR-12–ADR-15 complementan la arquitectura original.
+El cliente mantiene IndexedDB y una cola local; estos datos no sustituyen
+PostgreSQL. La interfaz distingue pendiente, sincronizado, conflicto y error.
+La API recibe operaciones de RF17 y delega en los mismos casos de uso del
+monolito, verificando identidad, membresía, permisos, versión y duplicados.
+La identidad se obtiene de la autenticación, no de un actor declarado por el cliente.
+No se incorporan servicios independientes para sincronización o fotografías.
+Los recordatorios individuales y colectivos siguen en Calendario, sin IA.
+
+Nacimientos/parentescos pertenecen a Animales y colaboran con los eventos
+reproductivos de Seguimiento. La venta no transfiere fichas ni historiales.
+La genealogía pública es una proyección autorizada, separada del historial.
+El formato concreto de claves, lotes, contratos y conflictos se definirá en SPEC.
+
+La figura PNG es la vista original; su actualización gráfica está pendiente
+por ausencia de fuente editable. Las relaciones vigentes están descritas en
+los [documentos C4](../04-modelo-c4/Nivel2-DiagramaContenedores.md).

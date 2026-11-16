@@ -9,12 +9,12 @@ durante el diseño y desarrollo de GanadoConecta.
 
 | ID | Restricción | Descripción |
 |---|---|---|
-| RC01 | Aplicación web | El sistema deberá ser accesible mediante un navegador web y contar con una interfaz adaptable a computadoras, tabletas y teléfonos móviles. |
+| RC01 | Aplicación web | El sistema será una aplicación React responsiva, PWA y Offline-First, accesible en celulares y computadoras; el funcionamiento sin red será parcial mediante IndexedDB y sincronización posterior. |
 | RC02 | Control de versiones | El código fuente y la documentación deberán gestionarse mediante Git y mantenerse en un repositorio de GitHub. |
 | RC03 | API REST | La comunicación entre la aplicación web y el backend deberá realizarse mediante una API REST. |
 | RC04 | Organización arquitectónica | La solución deberá separar sus responsabilidades y aplicar Clean Architecture para orientar las dependencias internas hacia el núcleo del negocio. |
 | RC05 | Alcance inicial | La primera versión estará orientada al ganado vacuno e incluirá gestión, seguimiento, análisis de información y anuncios de venta. |
-| RC06 | Alcance de la inteligencia artificial | La IA analizará registros históricos del sistema. No realizará diagnósticos automáticos ni sustituirá la evaluación de un profesional veterinario. |
+| RC06 | Alcance de la inteligencia artificial | La IA analizará registros históricos autorizados y ofrecerá conversación sobre esos datos y orientación general basada en fuentes confiables. No diagnosticará, prescribirá ni sustituirá al profesional veterinario. |
 | RC07 | Notificaciones externas | El envío de recordatorios y alertas fuera de la plataforma dependerá de un proveedor externo. |
 | RC08 | Operaciones comerciales | La primera versión no procesará pagos, cobrará comisiones por venta ni gestionará la entrega o el transporte. Estas condiciones serán acordadas entre los interesados. |
 | RC09 | Contacto entre interesados | La comunicación se realizará mediante el contacto autorizado por el vendedor. No se implementará inicialmente un chat interno. |
@@ -52,3 +52,12 @@ tecnologia/propuesta-tecnologica.md.
 
 El proveedor de notificaciones y la solución de almacenamiento
 de fotografías están pendientes de selección.
+
+## 5. Precisiones aprobadas
+
+RC01 exige interfaz en español y «Mi ganado». RC07 no condiciona la creación
+de recordatorios a la IA ni garantiza entrega externa sin internet.
+RC08–RC09 conservan catálogo no transaccional, sin pagos, comisiones, logística
+ni chat interno entre compradores y vendedores. La IA conversacional RF19
+no es ese chat. Las fotografías se integran mediante adaptador de infraestructura,
+sin microservicio adicional. Redis sigue limitado al catálogo público.

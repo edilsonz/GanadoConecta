@@ -13,11 +13,12 @@ arquitectónicas y las pruebas.
 | AC01 | Rendimiento | El 95 % de las consultas de animales y anuncios deberá responder en un máximo de 2 segundos durante una prueba con 100 usuarios concurrentes y un conjunto de datos definido. Se excluyen el procesamiento de IA y la transferencia de fotografías. | Alta |
 | AC02 | Disponibilidad | Ante una falla temporal de IA, notificaciones o Redis, el sistema deberá permitir continuar con el registro de animales y la consulta de historiales y anuncios. Si Redis falla, las consultas del catálogo utilizarán PostgreSQL. | Alta |
 | AC03 | Escalabilidad | El sistema deberá permitir aumentar su capacidad conforme crezcan los usuarios, animales, registros, fotografías y solicitudes, sin requerir un rediseño completo. | Media |
-| AC04 | Seguridad | Cada productor deberá acceder únicamente a sus registros privados. Las publicaciones mostrarán solo información autorizada y las funciones administrativas estarán restringidas según los permisos del usuario. | Alta |
+| AC04 | Seguridad | Cada usuario deberá acceder únicamente a registros privados de ganaderías para las que tenga autorización vigente. Las publicaciones mostrarán solo información autorizada y las funciones administrativas estarán restringidas según los permisos del usuario. | Alta |
 | AC05 | Integridad de datos | Los controles conservarán su asociación con el animal correspondiente. Al registrar una venta, el estado del animal y el cierre de sus anuncios activos deberán actualizarse de manera consistente, conservando el historial. | Alta |
 | AC06 | Mantenibilidad | Los módulos deberán poder modificarse y probarse sin afectar innecesariamente otras funcionalidades. Las dependencias del código respetarán los límites definidos por Clean Architecture. | Alta |
 | AC07 | Interoperabilidad | El sistema deberá intercambiar información con IA y notificaciones mediante interfaces definidas, detectando respuestas inválidas y fallos de comunicación. | Alta |
 | AC08 | Usabilidad | El productor deberá registrar controles y publicar animales mediante formularios claros. Los interesados podrán consultar y filtrar anuncios desde computadoras y dispositivos móviles. | Alta |
+| AC09 | Continuidad parcial sin conexión | En un dispositivo previamente preparado, los datos locales autorizados podrán consultarse y los registros habilitados por la SPEC guardarse pendientes en IndexedDB. Al reconectar se verificarán permisos y versiones y se evitarán duplicados, sin presentar guardados locales como confirmaciones remotas. | Alta |
 
 ## 3. Verificación de los atributos
 
@@ -82,3 +83,16 @@ y criterios adicionales en las especificaciones correspondientes.
 
 No se ha definido todavía un porcentaje de disponibilidad mensual
 ni una capacidad máxima garantizada de usuarios o registros.
+
+## 7. Verificación adicional aprobada
+
+- AC09: pruebas unitarias de estados y deduplicación; integración de permisos,
+  versiones y reintentos; E2E de desconexión/reconexión y almacenamiento local insuficiente.
+- AC04: aislamiento entre ganaderías, acceso familiar válido y permisos revocados.
+- AC05: ausencia de duplicados y de sobrescritura silenciosa en conflictos.
+- AC08: interfaz responsiva en español, lenguaje sencillo y «Mi ganado».
+
+AC09 no garantiza arranque inicial sin red, persistencia permanente del navegador,
+revocación inmediata de copias en un dispositivo desconectado ni notificaciones
+puntuales con el navegador cerrado. El alcance de datos locales, su limpieza,
+retención y recuperación debe especificarse antes de implementar.

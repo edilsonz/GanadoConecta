@@ -6,8 +6,9 @@ Las decisiones arquitectónicas de GanadoConecta responden a los
 drivers identificados y establecen una base para implementar
 la primera versión del sistema.
 
-Su estado es propuesto para implementación. El cumplimiento
-se verificará mediante revisión del código y pruebas.
+Las decisiones de arquitectura están aprobadas por el responsable del proyecto
+para orientar la implementación. Esto no constituye implementación, pruebas
+ejecutadas ni aprobación docente. Los detalles abiertos siguen pendientes.
 
 ## 2. Decisiones
 
@@ -24,6 +25,10 @@ se verificará mediante revisión del código y pruebas.
 | ADR-09 | Tareas persistentes para análisis y notificaciones. | DA03, DA04 | Las solicitudes deben recuperarse y reintentarse después de una falla sin perder las tareas pendientes. | Registro de tareas, estados e intentos en PostgreSQL; ejecución en segundo plano y reintentos limitados con control de duplicados. |
 | ADR-10 | Consultas optimizadas y almacenamiento separado de fotografías. | DA05 | Los listados requieren consultas eficientes y las fotografías necesitan almacenamiento adecuado para archivos. | Paginación e índices en PostgreSQL; fotografías en almacenamiento de archivos u objetos, con referencias y metadatos en la base de datos. |
 | ADR-11 | Redis como caché del catálogo público. | DA01, DA02, DA05, DA06 | Reduce consultas repetidas a PostgreSQL y permite mantener el acceso a la caché detrás de un contrato. | Caché de resultados públicos con caducidad, invalidación tras cambios confirmados y consulta a PostgreSQL cuando no exista una entrada o Redis falle. |
+| ADR-12 | React PWA Offline-First con IndexedDB y sincronización. | DA07, DA09, DA01, DA02 | Permite trabajo parcial sin conexión manteniendo la autoridad del servidor. | Cola local y estados pendiente/sincronizado/error; backend revalida identidad, permisos, pertenencia y versión, y evita duplicados. |
+| ADR-13 | Colaboración familiar por ganadería con cuentas individuales. | DA01, DA02 | La propiedad individual no representa por sí sola el acceso familiar autorizado. | Membresías y permisos en cada caso de uso, sin compartir credenciales; matriz exacta de roles pendiente. |
+| ADR-14 | Genealogía privada con proyección pública autorizada. | DA01, DA02, DA08 | Permite informar sobre parentescos sin publicar el historial completo. | Anuncios muestran solo genealogía autorizada; venta conserva historial sin transferencia automática. |
+| ADR-15 | IA conversacional y análisis en el servicio FastAPI existente. | DA01, DA03, DA06 | Aprovecha el servicio independiente sin crear otro microservicio. | Datos propios filtrados por permisos y orientación con fuentes confiables, sin diagnosticar ni prescribir. Modelo, corpus y contratos pendientes. |
 
 ## 3. Consecuencias y consideraciones
 
@@ -118,3 +123,22 @@ versión. Su configuración y beneficio se evaluarán mediante pruebas.
 
 La separación de nuevos servicios se evaluará según las mediciones
 y las necesidades de crecimiento del sistema.
+
+## 6. Consecuencias de la consolidación
+
+ADR-02 se amplía con ADR-12; ADR-07 con ADR-13; ADR-08 con ADR-14;
+ADR-05/06 con ADR-15. ADR-01/03/04/09/10/11 se conservan.
+Fotografías usa el adaptador de ADR-06/10, sin servicio adicional.
+La conversación no concede a la IA acceso directo irrestricto a PostgreSQL.
+La autorización y los filtros se aplican en el backend antes de entregar datos.
+
+La sincronización es una capacidad de la API y los casos de uso del monolito,
+no una segunda fuente principal ni un módulo que omita las reglas de negocio.
+Los reintentos deben producir un único efecto; no se promete transporte
+«exactamente una vez». Una versión incompatible debe producir un conflicto
+explícito, sin sobrescribir silenciosamente. Retención de identificadores,
+formato de operaciones y resolución de conflictos están pendientes de SPEC.
+
+Los recordatorios programados no dependen de IA. ADR-09 conserva análisis
+diferidos y notificaciones mediante tareas persistentes; el modo de respuesta,
+tiempos de espera y ejecución del asistente quedan por especificar.

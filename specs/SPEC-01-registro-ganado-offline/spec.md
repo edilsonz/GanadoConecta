@@ -1,12 +1,17 @@
 # SPEC-01: Registro flexible de ganado y sincronización (borrador propuesto)
 
+> **Borrador pendiente de revisión:** el alcance general está aprobado, pero
+> las reglas detalladas siguientes siguen siendo propuestas. Consultar la
+> sección 12 y la [consolidación arquitectónica](../../docs/05-preparacion-implementacion/05-consolidacion-arquitectonica.md)
+> antes de diseñar o implementar. Ningún criterio se declara verificado.
+
 ## 1. Identificación
 
 | Campo | Valor |
 |---|---|
 | Estado | **Borrador — no implementado** |
-| Requisitos | RF02, RF17, RF20, RF21 (los RF17+ son propuestas) |
-| Calidad | AC04, AC05, AC08, AC09 (AC09 propuesto) |
+| Requisitos | RF02, RF17, RF21; RF20 como contexto (cobertura parcial: alta individual, no masiva) |
+| Calidad | AC04, AC05, AC08, AC09 |
 
 ## 2. Objetivo
 
@@ -80,3 +85,16 @@ Permitir a un productor o familiar editor registrar un vacuno con pocos datos, i
 ## 11. Aspectos técnicos abiertos
 
 Versión inicial de dependencias, esquema exacto de eventos de sincronización, política de borrado local, elección de biblioteca IndexedDB y tratamiento de fotos offline. Deben definirse antes de implementar esos subflujos, evitando inventar proveedores.
+
+## 12. Estado tras consolidar la arquitectura
+
+RF17–RF22 y AC09 están integrados en la documentación base. Esta SPEC sigue
+siendo borrador: sexo obligatorio, UUID, permisos de editor/lector, generación
+de identificadores y reglas de categorías son propuestas por revisar. El alcance
+aprobado requiere identidad interna única y permite nombre, arete y datos
+adicionales opcionales. Los criterios CA01–CA08 no se consideran aprobados
+ni verificados por esta consolidación. El registro masivo RF20 requiere su
+propia especificación; aquí solo se aborda el alta individual.
+
+Referencias: HU02/HU18/HU22; DA01/DA02/DA09; ADR-04/ADR-07/ADR-12/ADR-13;
+EC11–EC12. El plan y las tareas permanecen pendientes, sin autorizar implementación.

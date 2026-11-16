@@ -125,7 +125,7 @@ sanitarios, reproductivos y productivos.
 
 ### Reglas principales
 
-- Cada animal está asociado a un productor.
+- Cada animal pertenece a una ganadería; el acceso depende de la cuenta y su autorización vigente sobre esa ganadería.
 - Los registros privados solo se consultan con autorización.
 - La venta conserva los historiales.
 - El cambio de estado por venta y el cierre de sus anuncios
@@ -163,7 +163,7 @@ Organizar actividades ganaderas y solicitar recordatorios.
 
 ### Reglas principales
 
-- Las actividades pertenecen al productor correspondiente.
+- Las actividades pertenecen a la ganadería y pueden dirigirse a un animal, una selección o el conjunto autorizado; no dependen de IA.
 - Reprogramar o cancelar debe actualizar los recordatorios afectados.
 - El procesamiento repetido no debe crear recordatorios
   duplicados para el mismo evento.
@@ -418,3 +418,49 @@ implementado con Python y FastAPI.
 
 Diseño interno propuesto.
 La implementación y validación de los módulos están pendientes.
+
+## 15. Diseño de bajo nivel consolidado
+
+Las decisiones aprobadas fijan capacidades y límites. Los nombres siguientes
+son conceptuales y no representan tablas, clases ni endpoints implementados.
+
+| Área | Conceptos y operaciones por diseñar | Invariantes aprobadas |
+|---|---|---|
+| Identidad | Ganadería, membresía y permisos por cuenta; autorizar acceso familiar. | Cuenta individual; autorización de ganadería en cada operación y al sincronizar. |
+| Ganado | Identificador interno, categorías, nacimiento, parentesco y antecedentes; registrar individualmente o por lote. | Identidad única; nombre, arete y datos adicionales opcionales; genealogía privada salvo proyección autorizada. |
+| Seguimiento | Campaña y atención individual; registrar vacunación, desparasitación y baños antiparasitarios. | Cada atención conserva el animal correspondiente; una campaña no equivale a confirmar todas las atenciones. |
+| Calendario | Destinatarios individuales/colectivos y programación. | El recordatorio no depende de IA; entrega externa sujeta a conectividad/proveedor. |
+| Sincronización | Cola local, identificador de operación, versión base y resultado. | Backend revalida identidad, membresía, datos y versión; reintentos sin duplicar efectos y conflictos explícitos. |
+| Análisis | Consulta conversacional y fuentes de orientación. | Backend filtra datos autorizados; sin diagnóstico, prescripción ni escritura autónoma por IA. |
+| Anuncios | Proyección autorizada de genealogía y coordinación de venta. | No publica historial completo; venta/cierre atómicos sin transferencia entre usuarios. |
+
+### Secuencia de sincronización por diseñar
+
+1. El cliente preparado conserva el registro local y lo muestra pendiente.
+2. Envía la operación al backend al recuperar conexión.
+3. El backend obtiene la identidad autenticada y valida membresía y permiso vigente.
+4. El caso de uso verifica duplicados, datos y versión; un conflicto no sobrescribe silenciosamente.
+5. La persistencia confirma de forma consistente el cambio y su resultado idempotente.
+6. La respuesta determina si el cliente muestra sincronizado, conflicto o rechazo.
+
+No se garantiza una entrega de red exactamente una vez. Se requiere un único
+efecto observable ante reintentos. Un identificador repetido con contenido distinto
+necesita una política explícita de rechazo/conflicto en la SPEC. Las ventas offline
+no alteran el catálogo público hasta confirmación del servidor; habilitar ese flujo
+sin conexión sigue pendiente de especificación.
+
+### Correspondencia de agrupaciones
+
+El esquema de carpetas usa `identidad` para Usuarios y acceso y `ganado` como
+agrupación de Animales y Seguimiento; calendario, análisis, anuncios y reportes
+corresponden a C4. Administración aplica sus operaciones mediante los contratos
+de Identidad y Anuncios. Estas agrupaciones no crean unidades de despliegue.
+
+### Detalles que no se aprueban implícitamente
+
+El correo como identificador de cuenta, los roles editor/lector y su matriz,
+UUID como representación, sexo obligatorio, categorías derivadas por edad/parto,
+profundidad genealógica, CSV, tamaño de lotes, retención local, contratos API,
+versionado y resolución de conflictos requieren SPEC y revisión. Las reglas
+anteriores sobre correo único y registro público de productor son propuestas
+de este diseño, no nuevas decisiones aprobadas en esta consolidación.

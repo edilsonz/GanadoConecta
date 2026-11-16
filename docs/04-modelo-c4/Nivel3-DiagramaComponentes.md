@@ -114,3 +114,26 @@ La implementación y las pruebas están pendientes.
 
 El nivel 4 se elaborará cuando se concrete el diseño
 de código de un componente seleccionado.
+
+## 10. Componentes y relaciones consolidados
+
+| Componente | Responsabilidad ampliada | Colaboración |
+|---|---|---|
+| API REST y seguridad | Recibir operaciones de sincronización, autenticar y validar formato. | Casos de uso del módulo responsable. |
+| Usuarios y acceso | Ganaderías y membresías familiares; comprobar autorización vigente. | Persistencia PostgreSQL. |
+| Animales | Altas individuales/masivas, categorías, nacimientos, parentescos y genealogía. | Seguimiento para eventos reproductivos; Anuncios para proyección pública y venta. |
+| Seguimiento ganadero | Campañas colectivas y atenciones individuales asociadas a cada animal. | Animales y Calendario mediante contratos. |
+| Casos de uso y persistencia | Verificar permisos/versiones y deduplicar operaciones; confirmar un único efecto. | Módulo responsable de cada operación; PostgreSQL. |
+| Análisis inteligente | Consultas propias autorizadas y orientación basada en fuentes. | Adaptador del FastAPI existente. |
+| Calendario | Recordatorios individuales/colectivos sin IA. | Ejecutor de tareas y adaptador de notificaciones. |
+| Anuncios | Publicar genealogía solo autorizada; cerrar publicaciones sin transferir fichas. | Animales y adaptador de caché tras confirmar la transacción. |
+
+Sincronización es una entrada transversal a casos de uso existentes, no un
+microservicio ni una vía para omitir reglas. El estado idempotente y el cambio
+de negocio deben confirmarse de forma consistente en PostgreSQL; el detalle
+transaccional y la política de conflictos se concretarán en las SPEC.
+
+Solo se encontró `img/GanadoConecta_C4_Nivel_3_Componentes.png`, sin fuente
+editable. Queda pendiente reflejar gráficamente estas ampliaciones. Se conserva
+el PNG original. El diseño de bajo nivel se desarrolla en
+[diseño interno](../03-diseno-de-software/diseño-interno-de-modulos.md).

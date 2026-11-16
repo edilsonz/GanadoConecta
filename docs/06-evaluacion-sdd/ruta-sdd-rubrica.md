@@ -113,3 +113,17 @@ No bloquean el inicio de la Fase 0: versiones exactas de herramientas, servicio 
 - CI con GitHub Actions: https://docs.github.com/en/actions/get-started/continuous-integration
 - Playwright E2E: https://playwright.dev/docs/intro
 - Umbrales k6: https://grafana.com/docs/k6/latest/using-k6/thresholds/
+
+## 7. Estado tras la consolidación arquitectónica
+
+Las 16 decisiones del responsable del proyecto están integradas en la base
+RF/HU/AC/ADR y las vistas textuales C4. El estado histórico del ZIP descrito
+arriba corresponde al material de origen. Para el estado vigente consultar
+la [matriz de evaluación](matriz-trazabilidad.md) y la
+[consolidación](../05-preparacion-implementacion/05-consolidacion-arquitectonica.md).
+
+La fase 0 no se considera terminada: SPEC-01 sigue en borrador, su plan/tareas
+necesitan desarrollo y los PNG esperan fuentes editables. Playwright, k6,
+Flyway y GitHub Actions son herramientas previstas en esta ruta; su selección
+concreta/versiones y uso se documentarán antes de implementar los proyectos.
+Ningún criterio de ejecución se considera demostrado por esta revisión documental.

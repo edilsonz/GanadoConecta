@@ -65,3 +65,20 @@ sin realizar diagnósticos ni sustituir la evaluación veterinaria.
 La propuesta establece la base para implementar y verificar
 el sistema. Su comportamiento y sus metas de calidad deberán
 demostrarse mediante las pruebas correspondientes.
+
+## Consolidación aprobada
+
+React será responsivo, PWA y Offline-First con IndexedDB para funcionamiento
+parcial sin red. La sincronización posterior verifica permisos, versiones y
+duplicados. Las cuentas individuales permiten colaboración familiar autorizada
+sobre una ganadería. Se incorpora registro flexible individual y masivo,
+categorías ternera/vaquilla/vaca/ternero/torete/toro, nacimientos y genealogía,
+campañas colectivas y recordatorios individuales/colectivos sin IA.
+El servicio FastAPI añade conversación sobre datos autorizados y orientación
+con fuentes confiables, sin diagnosticar ni prescribir. La genealogía pública
+requiere autorización; la venta no transfiere registros entre cuentas.
+Las fotografías mantienen un adaptador de infraestructura sin otro servicio.
+Las interfaces serán en español, con «Mi ganado» y lenguaje sencillo.
+
+La [matriz de consolidación](../05-preparacion-implementacion/05-consolidacion-arquitectonica.md)
+distingue estas decisiones de los detalles aún pendientes de SPEC.

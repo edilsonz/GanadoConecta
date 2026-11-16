@@ -56,3 +56,18 @@ de fotografías se detallan en el nivel 2.
   fuera de la plataforma.
 - La IA no realiza diagnósticos ni sustituye
   la evaluación veterinaria.
+
+## 8. Contexto consolidado y estado gráfico
+
+ACT01 incorpora al titular y familiares autorizados, cada uno con cuenta propia.
+Su relación con GanadoConecta incluye colaboración en una misma ganadería,
+registro flexible/masivo, genealogía, campañas y trabajo parcial sin red.
+La IA permite conversación y orientación con fuentes sin diagnosticar ni prescribir;
+sigue dentro del sistema. La genealogía pública requiere autorización y la
+venta no transfiere historiales. ACT02 y ACT03 conservan sus límites.
+
+Solo se encontró `img/GanadoConecta_C4_Nivel_1_Contexto.png`, sin archivo
+editable asociado. Se conserva como figura original; falta reflejar visualmente
+el acceso familiar y las capacidades ampliadas. El proveedor de fotografías
+podría aparecer como sistema externo si la solución seleccionada fuese de un tercero;
+su selección y límite definitivo están pendientes. No se inventa un proveedor.

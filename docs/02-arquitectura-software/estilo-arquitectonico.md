@@ -115,3 +115,12 @@ La propuesta se verificará mediante:
 
 La separación de nuevos servicios se evaluará según
 las mediciones y necesidades de crecimiento.
+
+## 7. Alcance aprobado ampliado
+
+ADR-12 incorpora PWA Offline-First e IndexedDB al cliente React: el trabajo sin
+red es parcial y se sincroniza por la API REST al recuperar conexión. ADR-13
+introduce acceso familiar autorizado por ganadería; ADR-14, genealogía pública
+solo autorizada; ADR-15, conversación con IA en el servicio FastAPI existente.
+Estas extensiones no cambian el estilo ni dividen el monolito. Los recordatorios
+siguen siendo independientes de IA y las fotografías utilizan un adaptador.

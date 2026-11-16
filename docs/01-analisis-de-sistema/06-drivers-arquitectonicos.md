@@ -6,8 +6,8 @@ Los drivers arquitectónicos identifican los requisitos, atributos
 de calidad y restricciones que influyen directamente en el diseño
 de GanadoConecta.
 
-Las referencias corresponden a los 16 requisitos funcionales,
-los ocho atributos de calidad y las nueve restricciones acordadas.
+Las referencias corresponden a RF01–RF22,
+los nueve atributos de calidad y las nueve restricciones acordadas.
 
 ## 2. Drivers arquitectónicos
 
@@ -79,3 +79,19 @@ También se relaciona con:
 
 Las especificaciones definirán la caducidad, las claves,
 la invalidación y el comportamiento ante fallos.
+
+## 7. Ampliación de trazabilidad aprobada
+
+| Driver | Nuevos orígenes | Consecuencia |
+|---|---|---|
+| DA01 | RF17, RF18, RF19, RF21, AC04 | Membresía por ganadería, revalidación al sincronizar y proyección pública de genealogía. |
+| DA02 | RF17, RF18, RF20, RF22, AC05 | Identidad única, parentescos, asociación por animal y control de versiones/duplicados. |
+| DA03 | RF19, RC06 | Asistente con datos autorizados y fuentes confiables; sin diagnóstico ni prescripción. |
+| DA04 | RF07, RF22 | Recordatorios individuales/colectivos independientes de IA. |
+| DA05 | RF20 | Lotes y consultas paginadas; límites y mediciones pendientes. |
+| DA07 | RF17, AC09, RC01 | PWA, IndexedDB y estados comprensibles de sincronización. |
+| DA08 | RF18, RF15 | Genealogía pública autorizada; venta sin transferencia automática. |
+| DA09 | RF17, AC04, AC05, AC09, RC01 | Continuidad parcial sin red: cola local, permisos actuales al sincronizar, versiones y deduplicación; ADR-12. |
+
+DA06 conserva los límites del monolito y los contratos de infraestructura.
+No se añade un servicio independiente para sincronización ni fotografías.

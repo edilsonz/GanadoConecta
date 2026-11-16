@@ -1,5 +1,10 @@
 # Plan incremental de implementación con Codex
 
+> **Estado de consolidación:** las 16 decisiones aprobadas por el responsable
+> del proyecto se integran en la [base consolidada](05-consolidacion-arquitectonica.md).
+> Los detalles de este documento que no figuren como aprobados allí siguen
+> siendo propuestas pendientes de SPEC. No hay implementación ni pruebas funcionales.
+
 ## Regla general
 
 No pedir a Codex «construye toda GanadoConecta» en una sola instrucción. Primero revisar/agregar documentación; después estructura ejecutable; luego verticales funcionales (UI + API + datos + pruebas). Mantener el SDD indicado en `AGENTS.md` y `specs/plantilla-spec.md`.

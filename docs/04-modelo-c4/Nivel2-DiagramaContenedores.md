@@ -89,3 +89,26 @@ mediante tareas persistentes en segundo plano dentro del backend.
 
 El nivel 3 detallará los componentes internos de la API Backend:
 controladores, módulos, ejecutor de tareas y adaptadores.
+
+## 10. Contenedores y relaciones consolidados
+
+| Origen | Destino | Relación aprobada |
+|---|---|---|
+| Titular y familiares autorizados | React PWA | Interfaz responsiva en español con «Mi ganado». |
+| React PWA | IndexedDB local | Consulta de datos previamente autorizados y cola de registros pendientes, dentro del dispositivo cliente. |
+| React PWA | API Backend | Sincronización al recuperar conexión por REST/HTTPS/JSON, con permisos actuales, versiones y deduplicación. |
+| API Backend | PostgreSQL | Ganaderías, membresías, parentescos, campañas y control de operaciones sincronizadas, además de los registros originales. |
+| API Backend | FastAPI existente | Análisis y conversación sobre datos filtrados por autorización; orientación con fuentes confiables. |
+| API Backend | Almacenamiento de fotografías | Adaptador de infraestructura; sin microservicio de fotografías. |
+
+Service Worker y almacenamiento local son detalles internos del cliente PWA,
+no nuevos servicios del backend. Redis solo conserva resultados públicos del
+catálogo. El cliente no accede directamente a PostgreSQL, Redis o FastAPI.
+El proveedor/modelo de IA y las fuentes concretas están pendientes de selección.
+La cola local no garantiza almacenamiento permanente ni arranque sin preparación.
+
+Solo se encontró `img/GanadoConecta_C4_Nivel_2_Contenedores.png`, sin fuente
+editable. Se mantiene la imagen original. Queda pendiente representar PWA,
+IndexedDB y sincronización, ampliar FastAPI y precisar el límite del almacenamiento
+cuando se elija proveedor. Esta tabla actualiza las relaciones documentadas;
+no afirma que la imagen haya sido regenerada.

@@ -17,3 +17,13 @@ Actúa como arquitecto de software del proyecto GanadoConecta. Estás trabajando
 **Restricciones:** Mantener Spring Boot monolito modular/Clean Architecture, React, PostgreSQL, Redis para caché pública, FastAPI independiente y tareas persistentes existentes. No inventar funcionalidades ya desarrolladas. NO implementar todavía todo el frontend o backend. No incluir secretos ni cambiar el ZIP original.
 
 **Resultado esperado:** Resumen de archivos modificados, tabla antes/después, decisiones incorporadas, riesgos, fuentes consultadas y pruebas de consistencia documental realmente realizadas. Si algo contradice los originales, señalarlo explícitamente.
+
+## Estado y límites después de consolidar
+
+Consultar primero `docs/05-preparacion-implementacion/05-consolidacion-arquitectonica.md`.
+RF17–RF22, AC09 y ADR-12–ADR-15 ya se integraron para las 16 decisiones aprobadas.
+El texto anterior se conserva como encargo de origen; no aprueba los detalles
+adicionales del paquete v2 ni autoriza implementar código o modificar imágenes
+sin fuentes editables. Los permisos concretos, validaciones, modelos y contratos
+siguen pendientes de SPEC. El siguiente trabajo requiere revisión de la
+consolidación y de los pendientes, sin volver a numerar requisitos existentes.

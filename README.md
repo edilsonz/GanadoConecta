@@ -141,3 +141,21 @@ El tablero permite realizar el seguimiento de actividades, verificar avances y r
 **Estado:** Documentación técnica preparada para entrega y pendiente de evaluación docente.
 
 La implementación del sistema se desarrollará en etapas posteriores.
+
+## Alcance arquitectónico consolidado
+
+Se han integrado las decisiones aprobadas de PWA Offline-First con IndexedDB,
+acceso familiar autorizado, registro flexible individual y masivo, categorías,
+nacimientos y genealogía, campañas sanitarias, recordatorios colectivos e
+individuales sin IA y conversación con IA basada en datos autorizados y fuentes.
+La interfaz será en español, con «Mi ganado». El catálogo publicará genealogía
+solo autorizada y la venta conservará historial sin transferir fichas entre cuentas.
+Las fotografías usan un adaptador sin microservicio adicional. La IA no diagnostica
+ni prescribe. React, Spring Boot modular/Clean Architecture, PostgreSQL, Redis
+público y FastAPI independiente se conservan.
+
+Consultar la [consolidación y pendientes](docs/05-preparacion-implementacion/05-consolidacion-arquitectonica.md)
+y la [matriz de evaluación](docs/06-evaluacion-sdd/matriz-trazabilidad.md).
+La aprobación de arquitectura no acredita implementación ni aprobación docente.
+Las SPEC y sus planes requieren revisión; las imágenes C4 siguen siendo originales,
+sin fuentes editables encontradas en el repositorio.

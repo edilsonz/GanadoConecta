@@ -3,7 +3,7 @@
 ## 1. Descripción
 
 Las historias de usuario expresan las necesidades de los actores
-de GanadoConecta. Se relacionan con los 16 requisitos funcionales
+de GanadoConecta. Se relacionan con los requisitos funcionales RF01–RF22
 acordados y servirán como base para las especificaciones en specs/.
 
 ## 2. Historias de usuario
@@ -25,7 +25,7 @@ acordados y servirán como base para las especificaciones en specs/.
 | HU13 | Visitante o interesado | Como interesado, quiero consultar y filtrar anuncios activos para encontrar animales que coincidan con mis necesidades. | RF13 |
 | HU14 | Productor | Como productor, quiero publicar, pausar o retirar mis anuncios para controlar su disponibilidad en el catálogo. | RF14 |
 | HU15 | Productor | Como productor, quiero registrar un animal como vendido para actualizar su estado, cerrar sus anuncios activos y conservar su historial. | RF15 |
-| HU16 | Usuario autenticado | Como usuario autenticado, quiero reportar anuncios inadecuados para solicitar su revisión. | RF16 |
+| HU16 | Usuario (autenticación propuesta) | Como usuario, quiero reportar anuncios inadecuados para solicitar su revisión; el requisito de autenticación se confirmará en la SPEC. | RF16 |
 | HU17 | Administrador | Como administrador, quiero revisar los reportes y retirar anuncios inadecuados cuando corresponda para moderar el catálogo. | RF16 |
 
 ## 3. Criterios de aceptación iniciales
@@ -50,13 +50,13 @@ funcionalidad antes de implementar el código.
 | HU13 | El catálogo muestra anuncios publicados y habilitados por moderación. Los filtros disponibles son categoría, raza, sexo, ubicación y rango de precio. |
 | HU14 | El propietario puede cambiar el estado del anuncio mediante las transiciones permitidas. Los anuncios pausados o retirados dejan de aparecer en el catálogo público. |
 | HU15 | El estado del animal y el cierre de sus anuncios activos se actualizan dentro de una misma transacción. Se conserva el historial y no se procesa ningún pago. |
-| HU16 | El usuario autenticado puede reportar un anuncio indicando el motivo. El reporte queda disponible para revisión administrativa. |
+| HU16 | El usuario puede reportar un anuncio indicando el motivo, con la política de acceso que confirme la SPEC. El reporte queda disponible para revisión administrativa. |
 | HU17 | El administrador puede revisar el reporte y retirar la publicación cuando corresponda. Un anuncio retirado deja de mostrarse en el catálogo público. |
 
 ## 4. Decisiones pendientes de especificación
 
 - Datos obligatorios e identificador de las cuentas.
-- Datos obligatorios de animales y anuncios.
+- Datos obligatorios de anuncios y validaciones de animales adicionales al identificador interno; nombre, arete y datos adicionales son opcionales.
 - Indicadores productivos adicionales al peso.
 - Método y datos necesarios para estimar la fecha probable de parto.
 - Condiciones que generan alertas y análisis de IA.
@@ -77,3 +77,21 @@ Las especificaciones deberán vincular sus criterios de aceptación con:
 
 Las pruebas de carga se realizarán cuando los flujos evaluados
 dispongan de una implementación ejecutable.
+
+## 6. Historias incorporadas por la consolidación
+
+| ID | Actor | Historia | Requisito | Aceptación inicial (por verificar) |
+|---|---|---|---|---|
+| HU18 | Integrante autorizado | Como integrante, quiero consultar y registrar sin conexión para continuar parcialmente mi trabajo y sincronizar después. | RF17 | Dado un dispositivo preparado, el registro se muestra pendiente; al reconectar se revalidan permisos y versión y los reintentos no duplican registros. |
+| HU19 | Productor autorizado | Como productor, quiero registrar nacimientos y parentescos para consultar genealogía y antecedentes. | RF18, RF05 | La genealogía incompleta se identifica; no se publica sin autorización ni se transfiere con una venta. |
+| HU20 | Integrante autorizado | Como integrante, quiero conversar con IA sobre datos permitidos y orientación general con fuentes para comprender la información disponible. | RF19, RF08 | Se rechaza el acceso ajeno; la orientación identifica sus fuentes y sus límites, sin diagnósticos ni prescripciones. |
+| HU21 | Productor autorizado | Como productor, quiero registrar animales de forma individual o masiva sin exigir nombre ni arete para incorporar mi ganado. | RF20, RF02 | Cada alta válida conserva un identificador interno único; los errores de lote se informan según la política definida en la SPEC. |
+| HU22 | Titular de ganadería | Como titular, quiero autorizar acceso familiar mediante cuentas individuales para colaborar sin compartir credenciales. | RF21, RF01 | Un integrante autorizado opera conforme a sus permisos; otra ganadería y una membresía revocada no obtienen acceso remoto. |
+| HU23 | Integrante autorizado | Como integrante, quiero registrar campañas colectivas y atenciones individuales para conservar el historial por animal. | RF22, RF04 | Una campaña permite identificar los animales atendidos sin declarar atenciones no realizadas; la SPEC definirá su confirmación. |
+
+HU02 incluye registro flexible y categorías; HU07 incluye recordatorios
+individuales y colectivos independientes de IA; HU12 incluye genealogía
+pública autorizada; HU15 conserva el historial sin transferencia entre cuentas.
+Las referencias originales a «otro productor» significan ausencia de permiso
+sobre la ganadería; no impiden la colaboración familiar autorizada.
+La interfaz será en español y utilizará «Mi ganado».

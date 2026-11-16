@@ -1,5 +1,10 @@
 # GanadoConecta — Preparación arquitectónica para Codex (propuesta v2)
 
+> **Estado de consolidación:** las 16 decisiones aprobadas por el responsable
+> del proyecto se integran en la [base consolidada](05-consolidacion-arquitectonica.md).
+> Los detalles de este documento que no figuren como aprobados allí siguen
+> siendo propuestas pendientes de SPEC. No hay implementación ni pruebas funcionales.
+
 **Estado:** documentación de trabajo preparada a partir del ZIP original y las decisiones conversadas; **NO es software implementado, probado ni aprobado por el docente**.
 
 ## Cómo usar
@@ -25,7 +30,7 @@
 
 ## Documentación original
 
-La documentación original define RF01–RF16, AC01–AC08, ADR-01–ADR-11 y tres niveles C4. Esta propuesta no sustituye silenciosamente esos documentos. Las nuevas numeraciones, pantallas y entidades **son propuestas para revisión**. No se modificaron los diagramas PNG originales ni se afirmó que existiera código funcional.
+La documentación original define RF01–RF16, AC01–AC08, ADR-01–ADR-11 y tres niveles C4. Esta propuesta no sustituye silenciosamente esos documentos. La consolidación integra RF17–RF22, AC09 y ADR-12–ADR-15 para el alcance aprobado; pantallas, entidades y detalles adicionales siguen como propuestas para revisión. No se modificaron los diagramas PNG originales ni se afirmó que existiera código funcional.
 
 ## Meta del primer ciclo de código
 

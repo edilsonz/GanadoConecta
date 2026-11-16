@@ -1,5 +1,10 @@
 # Alcance y acuerdos de GanadoConecta — propuesta v2
 
+> **Estado de consolidación:** las 16 decisiones aprobadas por el responsable
+> del proyecto se integran en la [base consolidada](05-consolidacion-arquitectonica.md).
+> Los detalles de este documento que no figuren como aprobados allí siguen
+> siendo propuestas pendientes de SPEC. No hay implementación ni pruebas funcionales.
+
 > **Importante:** las siguientes decisiones recogen la conversación de definición funcional y deben contrastarse formalmente con la documentación aprobada por el docente. Se conservan los requisitos existentes RF01–RF16 como punto de partida.
 
 ## Visión del producto
@@ -48,7 +53,7 @@ GanadoConecta es una **aplicación web responsiva** para computadora y celular, 
 | ADR-14 | Genealogía privada y proyección pública autorizada | ADR-08 |
 | ADR-15 | Asistente de IA con herramientas de lectura autorizadas y fuentes verificables | ADR-05, ADR-06 |
 
-**Estos códigos no están incorporados aún a los documentos originales**. Codex deberá proponer una modificación explícita de RF/AC/ADR con trazabilidad, sin cambios silenciosos.
+**RF17–RF22, AC09 y ADR-12–ADR-15 ya están incorporados a la base consolidada**, limitados a las decisiones aprobadas. La tabla conserva las formulaciones v2 de origen; los detalles adicionales siguen pendientes de SPEC.
 
 ## Fuera del alcance inicial
 

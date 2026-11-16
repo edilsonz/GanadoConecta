@@ -163,3 +163,13 @@ Clean Architecture organizará el código resultante.
 
 La separación permitirá probar reglas de negocio sin ejecutar
 PostgreSQL, Redis o el servicio real de IA.
+
+## 11. Contratos a precisar tras la consolidación
+
+La persistencia de ganaderías, membresías, parentescos, campañas y operaciones
+sincronizadas utilizará contratos del núcleo. Sus nombres y firmas se definirán
+en las SPEC. IndexedDB será un adaptador del cliente, sin introducir dependencias
+del navegador en el dominio Java. La API de sincronización invoca casos de uso
+con autorización y transacción; no escribe directamente en tablas omitiendo reglas.
+El adaptador FastAPI cubre también RF19 y el adaptador de fotografías se mantiene
+sin microservicio adicional. No es necesario crear una interfaz por cada clase.
