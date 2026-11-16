@@ -66,8 +66,32 @@ fotografías están pendientes de selección.
 | docs/02-arquitectura-software/ | Propuesta arquitectónica |
 | docs/03-diseno-de-software/ | Diseño interno del software |
 | docs/04-modelo-c4/ | Documentación de los modelos C4 |
+| docs/05-preparacion-implementacion/ | Propuestas de preparación; pendientes de revisión |
+| docs/06-evaluacion-sdd/ | Ruta SDD y criterios de evaluación |
 | img/ | Imágenes de los diagramas arquitectónicos y modelos C4 |
 | tecnologia/ | Propuesta tecnológica |
+| specs/ | Una carpeta por funcionalidad con spec.md, plan.md y tasks.md; plantilla original conservada |
+| prompts-codex/ | Instrucciones reutilizables para tareas de Codex |
+
+Consultar la [guía de preparación](docs/05-preparacion-implementacion/README.md),
+la [ruta SDD](docs/06-evaluacion-sdd/ruta-sdd-rubrica.md) y las
+[convenciones de especificaciones](specs/README.md).
+
+Organización prevista para la implementación (estas carpetas aún no existen):
+
+| Ruta futura | Responsabilidad |
+|---|---|
+| frontend/ | Aplicación React y sus pruebas unitarias y de integración |
+| backend/ | Monolito modular Java/Spring Boot, migraciones y pruebas unitarias y de integración |
+| servicio-ia/ | Servicio Python/FastAPI independiente y sus pruebas |
+| tests/e2e/ | Pruebas de flujos completos entre servicios |
+| tests/carga/ | Escenarios, datos sintéticos y resultados de carga documentados |
+| infra/ | Configuración de entornos, servicios locales y despliegue sin secretos |
+| .github/workflows/ | Automatización de CI/CD cuando se defina |
+
+Las herramientas de pruebas se revisarán y documentarán antes de implementarlas.
+Las carpetas se crearán cuando tengan contenido real; la infraestructura
+de despliegue de infra/ se distingue de los adaptadores internos del backend.
 
 ## Estado del proyecto
 
