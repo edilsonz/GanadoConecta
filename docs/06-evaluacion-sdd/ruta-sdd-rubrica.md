@@ -122,8 +122,9 @@ arriba corresponde al material de origen. Para el estado vigente consultar
 la [matriz de evaluación](matriz-trazabilidad.md) y la
 [consolidación](../05-preparacion-implementacion/05-consolidacion-arquitectonica.md).
 
-La fase 0 no se considera terminada: SPEC-01 sigue en borrador, su plan/tareas
-necesitan desarrollo y los PNG esperan fuentes editables. Playwright, k6,
+La fase 0 no se considera terminada: SPEC-01, su plan y tareas están redactados
+para aprobación; faltan revisión, contrato de acceso y aprobación de decisiones.
+Los PNG siguen esperando fuentes editables. Playwright, k6,
 Flyway y GitHub Actions son herramientas previstas en esta ruta; su selección
 concreta/versiones y uso se documentarán antes de implementar los proyectos.
 Ningún criterio de ejecución se considera demostrado por esta revisión documental.

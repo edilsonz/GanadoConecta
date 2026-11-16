@@ -13,7 +13,7 @@ nuevas especificaciones. Reorganizar un borrador no implica aprobarlo.
 
 | Identificador | Especificación | Plan | Tareas | Estado |
 |---|---|---|---|---|
-| SPEC-01 | [Registro de ganado y sincronización](SPEC-01-registro-ganado-offline/spec.md) | [Plan](SPEC-01-registro-ganado-offline/plan.md) | [Tareas](SPEC-01-registro-ganado-offline/tasks.md) | Propuesta pendiente de revisión; sin implementación |
+| SPEC-01 | [Registro de ganado y sincronización](SPEC-01-registro-ganado-offline/spec.md) | [Plan](SPEC-01-registro-ganado-offline/plan.md) | [Tareas](SPEC-01-registro-ganado-offline/tasks.md) | Pendiente de aprobación — No implementada; plan y tareas propuestos |
 
 RF17–RF22 y AC09 ya están integrados en la documentación base. La SPEC-01
 sigue en borrador: roles concretos, validaciones y contratos requieren revisión.
