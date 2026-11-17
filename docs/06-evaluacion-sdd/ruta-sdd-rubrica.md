@@ -122,8 +122,10 @@ arriba corresponde al material de origen. Para el estado vigente consultar
 la [matriz de evaluación](matriz-trazabilidad.md) y la
 [consolidación](../05-preparacion-implementacion/05-consolidacion-arquitectonica.md).
 
-La fase 0 no se considera terminada: SPEC-01, su plan y tareas están redactados
-para aprobación; faltan revisión, contrato de acceso y aprobación de decisiones.
+SPEC-01, su contrato DP01, plan y tareas están aprobados documentalmente por
+el responsable el 16 de noviembre de 2026 con rotación de tokens de renovación.
+La fase 0 global no se considera terminada ni hay implementación verificada:
+faltan proyecto ejecutable, acceso real previo, pruebas y evidencias.
 Los PNG siguen esperando fuentes editables. Playwright, k6,
 Flyway y GitHub Actions son herramientas previstas en esta ruta; su selección
 concreta/versiones y uso se documentarán antes de implementar los proyectos.

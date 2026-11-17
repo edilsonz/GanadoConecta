@@ -1,24 +1,45 @@
 # SPEC-01 — Tareas incrementales propuestas
 
-**Estado:** plan de trabajo para aprobación; ninguna tarea de implementación o
-prueba ejecutada. Depende de [spec.md](spec.md) y [plan.md](plan.md). Todos los
-checks permanecen abiertos. No ejecutar estas tareas en la presente revisión.
+**Estado: Aprobada — Pendiente de implementación.** T01 documental completada por autorización del responsable el 16 de noviembre de 2026. Ninguna tarea de implementación o prueba ejecutada; las restantes siguen pendientes. Depende de [spec.md](spec.md) y [plan.md](plan.md). No implementar en esta tarea documental.
 
 ## 0. Aprobación y dependencias
 
 | ID | Tarea | Depende de | Entregable / verificación futura |
 |---|---|---|---|
-| T01 | Aprobar DP01–DP08, CA01–CA18 y alcance individual sin edición/masivo/fotos. | Revisión del responsable | Acta/estado de aprobación; no marcar implementado. |
-| T02 | Disponer de contrato aprobado y autenticación, ganadería activa, membresía y roles PROPIETARIO/EDITOR/LECTOR implementados y verificados; incluir revocación transaccional. | T01 | Dependencia previa al registro real y preparación offline: integración de login, pertenencia y matriz de roles; negativos anónimo/lector/ajeno/revocado. Contrato o mocks solos no habilitan producción. |
-| T03 | Fijar versiones de Java/Spring, Node/React, PostgreSQL y herramientas propuestas, navegadores objetivo y comandos reproducibles. | T01 | Decisiones registradas, archivos de dependencias en tarea de implementación posterior; sin secretos. |
+| T01 | COMPLETADA DOCUMENTALMENTE: aprobación de DP01–DP08, SPEC-01/CA01–CA18 y plan/tareas con rotación obligatoria. | Autorización expresa del responsable, 16 de noviembre de 2026 | Aprobación registrada; no equivale a código, pruebas ejecutadas ni habilitación de datos reales. |
+| T02 | Implementar y verificar prerrequisito mínimo DP01 según subtareas T02.1–T02.8; no asumir acceso existente. | T01, T03 | Registro/login/sesión, ganadería/propietario inicial, validación por petición y revocación. Solo miembros de test para editor/lector; no alta familiar real. PA01–PA08 aprobadas antes de animales reales. |
+| T03 | Fijar versiones de Java/Spring, Node/React, PostgreSQL y herramientas previstas por DP07, coste Argon2id y navegadores objetivo y comandos reproducibles. | T01 | Decisiones registradas, archivos de dependencias en tarea de implementación posterior; sin secretos. |
 
 
 **Bloqueo de habilitación:** T02 debe estar cumplida antes de cualquier registro,
-consulta o preparación offline con datos reales. Las tareas de dominio y UI
+consulta o preparación offline con datos reales. Las tareas de dominio y UI de animales
 pueden trabajarse con dobles/datos sintéticos sin habilitar ese flujo. La falta
 de contrato o implementación del acceso familiar no se resuelve desactivando
-seguridad. Invitaciones y registro masivo se gestionarán mediante otras SPEC.
+seguridad. Invitaciones, incorporación real de editores/lectores y registro masivo se gestionarán mediante otras SPEC. Las pruebas de roles familiares usan autenticación real y fixtures aislados, nunca un endpoint de test en producción.
 La caducidad offline nunca es una tarea de limpieza de registros pendientes.
+
+### T02 — Desglose obligatorio del prerrequisito de acceso
+
+Se conservan 23 tareas de nivel superior; T02 se desglosa en ocho subtareas,
+no se declara ejecutada ninguna subtarea de implementación. T01 registra la aprobación documental; T02.8 completa
+la base de acceso, sin habilitar animales reales hasta pasar las pruebas conjuntas.
+
+| ID | Trabajo futuro | Dependencias | Verificación / criterios |
+|---|---|---|---|
+| T02.1 | Modelar Usuario, SesionDispositivo, Ganaderia y Membresia; migraciones, unicidad y hashes, instantes UTC/fecha de negocio Lima. | T01, T03 | Modelos/contratos de Identidad puros y adaptadores; PA01/PA05/PA08, CA03. |
+| T02.2 | Implementar registro/login real y errores genéricos, Argon2id, validaciones/rate limit; sin asignar roles desde solicitud. | T02.1 | PA01/PA02; CA03/CA12. |
+| T02.3 | Implementar JWT en memoria, sesión/cookie segura y renovación con rotación atómica, verificadores únicos seguros e historial de consumidos; detectar reuse y revocar familia. Logout/estado de sesión y membresía impiden usar JWT previos; CSRF/mismo origen, sin credenciales en IndexedDB. | T02.2 | PA02/PA03/PA04/PA07; CA03/CA12/CA14. |
+| T02.4 | Implementar alta online de ganadería+propietario atómica, listado propio y GET /acceso; validar pertenencia/rol en toda API protegida. | T02.1, T02.3 | PA05/PA06; CA03. |
+| T02.5 | Implementar revocación de editor/lector existente solo por propietario, protegiendo propietario y orden de bloqueos con registro de animal. | T02.4 | PA06/PA08; CA03/CA06; cierre de pruebas de carrera con T07 antes de habilitar altas. |
+| T02.6 | Implementar pantallas React mínimas de registro/login/logout/selección-creación de ganadería, renovación serializada entre pestañas/recarga y cierre remoto pendiente; no reintentar refresh incierto, exigir login sin perder cola; sin invitaciones. | T02.3, T02.4, T02.5 | PA03/PA04/PA07, E2E del propietario inicial; CA03/CA12/CA14. Pruebas conjuntas de cola con T15/T18. |
+| T02.7 | Ejecutar la parte de PA01–PA08 correspondiente al acceso sin animales, con API/PostgreSQL/navegador y fixtures solo test; reservar carreras con altas y conservación de cola para T17/T18. | T02.2–T02.6 | Permisos de propietario/editor/lector, IDOR, rotación/reutilización de refresh, dos renovaciones concurrentes, rollback, respuesta perdida, rechazo de JWT previo por estado, CSRF y transacciones; CA03/CA06/CA12/CA14. Sin afirmar que invitaciones o altas reales de familiares existen. |
+| T02.8 | Comprobar gate de acceso antes de habilitar cualquier animal real: login/sesión, propietario inicial y autorización probados. | T02.7 | Gate de base de acceso cumplido permite desarrollar T04–T18; no habilita producción. Mantener animales reales cerrados hasta completar T07/T15/T17/T18 y todas las PA conjuntas. |
+
+T02 cubre su base de acceso antes de T04/T06/T08; las pruebas conjuntas de carreras
+con animales y conservación offline se completan luego en T17/T18. No se crea
+un ciclo de dependencias: habilitar acceso real es la condición final, no un
+requisito para ejecutar pruebas de integración en entornos aislados.
+
 ## 1. Base de datos y núcleo backend
 
 | ID | Tarea | Depende de | Verificación / CA |
@@ -49,18 +70,18 @@ las suites, no posterga toda la verificación hasta terminar la aplicación.
 | ID | Tarea | Depende de | Resultado requerido |
 |---|---|---|---|
 | T16 | Completar PU01–PU04 y comprobar todas las fronteras de validación y estados. | T05, T06, T11, T13 | Casos válidos, inválidos y límite; CA01/CA02/CA03/CA04/CA05/CA07/CA08/CA09/CA10/CA12/CA13/CA15/CA16. |
-| T17 | Ejecutar PI01–PI05 contra API/PostgreSQL y navegador controlados. | T07, T08, T09, T12, T13, T15 | Autenticación real y pertenencia/roles como prerrequisitos, IDOR, sexo omitido/null/inválido sin escritura, concurrencia, rollback, respuesta perdida, cuota y ausencia de dependencia Redis/IA/notificaciones; CA02–CA17 aplicables. |
-| T18 | Ejecutar EE01–EE04 con propietario/editor/lector y dos ganaderías sintéticas. | T10–T17 | Sexo obligatorio online/offline; ventana vencida/sesión perdida sin borrar cola; reautenticación de la misma cuenta y otra cuenta sin acceso; reapertura, doble clic/pestaña, 401/403/409/422/429/5xx, errores de protocolo y almacenamiento; CA01–CA16 aplicables. |
+| T17 | Ejecutar PI01–PI05 y repetir PA01–PA08 contra API/PostgreSQL y navegador controlados. | T07, T08, T09, T12, T13, T15 | Autenticación real y pertenencia/roles como prerrequisitos, IDOR, sexo omitido/null/inválido sin escritura, concurrencia, rollback, respuesta perdida, cuota y ausencia de dependencia Redis/IA/notificaciones; CA02–CA17 aplicables. |
+| T18 | Ejecutar EE01–EE04 y flujos PA con registro/login/ganadería del propietario real, editor/lector por fixtures y dos ganaderías sintéticas. | T10–T17 | Sexo obligatorio online/offline; ventana vencida/sesión perdida sin borrar cola; reautenticación de la misma cuenta y otra cuenta sin acceso; reapertura, doble clic/pestaña, 401/403/409/422/429/5xx, errores de protocolo y almacenamiento; CA01–CA16 aplicables. |
 | T19 | Documentar entorno/dataset PC01 y ejecutar k6 cuando exista flujo funcional; analizar planes de consulta. | T03, T09, T17, T18 | CA18 y AC01: 100 concurrentes, p95 ≤ 2 s y errores nominales 0; registrar fallos sin ocultarlos. |
 | T20 | Integrar suites disponibles a CI y registrar comandos/evidencias reales sin secretos. | T16, T17, T18 | Criterios 5/6/12/14; pipeline ejecutado solo cuando exista, sin prometer despliegue. |
 
 ## 4. Cierre del incremento
 
-- [ ] T21: relacionar cada CA con sus resultados PU/PI/EE/PC; documentar entorno,
+- [ ] T21: relacionar cada CA con sus resultados PU/PI/EE/PC/PA; documentar entorno,
   commit evaluado, fecha, comandos, datos sintéticos, errores y limitaciones.
 - [ ] T22: actualizar documentación global y estado de SPEC solo tras revisar
   resultados; mantener explícito lo excluido y las fuentes C4 aún pendientes.
-- [ ] T23: revisión final y demostración: propietario/editor crea, lector consulta,
+- [ ] T23: revisión final y demostración: registro/login y creación de ganadería/propietario, alta individual; editor/lector por fixtures con sus permisos,
   guardar sin red, recuperar respuesta perdida, reconectar sin duplicados y
   rechazar una membresía revocada. No afirmar que RF02/RF20/RF21 completos están cubiertos.
 
