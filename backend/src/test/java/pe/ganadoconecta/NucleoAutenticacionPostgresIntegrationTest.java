@@ -46,7 +46,7 @@ import pe.ganadoconecta.modulos.identidad.dominio.UsuarioNuevo;
         properties = {"debug=false", "logging.level.root=INFO"})
 @ActiveProfiles("postgres")
 @EnabledIfSystemProperty(named = "ganadoconecta.postgres.integration-test", matches = "true")
-class NucleoAutenticacionPostgresIntegrationTest {
+class NucleoAutenticacionPostgresIntegrationTest extends SoporteJwtPostgres {
     private static final String PREFIJO = "login-test-";
     private static final String CONTRASENA = "contraseña-sintética-segura";
     private static KeyPair claves;

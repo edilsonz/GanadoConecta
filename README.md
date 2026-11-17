@@ -97,10 +97,9 @@ de despliegue de infra/ se distingue de los adaptadores internos del backend.
 
 Primera base ejecutable de frontend y backend disponible para revisión.
 SPEC-01 está aprobada documentalmente y el registro de cuentas AU01 funciona
-desde React hasta PostgreSQL. El núcleo backend de AU02/AU03 verifica
-credenciales, persiste sesiones y prueba JWT/rotación, pero login y renovación
-no tienen endpoints ni están disponibles para usuarios. Ganaderías, animales y
-offline continúan pendientes.
+desde React hasta PostgreSQL. El backend expone AU02–AU04 para login, renovación,
+logout y consulta de sesión con JWT/cookie segura; React todavía no tiene pantalla
+de login. Ganaderías, membresías operativas, animales y offline continúan pendientes.
 
 Se utilizará Redis como caché para consultas frecuentes del catálogo
 público de anuncios. PostgreSQL conservará los datos permanentes
@@ -249,6 +248,18 @@ del proceso tiene prioridad. Usar valores KEY=VALUE sin comillas para mantener
 compatibilidad con ambos lectores (Compose y Spring); no incluir secretos en logs.
 POSTGRES_PASSWORD nunca se transforma en variable VITE_* ni se publica al cliente.
 API_PROXY_TARGET solo cambia el proxy de desarrollo y puede configurarse en .env.
+Las rutas `GANADOCONECTA_JWT_PUBLIC_KEY_PATH` y
+`GANADOCONECTA_JWT_PRIVATE_KEY_PATH` son obligatorias con el perfil `postgres`.
+Deben apuntar fuera del repositorio a una clave pública X.509 y una privada
+PKCS#8, ambas RSA de al menos 2048 bits en PEM. No existe clave predeterminada.
+Por ejemplo, con OpenSSL disponible, crear el par en una carpeta privada externa:
+
+```powershell
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out C:/ruta-privada/ganadoconecta-private.pem
+openssl pkey -in C:/ruta-privada/ganadoconecta-private.pem -pubout -out C:/ruta-privada/ganadoconecta-public.pem
+```
+
+No guardar esas claves en el repositorio ni mostrar su contenido en logs.
 
 ### PostgreSQL opcional
 
@@ -282,7 +293,8 @@ resultado agregado, pero no publica detalles. Flyway valida y aplica en orden la
 migraciones versionadas de `backend/src/main/resources/db/migration`; `clean` está
 deshabilitado y una migración aplicada no debe editarse. El esquema inicial solo
 cubre Identidad (usuarios, ganaderías, membresías y sesiones): de autenticación
-solo está disponible AU01; no hay login, sesión ni migraciones de animales. Para
+están disponibles AU01 y los endpoints backend AU02–AU04; no hay interfaz React
+de login, ganaderías operativas ni migraciones de animales. Para
 detener la BD sin eliminar datos:
 `docker compose stop postgres`.
 No ejecutar `down -v` para una parada normal. Si cambia usuario/contraseña en .env,
@@ -317,8 +329,8 @@ reintento; no se desactiva CSRF ni se guardan credenciales en almacenamiento web
 
 El formulario evita doble envío, valida correo, confirmación y la longitud Unicode,
 y diferencia errores de validación, conflicto, límite, seguridad, servicio y red.
-El éxito informa honestamente que no existe una sesión iniciada. Login, JWT,
-renovación, invitaciones y animales continúan cerrados.
+El éxito informa honestamente que no existe una sesión iniciada. La pantalla
+React de login, invitaciones y animales continúan cerrados.
 Los DTO sensibles ocultan sus valores en representaciones de diagnóstico y los
 procesadores HTTP que podrían registrar cuerpos permanecen en nivel INFO.
 
@@ -327,7 +339,7 @@ La protección inicial limita de forma configurable diez intentos por origen en
 Antes de producción se debe aprobar un límite distribuido y la configuración de
 proxy confiable.
 
-### Núcleo de autenticación y sesiones — primera fase AU02/AU03
+### Autenticación y sesiones backend — AU02/AU03/AU04
 
 El backend contiene casos de uso y adaptadores internos para verificar
 credenciales Argon2id, crear sesiones con máximo absoluto de 24 horas, emitir y
@@ -336,10 +348,15 @@ PostgreSQL guarda únicamente huellas SHA-256 de los valores de renovación y de
 las claves de los contadores de fallos. La migración V3 agrega esos contadores
 persistentes sin modificar V1/V2.
 
-Esta fase **no expone** `POST /api/v1/auth/login`, renovación, logout ni `/me`.
-Tampoco configura claves privadas de despliegue ni cookies de renovación. Las
-pruebas usan pares RSA efímeros. Por tanto, el inicio de sesión aún no es una
-funcionalidad disponible desde React o mediante la API pública.
+Con el perfil `postgres` se exponen `POST /api/v1/auth/login`, `/renovar`,
+`/logout` y `GET /api/v1/auth/me`. La renovación solo viaja en
+`__Host-GC-Refresh` con Secure, HttpOnly, SameSite=Strict, Path=/ y sin Domain;
+el JWT de acceso se devuelve para memoria del cliente. Cada petición protegida
+revalida sesión y cuenta en PostgreSQL. Las claves RSA se cargan desde rutas
+externas obligatorias y las pruebas generan pares efímeros bajo `target/`.
+
+React todavía no implementa login ni guarda tokens. No están disponibles creación
+de ganaderías, invitaciones, membresías familiares ni animales.
 
 ### Problemas de entorno observados
 
@@ -368,5 +385,5 @@ para la base ejecutable, y la
 [evidencia del esquema inicial de Identidad](docs/05-preparacion-implementacion/07-esquema-identidad.md)
 para la base de datos, y la
 [evidencia del registro AU01](docs/05-preparacion-implementacion/08-registro-usuarios.md)
-y la [evidencia del núcleo AU02/AU03](docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md)
+y la [evidencia backend AU02–AU04](docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md)
 para resultados realmente ejecutados y limitaciones.

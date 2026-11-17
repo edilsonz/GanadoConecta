@@ -25,7 +25,7 @@ import org.springframework.test.context.ActiveProfiles;
         properties = {"debug=false", "logging.level.root=INFO"})
 @ActiveProfiles("postgres")
 @EnabledIfSystemProperty(named = "ganadoconecta.postgres.integration-test", matches = "true")
-class RegistroUsuarioCsrfPostgresIntegrationTest {
+class RegistroUsuarioCsrfPostgresIntegrationTest extends SoporteJwtPostgres {
     private static final String PREFIJO = "registro-csrf-test-";
     private static final String ORIGEN = "http://127.0.0.1:5173";
 

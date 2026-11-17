@@ -107,14 +107,35 @@ public final class RepositorioSesionesPostgres implements RepositorioSesiones {
     private void revocarFamilia(UUID sesionId, Instant ahora) {
         jdbc.update("""
                 UPDATE identidad.sesion_dispositivo
-                SET revocado_en = COALESCE(revocado_en, ?)
+                SET revocado_en = COALESCE(revocado_en, GREATEST(?, creado_en))
                 WHERE id = ?
                 """, fecha(ahora), sesionId);
         jdbc.update("""
                 UPDATE identidad.verificador_renovacion
-                SET estado = 'REVOCADO', revocado_en = COALESCE(revocado_en, ?)
+                SET estado = 'REVOCADO',
+                    revocado_en = COALESCE(revocado_en, GREATEST(?, creado_en))
                 WHERE sesion_id = ? AND estado <> 'REVOCADO'
                 """, fecha(ahora), sesionId);
+    }
+
+    @Override
+    public void revocarPorHuella(String huella, Instant ahora) {
+        try {
+            transacciones.executeWithoutResult(status -> {
+                List<UUID> sesiones = jdbc.query("""
+                        SELECT s.id
+                        FROM identidad.verificador_renovacion v
+                        JOIN identidad.sesion_dispositivo s ON s.id = v.sesion_id
+                        WHERE v.huella_sha256 = ?
+                        FOR UPDATE OF v, s
+                        """, (rs, row) -> rs.getObject("id", UUID.class), bytes(huella));
+                if (!sesiones.isEmpty()) {
+                    revocarFamilia(sesiones.getFirst(), ahora);
+                }
+            });
+        } catch (DataAccessException exception) {
+            throw new PersistenciaIdentidadException(exception);
+        }
     }
 
     @Override

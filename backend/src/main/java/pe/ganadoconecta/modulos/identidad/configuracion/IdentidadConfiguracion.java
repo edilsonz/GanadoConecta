@@ -1,6 +1,7 @@
 package pe.ganadoconecta.modulos.identidad.configuracion;
 
 import java.util.UUID;
+import java.time.Clock;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -13,13 +14,18 @@ import pe.ganadoconecta.modulos.identidad.adaptadores.salida.RepositorioCredenci
 import pe.ganadoconecta.modulos.identidad.adaptadores.salida.RepositorioSesionesPostgres;
 import pe.ganadoconecta.modulos.identidad.adaptadores.salida.RepositorioUsuariosPostgres;
 import pe.ganadoconecta.modulos.identidad.aplicacion.CodificadorContrasena;
+import pe.ganadoconecta.modulos.identidad.aplicacion.CerrarSesion;
 import pe.ganadoconecta.modulos.identidad.aplicacion.GeneradorCredencialesRenovacion;
 import pe.ganadoconecta.modulos.identidad.aplicacion.GeneradorIdUsuario;
 import pe.ganadoconecta.modulos.identidad.aplicacion.LimiteIntentosLogin;
+import pe.ganadoconecta.modulos.identidad.aplicacion.IniciarSesion;
+import pe.ganadoconecta.modulos.identidad.aplicacion.RenovarSesion;
 import pe.ganadoconecta.modulos.identidad.aplicacion.RegistrarUsuario;
 import pe.ganadoconecta.modulos.identidad.aplicacion.RepositorioCredenciales;
 import pe.ganadoconecta.modulos.identidad.aplicacion.RepositorioSesiones;
 import pe.ganadoconecta.modulos.identidad.aplicacion.RepositorioUsuarios;
+import pe.ganadoconecta.modulos.identidad.aplicacion.TokensAcceso;
+import pe.ganadoconecta.modulos.identidad.aplicacion.ValidarTokenAcceso;
 
 @Configuration(proxyBeanMethods = false)
 @Profile("postgres")
@@ -66,5 +72,35 @@ public class IdentidadConfiguracion {
     RegistrarUsuario registrarUsuario(RepositorioUsuarios repositorio,
             CodificadorContrasena codificador, GeneradorIdUsuario generadorId) {
         return new RegistrarUsuario(repositorio, codificador, generadorId);
+    }
+
+    @Bean
+    IniciarSesion iniciarSesion(RepositorioCredenciales credenciales,
+            CodificadorContrasena codificador, RepositorioSesiones sesiones,
+            GeneradorCredencialesRenovacion renovaciones, TokensAcceso tokens,
+            LimiteIntentosLogin limite, Clock reloj) {
+        String hashSimulado = codificador.codificar(
+                "verificacion-sintetica-de-coste-equivalente");
+        return new IniciarSesion(credenciales, codificador, sesiones, renovaciones,
+                tokens, limite, UUID::randomUUID, reloj, hashSimulado);
+    }
+
+    @Bean
+    RenovarSesion renovarSesion(RepositorioSesiones sesiones,
+            GeneradorCredencialesRenovacion renovaciones, TokensAcceso tokens,
+            Clock reloj) {
+        return new RenovarSesion(sesiones, renovaciones, tokens, UUID::randomUUID, reloj);
+    }
+
+    @Bean
+    CerrarSesion cerrarSesion(RepositorioSesiones sesiones,
+            GeneradorCredencialesRenovacion renovaciones, Clock reloj) {
+        return new CerrarSesion(sesiones, renovaciones, reloj);
+    }
+
+    @Bean
+    ValidarTokenAcceso validarTokenAcceso(
+            TokensAcceso tokens, RepositorioSesiones sesiones, Clock reloj) {
+        return new ValidarTokenAcceso(tokens, sesiones, reloj);
     }
 }

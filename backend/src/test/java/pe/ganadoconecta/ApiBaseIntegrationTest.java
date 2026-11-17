@@ -26,7 +26,8 @@ class ApiBaseIntegrationTest {
     @Test
     void noExponeRutasDeNegocioNiDetallesDeActuator() {
         for (String path : new String[]{"/api/animales", "/api/auth/me", "/api/env", "/api/health/detalles"}) {
-            assertThat(rest.getForEntity(path, String.class).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+            assertThat(rest.getForEntity(path, String.class).getStatusCode())
+                    .isEqualTo(HttpStatus.UNAUTHORIZED);
         }
     }
 

@@ -20,7 +20,7 @@ import org.springframework.test.context.ActiveProfiles;
         properties = {"debug=false", "logging.level.root=INFO"})
 @ActiveProfiles("postgres")
 @EnabledIfSystemProperty(named = "ganadoconecta.postgres.integration-test", matches = "true")
-class PostgresConectividadIntegrationTest {
+class PostgresConectividadIntegrationTest extends SoporteJwtPostgres {
     @Autowired
     private JdbcTemplate jdbc;
 

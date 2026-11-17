@@ -47,9 +47,9 @@ completa. Usa Spring Security y JWT conforme a ADR-07; membresías conforme a
 ADR-13 y persistencia PostgreSQL conforme a ADR-04. React muestra registro,
 login, logout, selección/creación de ganadería y estados de sesión; no asignador
 de roles ni pantalla de invitaciones. AU01 ya tiene implementación y pruebas
-desde el formulario React hasta PostgreSQL. De AU02/AU03 existe el núcleo backend
-de credenciales, sesión, JWT y rotación, todavía sin endpoints/cookies; AU04–AU08
-y las demás pantallas de acceso continúan pendientes.
+desde el formulario React hasta PostgreSQL. AU02–AU04 exponen en backend login,
+renovación, logout y consulta de sesión con cookie/JWT; la pantalla React de login,
+AU05–AU08 y las demás pantallas de acceso continúan pendientes.
 
 ### API de acceso y creación inicial
 
@@ -181,8 +181,8 @@ No se afirma que otros dispositivos hayan sido desconectados ni se borra su cola
 
 El modelo siguiente fue conceptual al aprobarse la SPEC. Su traducción física,
 limitada a Identidad, se implementó con Flyway V1/V2 y se amplió con V3 para el
-límite persistente de fallos de login el 17 de noviembre de 2026. El núcleo de
-AU02/AU03 está probado; sus adaptadores HTTP continúan pendientes:
+límite persistente de fallos de login el 17 de noviembre de 2026. El backend de
+AU02–AU04, incluidos adaptadores HTTP, cookie, filtro JWT y logout, está probado:
 
 | Entidad | Restricciones/operación |
 |---|---|
@@ -205,9 +205,9 @@ ventana, contador y bloqueo temporal; no guarda esos identificadores en claro. F
 valida las migraciones al iniciar el perfil `postgres`; `clean` está deshabilitado.
 
 Esta persistencia es una parte de T02.1, no su cierre: ya existen el modelo,
-puerto, caso de uso, adaptador JDBC y endpoint de AU01 con Argon2id, además del
-núcleo de sesión/rotación de AU02/AU03. Faltan sus endpoints/cookies, logout y los
-modelos funcionales de ganadería/membresía de AU04–AU08. La base nunca
+puerto, caso de uso, adaptador JDBC y endpoint de AU01 con Argon2id, además de
+sesión/rotación y endpoints backend AU02–AU04. Faltan el cliente React de login y
+los modelos funcionales de ganadería/membresía de AU05–AU08. La base nunca
 almacena contraseñas en claro ni tokens de renovación. No se agregaron datos
 semilla ni membresías reales de editor/lector.
 

@@ -37,6 +37,11 @@ logging:
 ganadoconecta:
   seguridad:
     origen-permitido: ${GANADOCONECTA_ORIGEN_PERMITIDO:http://127.0.0.1:5173}
+    jwt:
+      clave-publica: ${GANADOCONECTA_JWT_PUBLIC_KEY_PATH}
+      clave-privada: ${GANADOCONECTA_JWT_PRIVATE_KEY_PATH}
+      emisor: ${GANADOCONECTA_JWT_ISSUER:ganadoconecta-api}
+      audiencia: ${GANADOCONECTA_JWT_AUDIENCE:ganadoconecta-web}
     registro:
       max-intentos: ${REGISTRO_MAX_INTENTOS:10}
       ventana: ${REGISTRO_VENTANA:15m}

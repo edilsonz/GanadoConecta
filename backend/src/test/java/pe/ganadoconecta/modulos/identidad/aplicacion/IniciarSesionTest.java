@@ -131,6 +131,10 @@ class IniciarSesionTest {
         }
 
         @Override
+        public void revocarPorHuella(String huella, Instant ahora) {
+        }
+
+        @Override
         public boolean estaVigente(UUID sesionId, UUID usuarioId, Instant ahora) {
             return false;
         }

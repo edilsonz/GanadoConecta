@@ -14,7 +14,7 @@ nuevas especificaciones. Reorganizar un borrador no implica aprobarlo.
 | Identificador | Especificación | Plan | Tareas | Estado |
 |---|---|---|---|---|
 | BASE-01 | [Estructura ejecutable](BASE-01-estructura-ejecutable/spec.md) | [Plan](BASE-01-estructura-ejecutable/plan.md) | [Tareas](BASE-01-estructura-ejecutable/tasks.md) | Base y conexión PostgreSQL/JDBC verificadas. No completa SPEC-01 |
-| SPEC-01 | [Registro de ganado y sincronización](SPEC-01-registro-ganado-offline/spec.md) | [Plan](SPEC-01-registro-ganado-offline/plan.md) | [Tareas](SPEC-01-registro-ganado-offline/tasks.md) | Aprobada — Implementación en curso; AU01 verificada y núcleo AU02/AU03 probado sin endpoints, membresías operativas ni animales |
+| SPEC-01 | [Registro de ganado y sincronización](SPEC-01-registro-ganado-offline/spec.md) | [Plan](SPEC-01-registro-ganado-offline/plan.md) | [Tareas](SPEC-01-registro-ganado-offline/tasks.md) | Aprobada — Implementación en curso; AU01 y endpoints backend AU02–AU04 verificados, sin login React, membresías operativas ni animales |
 
 RF17–RF22 y AC09 ya están integrados en la documentación base. La SPEC-01
 está aprobada documentalmente por el responsable el 16 de noviembre de 2026,

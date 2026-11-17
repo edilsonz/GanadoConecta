@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -21,6 +22,8 @@ import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.csrf.InvalidCsrfTokenException;
 import org.springframework.security.web.csrf.MissingCsrfTokenException;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import pe.ganadoconecta.modulos.identidad.adaptadores.entrada.http.AutenticacionJwtFiltro;
 import pe.ganadoconecta.modulos.identidad.adaptadores.entrada.http.ProteccionRegistroFiltro;
 
 /** Mantiene cerrada la API salvo salud y el incremento explícito de registro. */
@@ -29,6 +32,7 @@ public class SeguridadConfiguracion {
     @Bean
     SecurityFilterChain apiSecurity(HttpSecurity http,
             ProteccionRegistroFiltro proteccionRegistro,
+            ObjectProvider<AutenticacionJwtFiltro> autenticacionJwt,
             ObjectMapper objectMapper) throws Exception {
         CookieCsrfTokenRepository csrfRepository = new CookieCsrfTokenRepository();
         csrfRepository.setCookieName("__Host-GC-CSRF");
@@ -51,11 +55,14 @@ public class SeguridadConfiguracion {
                     objectMapper);
         };
 
-        return http
-                .authorizeHttpRequests(authorize -> authorize
+        http.authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/registro").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/renovar").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
                         .anyRequest().denyAll())
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfRepository)
@@ -64,16 +71,18 @@ public class SeguridadConfiguracion {
                         .accessDeniedHandler(deniedHandler)
                         .authenticationEntryPoint((request, response, exception) -> writeError(
                                 response,
-                                HttpServletResponse.SC_FORBIDDEN,
-                                "ACCESO_DENEGADO",
-                                "No tiene acceso a este recurso.",
+                                HttpServletResponse.SC_UNAUTHORIZED,
+                                "AUTENTICACION_REQUERIDA",
+                                "Se requiere una sesión válida.",
                                 objectMapper)))
                 .addFilterBefore(proteccionRegistro, CsrfFilter.class)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .logout(AbstractHttpConfigurer::disable)
-                .build();
+                .logout(AbstractHttpConfigurer::disable);
+        autenticacionJwt.ifAvailable(filter ->
+                http.addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class));
+        return http.build();
     }
 
     @Bean

@@ -6,8 +6,8 @@
 > [evidencia del esquema de Identidad](07-esquema-identidad.md) para la parte de
 > persistencia iniciada en T02.1, y la [evidencia de AU01](08-registro-usuarios.md)
 > para el registro real de cuentas. La
-> [evidencia del núcleo AU02/AU03](09-nucleo-autenticacion-sesiones.md) documenta
-> sesiones, JWT y rotación todavía sin endpoints públicos. Los estados de propuesta siguientes describen la
+> [evidencia AU02–AU04](09-nucleo-autenticacion-sesiones.md) documenta
+> sesiones, JWT, rotación y endpoints backend; React login sigue pendiente. Los estados de propuesta siguientes describen la
 > preparación arquitectónica original, no acreditan implementación de SPEC-01.
 
 > **Estado de consolidación:** las 16 decisiones aprobadas por el responsable

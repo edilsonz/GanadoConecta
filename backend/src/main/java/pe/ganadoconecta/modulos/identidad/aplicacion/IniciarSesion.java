@@ -62,6 +62,12 @@ public final class IniciarSesion {
             throw new CredencialesInvalidasException();
         }
 
+        if (comando.tokenRenovacionAnterior() != null
+                && !comando.tokenRenovacionAnterior().isBlank()) {
+            sesiones.revocarPorHuella(
+                    renovaciones.calcularHuella(comando.tokenRenovacionAnterior()), ahora);
+        }
+
         UUID sesionId = ids.get();
         UUID verificadorId = ids.get();
         Instant venceEn = ahora.plus(DURACION_SESION);
@@ -87,7 +93,12 @@ public final class IniciarSesion {
         return correo == null ? "" : correo.trim().toLowerCase(Locale.ROOT);
     }
 
-    public record Comando(String correo, String contrasena, String origen) {
+    public record Comando(String correo, String contrasena, String origen,
+            String tokenRenovacionAnterior) {
+        public Comando(String correo, String contrasena, String origen) {
+            this(correo, contrasena, origen, null);
+        }
+
         @Override
         public String toString() {
             return "ComandoLogin[datos=PROTEGIDOS]";

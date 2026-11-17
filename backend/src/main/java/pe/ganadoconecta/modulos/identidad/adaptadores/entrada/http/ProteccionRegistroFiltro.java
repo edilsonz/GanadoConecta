@@ -20,10 +20,12 @@ import java.util.UUID;
 import org.springframework.http.MediaType;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-/** Origen, tamaño y límite básico antes del coste de Argon2id. */
+/** Origen y tamaño para cambios de autenticación; limita el registro antes de Argon2id. */
 public final class ProteccionRegistroFiltro extends OncePerRequestFilter {
     static final int MAXIMO_CUERPO_BYTES = 16 * 1024;
     private static final String RUTA = "/api/v1/auth/registro";
+    private static final java.util.Set<String> RUTAS_AUTENTICACION = java.util.Set.of(
+            RUTA, "/api/v1/auth/login", "/api/v1/auth/renovar", "/api/v1/auth/logout");
 
     private final String origenPermitido;
     private final LimitadorRegistro limitador;
@@ -44,7 +46,8 @@ public final class ProteccionRegistroFiltro extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !"POST".equals(request.getMethod()) || !RUTA.equals(request.getRequestURI());
+        return !"POST".equals(request.getMethod())
+                || !RUTAS_AUTENTICACION.contains(request.getRequestURI());
     }
 
     @Override
@@ -64,13 +67,15 @@ public final class ProteccionRegistroFiltro extends OncePerRequestFilter {
             return;
         }
 
-        LimitadorRegistro.Resultado limite = limitador.intentar(request.getRemoteAddr());
-        if (!limite.permitido()) {
-            response.setHeader("Retry-After", Long.toString(limite.reintentarEnSegundos()));
-            escribirError(response, 429, "DEMASIADOS_INTENTOS",
-                    "Espere antes de volver a intentar el registro.", Map.of());
-            java.util.Arrays.fill(cuerpo, (byte) 0);
-            return;
+        if (RUTA.equals(request.getRequestURI())) {
+            LimitadorRegistro.Resultado limite = limitador.intentar(request.getRemoteAddr());
+            if (!limite.permitido()) {
+                response.setHeader("Retry-After", Long.toString(limite.reintentarEnSegundos()));
+                escribirError(response, 429, "DEMASIADOS_INTENTOS",
+                        "Espere antes de volver a intentar el registro.", Map.of());
+                java.util.Arrays.fill(cuerpo, (byte) 0);
+                return;
+            }
         }
 
         try {

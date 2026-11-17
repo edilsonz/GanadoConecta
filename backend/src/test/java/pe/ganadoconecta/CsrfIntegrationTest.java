@@ -46,7 +46,7 @@ class CsrfIntegrationTest {
     @Test
     void tokenNoConcedeAccesoAOtrasRutas() throws Exception {
         mvc.perform(get("/api/v1/auth/me"))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.codigo").value("ACCESO_DENEGADO"));
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.codigo").value("AUTENTICACION_REQUERIDA"));
     }
 }

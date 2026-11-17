@@ -8,6 +8,8 @@ public interface RepositorioSesiones {
 
     Rotacion rotar(String huellaActual, UUID sucesorId, String huellaSucesor, Instant ahora);
 
+    void revocarPorHuella(String huella, Instant ahora);
+
     boolean estaVigente(UUID sesionId, UUID usuarioId, Instant ahora);
 
     record NuevaSesion(UUID sesionId, UUID usuarioId, Instant creadoEn, Instant venceEn,

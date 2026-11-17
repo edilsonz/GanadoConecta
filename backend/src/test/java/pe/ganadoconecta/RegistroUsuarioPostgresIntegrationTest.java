@@ -37,7 +37,7 @@ import pe.ganadoconecta.modulos.identidad.dominio.UsuarioNuevo;
 @AutoConfigureMockMvc
 @ActiveProfiles("postgres")
 @EnabledIfSystemProperty(named = "ganadoconecta.postgres.integration-test", matches = "true")
-class RegistroUsuarioPostgresIntegrationTest {
+class RegistroUsuarioPostgresIntegrationTest extends SoporteJwtPostgres {
     private static final String RUTA = "/api/v1/auth/registro";
     private static final String ORIGEN = "http://127.0.0.1:5173";
     private static final String CONTRASENA = "contraseña-sintética-segura";
@@ -172,7 +172,7 @@ class RegistroUsuarioPostgresIntegrationTest {
     }
 
     @Test
-    void limitaAbusoPorOrigenYConservaLosDemasEndpointsCerrados() throws Exception {
+    void limitaAbusoPorOrigenYConservaRutasFueraDelAlcanceCerradas() throws Exception {
         String origenPrueba = "203.0.113.50";
         for (int intento = 0; intento < 10; intento++) {
             mvc.perform(registro(correoNuevo(), "corta", origenPrueba))
@@ -183,12 +183,13 @@ class RegistroUsuarioPostgresIntegrationTest {
                 .andExpect(header().exists("Retry-After"))
                 .andExpect(jsonPath("$.codigo").value("DEMASIADOS_INTENTOS"));
 
-        mvc.perform(post("/api/v1/auth/login")
+        mvc.perform(post("/api/v1/ganaderias")
                         .with(csrf().asHeader())
                         .header("Origin", ORIGEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.codigo").value("AUTENTICACION_REQUERIDA"));
         assertThat(cantidadUsuariosSinteticos()).isZero();
     }
 

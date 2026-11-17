@@ -1,6 +1,6 @@
 # SPEC-01 — Tareas incrementales propuestas
 
-**Estado: Aprobada — Implementación en curso.** T01 documental fue completada por autorización del responsable el 16 de noviembre de 2026. El 17 de noviembre comenzó únicamente la parte de persistencia de T02.1; no se considera cerrada la subtarea ni implementados los flujos de acceso o animales. Depende de [spec.md](spec.md) y [plan.md](plan.md).
+**Estado: Aprobada — Implementación en curso.** T01 documental fue completada por autorización del responsable el 16 de noviembre de 2026. El 17 de noviembre se implementaron AU01 y el backend AU02–AU04; T02 sigue abierta por faltar React, ganadería, membresías y autorización integral. No hay animales implementados. Depende de [spec.md](spec.md) y [plan.md](plan.md).
 
 ## 0. Aprobación y dependencias
 
@@ -21,15 +21,15 @@ La caducidad offline nunca es una tarea de limpieza de registros pendientes.
 ### T02 — Desglose obligatorio del prerrequisito de acceso
 
 Se conservan 23 tareas de nivel superior; T02 se desglosa en ocho subtareas.
-Existe evidencia parcial de persistencia y registro para T02.1/T02.2; ninguna subtarea está
-completa. T01 registra la aprobación documental; T02.8 completa
+Existe evidencia de persistencia, registro y autenticación backend para T02.1–T02.3;
+ninguna subtarea integral está completa. T01 registra la aprobación documental; T02.8 completa
 la base de acceso, sin habilitar animales reales hasta pasar las pruebas conjuntas.
 
 | ID | Trabajo futuro | Dependencias | Verificación / criterios |
 |---|---|---|---|
 | T02.1 | **EN CURSO:** modelar Usuario, SesionDispositivo, Ganaderia y Membresia; migraciones, unicidad y hashes, instantes UTC/fecha de negocio Lima. V1/V2 y V3, Usuario, sesión/verificadores y sus adaptadores JDBC están verificados; faltan casos de uso de ganadería y membresía. | T01, T03 | [Esquema](../../docs/05-preparacion-implementacion/07-esquema-identidad.md), [registro](../../docs/05-preparacion-implementacion/08-registro-usuarios.md) y [núcleo de sesión](../../docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md); PA05/PA08 y CA03 siguen pendientes de cumplimiento integral. |
-| T02.2 | **EN CURSO:** AU01 real completada de React a PostgreSQL; el núcleo AU02 verifica Argon2id con error genérico y aplica límite persistente por huellas de correo/origen. Faltan endpoint/cookie de login, respuesta HTTP 401/429 y pruebas HTTP. Sin asignar roles desde solicitud. | T02.1 | PA01 ejecutada; PA02 parcial en núcleo/PostgreSQL. CA03/CA12 siguen pendientes integralmente. [Evidencia AU01](../../docs/05-preparacion-implementacion/08-registro-usuarios.md) y [AU02](../../docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md). |
-| T02.3 | **EN CURSO:** sesión máxima 24 h, JWT RS256 de 10 min, consulta de estado, token opaco 256 bits, rotación atómica y detección de reutilización probados en núcleo/PostgreSQL. Faltan claves externas de despliegue, endpoints, cookie segura, integración en filtro Spring, concurrencia y logout. | T02.2 | PA02/PA03 parciales; PA04/PA07 y CA03/CA12/CA14 continúan pendientes integralmente. [Evidencia](../../docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md). |
+| T02.2 | **BACKEND COMPLETADO; CLIENTE PENDIENTE:** AU01 real funciona de React a PostgreSQL; AU02 verifica Argon2id con error genérico, límite persistente y login HTTP 200/401/429 sin asignar roles. Falta formulario React de login. | T02.1 | PA01 ejecutada; PA02 verificada en backend/PostgreSQL. CA03/CA12 siguen pendientes integralmente. [Evidencia AU01](../../docs/05-preparacion-implementacion/08-registro-usuarios.md) y [AU02](../../docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md). |
+| T02.3 | **BACKEND COMPLETADO; CLIENTE/DESPLIEGUE PENDIENTES:** sesión 24 h, JWT 10 min, filtro con estado PostgreSQL, cookie segura, rotación, concurrencia, reutilización, respuesta perdida y logout verificados. Claves externas son obligatorias; falta su aprovisionamiento/rotación operativa y el flujo React. | T02.2 | PA02/PA03 backend ejecutadas; PA04/PA07 parciales por faltar cliente/offline/navegador HTTPS. CA03/CA12/CA14 continúan pendientes integralmente. [Evidencia](../../docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md). |
 | T02.4 | Implementar alta online de ganadería+propietario atómica, listado propio y GET /acceso; validar pertenencia/rol en toda API protegida. | T02.1, T02.3 | PA05/PA06; CA03. |
 | T02.5 | Implementar revocación de editor/lector existente solo por propietario, protegiendo propietario y orden de bloqueos con registro de animal. | T02.4 | PA06/PA08; CA03/CA06; cierre de pruebas de carrera con T07 antes de habilitar altas. |
 | T02.6 | **EN CURSO:** pantalla React de registro AU01 implementada; faltan login/logout/selección-creación de ganadería, renovación serializada entre pestañas/recarga y cierre remoto pendiente. No reintentar refresh incierto, exigir login sin perder cola; sin invitaciones. | T02.2 para registro; T02.3, T02.4, T02.5 para el resto | PA01 parcial en cliente; PA03/PA04/PA07, E2E del propietario inicial, CA03/CA12/CA14 y pruebas conjuntas de cola con T15/T18 siguen pendientes. |

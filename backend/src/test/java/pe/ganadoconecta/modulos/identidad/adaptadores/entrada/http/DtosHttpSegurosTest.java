@@ -46,5 +46,16 @@ class DtosHttpSegurosTest {
                 refresh, ahora.plusSeconds(86_400)).toString())
                 .doesNotContain(refresh, jwt)
                 .contains("PROTEGIDAS");
+        assertThat(new AutenticacionControlador.LoginSolicitud(correo, contrasena).toString())
+                .doesNotContain(correo, contrasena)
+                .contains("PROTEGIDOS");
+        assertThat(new AutenticacionControlador.LoginRespuesta(
+                UUID.randomUUID(), correo, "ACTIVO", jwt, ahora.plusSeconds(600)).toString())
+                .doesNotContain(correo, jwt)
+                .contains("PROTEGIDAS");
+        assertThat(new AutenticacionControlador.TokenAccesoRespuesta(
+                jwt, ahora.plusSeconds(600)).toString())
+                .doesNotContain(jwt)
+                .contains("PROTEGIDAS");
     }
 }

@@ -1,7 +1,7 @@
-# AU02/AU03 — Núcleo de autenticación y sesiones
+# AU02/AU03/AU04 — Autenticación y sesiones backend
 
-Fecha: 17 de noviembre de 2026, America/Lima. Estado: **núcleo backend parcial
-implementado y verificado; login y renovación no están expuestos por HTTP**.
+Fecha: 17 de noviembre de 2026, America/Lima. Estado: **backend HTTP implementado
+y verificado; la interfaz React de login y AU05–AU08 siguen pendientes**.
 
 ## Alcance realizado
 
@@ -20,6 +20,18 @@ implementado y verificado; login y renovación no están expuestos por HTTP**.
   sucesor ACTIVO. Reutilizar el anterior revoca la sesión y toda la familia.
 - DTO y resultados internos protegen credenciales en sus representaciones de
   diagnóstico. Las pruebas RSA generan claves efímeras y no versionan claves.
+- `POST /api/v1/auth/login` devuelve JWT en JSON y renovación únicamente en
+  `__Host-GC-Refresh`, con Secure, HttpOnly, SameSite=Strict, Path=/ y sin Domain.
+- `POST /api/v1/auth/renovar` rota la cookie; dos solicitudes concurrentes no
+  conservan dos sucesores y reutilizar el valor anterior revoca toda la familia.
+- `POST /api/v1/auth/logout` es idempotente, reconoce tokens activos o históricos,
+  revoca sesión/verificadores y elimina la cookie con los mismos atributos.
+- `GET /api/v1/auth/me` exige Bearer válido y vuelve a comprobar en PostgreSQL
+  que la sesión no esté vencida/revocada y que la cuenta permanezca activa.
+- Login, renovación y logout exigen CSRF y Origin/Referer del origen configurado.
+  Respuestas de sesión y errores llevan `Cache-Control: no-store`.
+- Las claves RSA de ejecución se cargan obligatoriamente desde archivos externos
+  X.509/PKCS#8; no hay clave privada ni valor predeterminado en el repositorio.
 
 V1 y V2 no se modificaron. V3 crea únicamente `identidad.intento_login`, con
 restricciones, clave primaria por dimensión/huella e índice de bloqueos. Flyway
@@ -29,10 +41,12 @@ la aplicó sobre la base existente sin `clean`, borrado de volumen ni recreació
 
 | Elemento | Estado de este incremento |
 |---|---|
-| AU02 / T02.2 / PA02 | Núcleo y PostgreSQL parciales: credenciales, estados, límite y JWT probados. Falta HTTP. |
-| AU03 / T02.3 / PA03 | Núcleo y PostgreSQL parciales: 10 min/24 h, rotación y reutilización probados. Faltan cookie/endpoints y concurrencia. |
-| CA03 | Sigue incompleto: no hay login público, membresías ni aislamiento integral. |
-| CA12 | Evidencia parcial de tiempos, revocación y errores; falta el flujo navegador/offline. |
+| AU02 / T02.2 / PA02 | Backend HTTP y PostgreSQL: login, errores uniformes, límite, JWT y filtro probados. Falta React. |
+| AU03 / T02.3 / PA03 | Backend HTTP: 10 min/24 h, cookie, rotación, concurrencia, reutilización y respuesta perdida segura probadas. |
+| AU04 / T02.3 / PA04 | Logout online y rechazo del JWT anterior probados; cierre offline/React y membresías pendientes. |
+| PA07 | CSRF/origen, cookie y `no-store` verificados en backend; navegador real queda pendiente. |
+| CA03 | Parcial: login backend existe; faltan ganadería, membresías y aislamiento integral. |
+| CA12 | Backend de tiempos, revocación y errores verificado; falta el flujo React/offline. |
 | ADR-04 / ADR-07 | PostgreSQL como fuente y Spring Security JOSE/RS256, sin claves en repositorio. |
 
 ## Evidencia ejecutada
@@ -53,23 +67,40 @@ PostgreSQL `17.12` permaneció healthy en Docker y accesible exclusivamente por
 | Atomicidad | Una huella inválida al crear el verificador revierte también la fila de sesión. |
 | Regresión | Registro AU01, CSRF, esquema, JDBC y rutas no autorizadas continúan pasando. |
 
+En el incremento HTTP se ejecutaron primero las pruebas relacionadas. La clase
+`AutenticacionHttpPostgresIntegrationTest` terminó con 9 pruebas, 0 fallos,
+0 errores y 0 omitidas; `DtosHttpSegurosTest` añadió 1 comprobación aprobada.
+La regresión completa final se registró al cerrar este incremento:
+
+| Cierre del incremento HTTP | Resultado real |
+|---|---|
+| `mvn.cmd -q -o "-Dganadoconecta.postgres.integration-test=true" verify` | 54 pruebas backend/PostgreSQL, 0 fallos, 0 errores y 0 omitidas. |
+| Frontend | No se repitió: no hubo cambios en React; sus 11 pruebas aprobadas pertenecen al incremento anterior. |
+
 La primera ejecución PostgreSQL detectó que `SET CONSTRAINTS` buscaba la FK
 diferible en `public`; la transacción se revirtió sin cambio parcial. Se corrigió
 la referencia a `identidad.fk_verificador_sucesor`, se repitió el caso afectado
 y después la suite completa terminó correctamente.
 
+La primera carrera HTTP de dos renovaciones detectó otro caso real: la segunda
+petición podía capturar su instante antes de esperar el bloqueo y revocar el
+sucesor con una fecha anterior a `creado_en`. PostgreSQL rechazó el cambio sin
+filtrar credenciales. La actualización usa como mínimo `creado_en`; se repitió
+primero el método fallido y después la clase HTTP completa, ambos correctamente.
+La primera regresión completa también encontró dos expectativas antiguas `403`
+para acceso anónimo; el contrato vigente exige `401`. Se corrigieron solo esos
+tests, ambos pasaron de forma dirigida y la regresión final de 54 pruebas quedó limpia.
+
 ## Pendientes explícitos
 
-- No existen aún `POST /auth/login`, `POST /auth/renovar`, logout ni `/auth/me`.
-- No se emite `__Host-GC-Refresh`; faltan la cookie, respuestas HTTP seguras,
-  CSRF/origen en esas rutas y la revocación de una cookie previa al nuevo login.
-- Las claves RSA de despliegue, su carga desde configuración externa y rotación
-  operativa siguen pendientes; no se incluye ninguna clave real o de prueba.
-- Falta integrar la validación JWT como filtro de Spring Security sobre rutas
-  privadas y probar 401/429 HTTP sin filtrar existencia de cuentas.
-- Faltan carreras de dos renovaciones, respuesta perdida tras commit, logout,
-  navegador/React y coordinación entre pestañas.
-- AU04–AU08, ganaderías, membresías, invitaciones y animales no se implementaron.
+- Falta el formulario React de login/logout, JWT solo en memoria, renovación
+  coordinada entre pestañas y tratamiento visual de sesión vencida.
+- Falta aprovisionar y rotar claves RSA en un entorno de despliegue real; la carga
+  externa está implementada y las pruebas solo generan claves efímeras en `target/`.
+- Falta validar cookie Secure y el flujo completo en navegador HTTPS real.
+- El cierre offline, la marca no secreta de cierre remoto pendiente y conservación
+  de la cola corresponden al cliente offline aún no implementado.
+- AU05–AU08, ganaderías, membresías, invitaciones y animales no se implementaron.
 
-No se declara AU02 ni AU03 completada y no existe inicio de sesión utilizable por
-usuarios finales en este estado.
+No se declara completo el acceso integral de SPEC-01: el backend AU02–AU04 está
+disponible, pero no existe inicio de sesión utilizable desde React.

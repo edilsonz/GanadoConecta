@@ -24,7 +24,7 @@ import org.springframework.test.context.ActiveProfiles;
         properties = {"debug=false", "logging.level.root=INFO"})
 @ActiveProfiles("postgres")
 @EnabledIfSystemProperty(named = "ganadoconecta.postgres.integration-test", matches = "true")
-class IdentidadSchemaIntegrationTest {
+class IdentidadSchemaIntegrationTest extends SoporteJwtPostgres {
     private static final String HASH_ARGON2ID_SINTETICO =
             "$argon2id$fixture-sintetica-no-utilizable";
 
