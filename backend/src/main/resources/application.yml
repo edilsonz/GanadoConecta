@@ -1,0 +1,31 @@
+spring:
+  config:
+    import: "optional:file:.env[.properties],optional:file:../.env[.properties]"
+  application:
+    name: ganadoconecta
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+server:
+  address: ${SERVER_ADDRESS:127.0.0.1}
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+management:
+  endpoints:
+    enabled-by-default: false
+    web:
+      base-path: /api
+      exposure:
+        include: health
+  endpoint:
+    health:
+      enabled: true
+      show-details: never
+      show-components: never
+logging:
+  level:
+    root: INFO

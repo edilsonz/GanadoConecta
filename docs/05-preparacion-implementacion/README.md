@@ -1,5 +1,10 @@
 # GanadoConecta — Preparación arquitectónica para Codex (propuesta v2)
 
+> **Avance de implementación:** ya existe una base ejecutable sin funciones de
+> negocio. Consultar el [informe de BASE-01](06-base-ejecutable.md) para pruebas
+> ejecutadas y limitaciones. Los estados de propuesta siguientes describen la
+> preparación arquitectónica original, no acreditan implementación de SPEC-01.
+
 > **Estado de consolidación:** las 16 decisiones aprobadas por el responsable
 > del proyecto se integran en la [base consolidada](05-consolidacion-arquitectonica.md).
 > Los detalles de este documento que no figuren como aprobados allí siguen

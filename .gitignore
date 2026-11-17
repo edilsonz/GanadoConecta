@@ -26,3 +26,8 @@ Thumbs.db
 
 # Configuración local de editores
 .idea/
+# Metadatos de compilación y verificaciones locales
+*.tsbuildinfo
+.cache/
+playwright-report/
+test-results/

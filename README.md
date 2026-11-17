@@ -77,9 +77,9 @@ Consultar la [guía de preparación](docs/05-preparacion-implementacion/README.m
 la [ruta SDD](docs/06-evaluacion-sdd/ruta-sdd-rubrica.md) y las
 [convenciones de especificaciones](specs/README.md).
 
-Organización prevista para la implementación (estas carpetas aún no existen):
+Organización de implementación (frontend/ y backend/ existen; las demás rutas se crearán cuando tengan contenido):
 
-| Ruta futura | Responsabilidad |
+| Ruta | Responsabilidad |
 |---|---|
 | frontend/ | Aplicación React y sus pruebas unitarias y de integración |
 | backend/ | Monolito modular Java/Spring Boot, migraciones y pruebas unitarias y de integración |
@@ -95,8 +95,8 @@ de despliegue de infra/ se distingue de los adaptadores internos del backend.
 
 ## Estado del proyecto
 
-En fase de documentación y diseño arquitectónico.
-La implementación se desarrollará posteriormente.
+Primera base ejecutable de frontend y backend disponible para revisión.
+SPEC-01 está aprobada documentalmente; autenticación, animales y offline aún no implementados.
 
 Se utilizará Redis como caché para consultas frecuentes del catálogo
 público de anuncios. PostgreSQL conservará los datos permanentes
@@ -157,5 +157,145 @@ público y FastAPI independiente se conservan.
 Consultar la [consolidación y pendientes](docs/05-preparacion-implementacion/05-consolidacion-arquitectonica.md)
 y la [matriz de evaluación](docs/06-evaluacion-sdd/matriz-trazabilidad.md).
 La aprobación de arquitectura no acredita implementación ni aprobación docente.
-Las SPEC y sus planes requieren revisión; las imágenes C4 siguen siendo originales,
+SPEC-01 y su contrato están aprobados documentalmente; las imágenes C4 siguen siendo originales,
 sin fuentes editables encontradas en el repositorio.
+
+## Ejecutar la primera base local
+
+Esta iteración incluye inicio React responsivo y salud de la API. Los botones
+«Mi ganado» y «Calendario» están deshabilitados porque esas funciones aún no
+existen. No hay usuarios de demostración, login, animales, PWA ni sincronización.
+La salud sin perfil postgres comprueba el proceso, no conexión a una base de datos.
+
+### Herramientas y versiones
+
+| Parte | Versión fijada / entorno comprobado |
+|---|---|
+| Java | Compilación release 21; validada con JDK/Javac 22.0.1 instalado. Para trabajo habitual usar JDK 21 LTS. |
+| Maven | 3.9.16 disponible; Spring Boot requiere Maven 3.6.3 o superior. |
+| Spring Boot | 3.5.16, compatible con JUnit 5 del plan aprobado. |
+| Node / npm | 22.19.0 / 10.9.3; frontend exige Node 22 >=22.12 y npm 10. |
+| React / TypeScript / Vite | 19.3.1 / 5.9.3 / 8.3.8, dependencias exactas y package-lock. |
+| Pruebas frontend | Vitest 5.1.0, Testing Library React 16.3.3, jest-dom 7.0.1 y happy-dom 21.0.4. |
+| Pruebas backend | Spring Boot Test y JUnit 5 gestionados por el parent fijado. |
+| PostgreSQL | Imagen postgres:17.12 en compose.yaml. Docker/PostgreSQL no detectados en esta computadora; ejecución de BD pendiente. |
+
+En Windows se usan npm.cmd y mvn.cmd para no depender de la política de scripts
+PowerShell. No se modificó Java, Node, PATH ni configuración global del equipo.
+Las dependencias indirectas frontend están fijadas en frontend/package-lock.json;
+las versiones Maven gestionadas se resuelven desde el parent 3.5.16.
+
+### Backend (primera terminal)
+
+Desde la raíz del repositorio:
+
+```powershell
+Set-Location backend
+mvn.cmd -B -ntp verify
+java -jar target/ganadoconecta-backend-0.1.0-SNAPSHOT.jar
+```
+
+API: http://127.0.0.1:8080/api/health, respuesta `{"status":"UP"}`.
+Alternativamente, ejecutar `mvn.cmd spring-boot:run`. Detener con Ctrl+C.
+Todas las rutas diferentes de GET /api/health están denegadas; no se crea usuario
+ni contraseña automática. El endpoint no expone componentes ni configuración.
+CSRF permanece activado; no hay endpoints de escritura de negocio.
+
+### Frontend (segunda terminal)
+
+```powershell
+Set-Location frontend
+npm.cmd ci
+npm.cmd run dev
+```
+
+Abrir http://127.0.0.1:5173/. Vite reenvía /api al backend mediante proxy local,
+sin abrir CORS de la API. Si el backend no está listo, la pantalla informa que
+no pudo comprobar conexión y permite volver a intentar. Detener con Ctrl+C.
+
+```powershell
+npm.cmd run typecheck
+npm.cmd test
+npm.cmd run build
+```
+
+`npm.cmd install` se usa para cambiar dependencias conscientemente; `npm.cmd ci`
+reproduce el lockfile en un checkout existente. No usar dist/ como evidencia de
+funciones de negocio. Las pruebas básicas de esta base no completan los CA de SPEC-01.
+
+### Variables de entorno
+
+Desde la raíz, copiar `.env.example` a `.env` solo si este último no existe y
+completar usuario/contraseña locales antes de iniciar PostgreSQL. No versionar `.env`.
+Los campos vacíos del ejemplo no son credenciales utilizables.
+
+```powershell
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+```
+
+Spring carga opcionalmente .env como propiedades desde su directorio de ejecución
+o su padre; usar backend/ como directorio para los comandos del backend. Entorno
+del proceso tiene prioridad. Usar valores KEY=VALUE sin comillas para mantener
+compatibilidad con ambos lectores (Compose y Spring); no incluir secretos en logs.
+POSTGRES_PASSWORD nunca se transforma en variable VITE_* ni se publica al cliente.
+API_PROXY_TARGET solo cambia el proxy de desarrollo y puede configurarse en .env.
+
+### PostgreSQL opcional
+
+No se requiere para arrancar el modo básico. Una vez instalado y arrancado
+Docker Desktop/Compose, configurar .env y ejecutar desde la raíz:
+
+```powershell
+docker compose config --quiet
+docker compose up -d postgres
+docker compose ps
+```
+
+No publicar la salida completa de `docker compose config`, pues puede contener
+el secreto expandido. Puerto ligado a 127.0.0.1; volumen postgres_data, zona UTC.
+Después iniciar backend con el perfil opcional:
+
+```powershell
+Set-Location backend
+mvn.cmd spring-boot:run "-Dspring-boot.run.profiles=postgres"
+```
+
+Con perfil postgres, la salud incluye la disponibilidad de conexión JDBC en su
+resultado agregado, pero no publica detalles. Aún no hay esquema ni migraciones
+de animales. Para detener la BD sin eliminar datos: `docker compose stop postgres`.
+No ejecutar `down -v` para una parada normal. Si cambia usuario/contraseña en .env,
+la imagen no reconfigura por sí sola un volumen ya inicializado: revisar la
+administración local, sin borrar el volumen como solución automática.
+
+Alternativa: PostgreSQL local 17.12 administrado por el desarrollador, con base/
+usuario propios y las mismas variables de conexión. No se instaló ni validó esa
+alternativa. Docker/PostgreSQL son la única comprobación de entorno pendiente
+que impide verificar persistencia real en esta iteración.
+
+### Problemas de entorno observados
+
+Maven falló inicialmente con `PKIX path building failed`. En este equipo funcionó
+usar el almacén de certificados confiables de Windows solo en el proceso Maven,
+sin desactivar TLS, importar certificados ni cambiar el almacén global:
+
+```powershell
+$opcionesMavenPrevias = $env:MAVEN_OPTS
+try {
+  $env:MAVEN_OPTS = "$opcionesMavenPrevias -Djavax.net.ssl.trustStoreType=Windows-ROOT -Djavax.net.ssl.trustStore=NONE"
+  mvn.cmd -B -ntp verify
+} finally {
+  $env:MAVEN_OPTS = $opcionesMavenPrevias
+}
+```
+
+No aplicar este ajuste en otros sistemas operativos sin comprobar su almacén de
+confianza. Si no funciona, revisar JDK/red/cadena de certificados con el responsable
+del equipo; nunca usar opciones para omitir la validación de certificados.
+Para Docker ausente, instalar/configurar Docker Desktop con WSL2 siguiendo la
+[guía oficial de Windows](https://docs.docker.com/desktop/setup/install/windows-install/),
+reabrir terminal y comprobar `docker version` y `docker compose version`.
+No se instaló software del sistema durante esta tarea.
+
+Consultar [BASE-01](specs/BASE-01-estructura-ejecutable/spec.md) y el
+[informe de implementación y evidencia](docs/05-preparacion-implementacion/06-base-ejecutable.md)
+para resultados realmente ejecutados y limitaciones.
