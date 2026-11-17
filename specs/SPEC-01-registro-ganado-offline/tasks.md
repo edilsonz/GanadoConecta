@@ -1,6 +1,6 @@
 # SPEC-01 — Tareas incrementales propuestas
 
-**Estado: Aprobada — Pendiente de implementación.** T01 documental completada por autorización del responsable el 16 de noviembre de 2026. Ninguna tarea de implementación o prueba ejecutada; las restantes siguen pendientes. Depende de [spec.md](spec.md) y [plan.md](plan.md). No implementar en esta tarea documental.
+**Estado: Aprobada — Implementación en curso.** T01 documental fue completada por autorización del responsable el 16 de noviembre de 2026. El 17 de noviembre comenzó únicamente la parte de persistencia de T02.1; no se considera cerrada la subtarea ni implementados los flujos de acceso o animales. Depende de [spec.md](spec.md) y [plan.md](plan.md).
 
 ## 0. Aprobación y dependencias
 
@@ -20,13 +20,14 @@ La caducidad offline nunca es una tarea de limpieza de registros pendientes.
 
 ### T02 — Desglose obligatorio del prerrequisito de acceso
 
-Se conservan 23 tareas de nivel superior; T02 se desglosa en ocho subtareas,
-no se declara ejecutada ninguna subtarea de implementación. T01 registra la aprobación documental; T02.8 completa
+Se conservan 23 tareas de nivel superior; T02 se desglosa en ocho subtareas.
+Solo existe evidencia parcial de persistencia para T02.1; ninguna subtarea está
+completa. T01 registra la aprobación documental; T02.8 completa
 la base de acceso, sin habilitar animales reales hasta pasar las pruebas conjuntas.
 
 | ID | Trabajo futuro | Dependencias | Verificación / criterios |
 |---|---|---|---|
-| T02.1 | Modelar Usuario, SesionDispositivo, Ganaderia y Membresia; migraciones, unicidad y hashes, instantes UTC/fecha de negocio Lima. | T01, T03 | Modelos/contratos de Identidad puros y adaptadores; PA01/PA05/PA08, CA03. |
+| T02.1 | **EN CURSO:** modelar Usuario, SesionDispositivo, Ganaderia y Membresia; migraciones, unicidad y hashes, instantes UTC/fecha de negocio Lima. Las V1/V2 y sus restricciones PostgreSQL están verificadas; faltan modelos/contratos de Identidad y adaptadores. | T01, T03 | [Evidencia parcial](../../docs/05-preparacion-implementacion/07-esquema-identidad.md); PA01/PA05/PA08 y CA03 siguen pendientes de cumplimiento integral. |
 | T02.2 | Implementar registro/login real y errores genéricos, Argon2id, validaciones/rate limit; sin asignar roles desde solicitud. | T02.1 | PA01/PA02; CA03/CA12. |
 | T02.3 | Implementar JWT en memoria, sesión/cookie segura y renovación con rotación atómica, verificadores únicos seguros e historial de consumidos; detectar reuse y revocar familia. Logout/estado de sesión y membresía impiden usar JWT previos; CSRF/mismo origen, sin credenciales en IndexedDB. | T02.2 | PA02/PA03/PA04/PA07; CA03/CA12/CA14. |
 | T02.4 | Implementar alta online de ganadería+propietario atómica, listado propio y GET /acceso; validar pertenencia/rol en toda API protegida. | T02.1, T02.3 | PA05/PA06; CA03. |

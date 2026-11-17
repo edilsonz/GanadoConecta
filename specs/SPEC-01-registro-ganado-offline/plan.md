@@ -1,8 +1,7 @@
 # SPEC-01 — Plan técnico propuesto
 
-**Estado: Aprobada — Pendiente de implementación.** Plan aprobado documentalmente junto con
-[spec.md](spec.md) y el contrato DP01, el 16 de noviembre de 2026 por autorización del responsable. Este plan no modifica
-los ADR aprobados ni autoriza empezar a programar. [Tareas](tasks.md).
+**Estado: Aprobada — Implementación en curso.** Plan aprobado documentalmente junto con
+[spec.md](spec.md) y el contrato DP01, el 16 de noviembre de 2026 por autorización del responsable. La implementación comenzó con la persistencia parcial de T02.1 el 17 de noviembre; este plan no modifica los ADR aprobados ni declara completos los flujos funcionales. [Tareas](tasks.md).
 
 ## 1. Arquitectura y límites
 
@@ -175,7 +174,9 @@ No se afirma que otros dispositivos hayan sido desconectados ni se borra su cola
 
 ### Modelo e invariantes transaccionales de Identidad
 
-Entidades conceptuales, todavía sin migraciones:
+El modelo siguiente fue conceptual al aprobarse la SPEC. Su primera traducción
+física, limitada a Identidad, se implementó con migraciones Flyway V1 y V2 el
+17 de noviembre de 2026; los contratos y casos de uso continúan pendientes:
 
 | Entidad | Restricciones/operación |
 |---|---|
@@ -184,6 +185,22 @@ Entidades conceptuales, todavía sin migraciones:
 | VerificadorRenovacion | huella UNIQUE, FK sesión/familia, estado ACTIVO/CONSUMIDO/REVOCADO, creadoEn/consumidoEn UTC y sucesor; un ACTIVO por sesión. Sin token en claro. |
 | Ganaderia | id UUIDv4 de petición, nombre, estado, propietarioUsuarioId FK; instantes UTC. |
 | Membresia | UNIQUE usuarioId+ganaderiaId, FKs, rol cerrado PROPIETARIO/EDITOR/LECTOR, estado ACTIVA/REVOCADA. PropietarioUsuarioId debe tener membresía PROPIETARIO activa al confirmar creación. |
+
+La migración V1 crea el esquema PostgreSQL `identidad` y las cinco tablas
+`usuario`, `ganaderia`, `membresia`, `sesion_dispositivo` y
+`verificador_renovacion`. Usa UUID como claves estables, FKs restrictivas,
+unicidad de correo normalizado y membresía, un propietario activo por ganadería,
+un verificador activo por sesión y una huella SHA-256 de 32 bytes en lugar del
+token de renovación. Un trigger de restricción diferible permite crear ganadería
+y membresía propietaria en una misma transacción, pero impide confirmarla huérfana.
+La V2 fija en la base el máximo de 24 horas de AU03 para la sesión online. Flyway
+valida las migraciones al iniciar el perfil `postgres`; `clean` está deshabilitado.
+
+Esta persistencia es una parte de T02.1, no su cierre: faltan los modelos y
+contratos del núcleo, Argon2id en el caso de uso, endpoints y flujos AU01–AU08.
+La base solo acepta formatos de hash Argon2id y nunca almacena contraseñas en
+claro ni tokens de renovación. No se agregaron datos semilla ni membresías reales
+de editor/lector.
 
 Alta de cuenta y contraseña codificada confirma una sola cuenta. AU05 crea
 Ganaderia+Membresia juntas con unicidad de ID y recibo lógico por consulta de
@@ -301,7 +318,7 @@ coincidencias conocidas, aclarando que la copia puede ser parcial o antigua.
 
 ## 5. Persistencia PostgreSQL y transacciones
 
-Migraciones propuestas en backend, sin generarlas todavía:
+Migraciones de animales propuestas en backend, sin generarlas todavía:
 
 - animal: PK id UUID; FK ganaderiaId; FK creadoPor; version positiva; estado ACTIVO
   para altas; constraints de sexo NOT NULL y enum MACHO/HEMBRA, compatibilidad sexo/categoría; nulls solo en campos opcionales

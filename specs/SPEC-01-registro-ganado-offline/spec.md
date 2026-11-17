@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | **Aprobada — Pendiente de implementación** |
+| Estado | **Aprobada — Implementación en curso** |
 | Fecha | Revisión DP01: 16 de noviembre de 2026; borrador inicial: 15 de noviembre de 2026 |
 | Requisitos | RF01 (registro/login y sesión mínima), RF02 y RF17; RF21 para pertenencia y permisos; RF20 solo alta individual. Perfil completo e invitaciones fuera de alcance. |
 | Historias | HU01 (registro/login), HU02, HU18, HU21 (alta individual), HU22 (propietario inicial, pertenencia y revocación; sin invitaciones) |
@@ -343,10 +343,13 @@ con precisiones: CA01 exige sexo por la decisión confirmada y CA08 no infiere c
 
 ## 12. Pruebas necesarias y trazabilidad
 
-Herramientas previstas conforme a DP07 adoptada, aún no instaladas/ejecutadas: JUnit 5 y dobles para
-núcleo, Spring Boot Test y Testcontainers/PostgreSQL para integración, Vitest
-para cliente, Playwright para E2E y k6 para carga. Versiones se fijarán antes
-de implementar. Se probarán el navegador real y su IndexedDB además de dobles.
+Herramientas previstas conforme a DP07 adoptada: JUnit 5 y Spring Boot Test ya
+se fijaron y ejecutaron para la base y el esquema de Identidad; esto no ejecuta
+las pruebas funcionales enumeradas debajo. Siguen pendientes los dobles para
+núcleo, la decisión de Testcontainers o PostgreSQL controlado por entorno para
+cada suite, y Playwright/k6. Vitest está fijado para la base del cliente. Las
+versiones restantes se fijarán antes de su implementación. Se probarán el
+navegador real y su IndexedDB además de dobles.
 
 | ID | Tipo y escenario | Criterios |
 |---|---|---|
@@ -420,7 +423,7 @@ Referencia: [matriz global](../../docs/06-evaluacion-sdd/matriz-trazabilidad.md)
 | DP07 | Adoptada: unitarias, integración, E2E, offline y carga con herramientas del plan. | Fijar versiones/compatibilidad cuando se prepare el proyecto ejecutable (T03), no cambiar herramientas silenciosamente. |
 | DP08 | Adoptada: zona de negocio America/Lima, instantes UTC y fecha/paginación documentadas. | Validar límites de fecha y cursor en pruebas, sin convertir fechaNacimiento en instante. |
 
-DP01–DP08 quedan adoptadas y SPEC-01 aprobada documentalmente por autorización expresa del responsable el 16 de noviembre de 2026. Las precisiones de rotación sustituyen la propuesta anterior de refresh estable; no se reabren las demás decisiones. Plan y tareas forman parte de esta aprobación. La implementación y las pruebas siguen pendientes.
+DP01–DP08 quedan adoptadas y SPEC-01 aprobada documentalmente por autorización expresa del responsable el 16 de noviembre de 2026. Las precisiones de rotación sustituyen la propuesta anterior de refresh estable; no se reabren las demás decisiones. Plan y tareas forman parte de esta aprobación. Desde el 17 de noviembre solo existe implementación y evidencia parcial del esquema de Identidad de T02.1; los flujos funcionales y criterios de aceptación siguen pendientes.
 
 ## 14. Evidencia de validación
 

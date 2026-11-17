@@ -159,7 +159,9 @@ el servidor Compose arranca con UTC, mientras el driver adapta la zona de la ses
 JDBC al proceso Java en America/Lima. La persistencia futura deberá probar por
 separado instantes UTC y fechas de negocio según DP08.
 
-Quedan pendientes el esquema, las migraciones y toda persistencia de negocio.
+El esquema inicial de Identidad y sus migraciones se implementaron después y se
+documentan en [07-esquema-identidad.md](07-esquema-identidad.md). Siguen pendientes
+los casos de uso de autenticación y toda persistencia de animales y demás negocio.
 También queda pendiente verificar el comportamiento de salud con PostgreSQL caído;
 no se detuvo el contenedor healthy del responsable durante esta tarea. Mantener
 cerrados los flujos de animales hasta implementar autenticación/membresías y los

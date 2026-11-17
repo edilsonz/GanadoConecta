@@ -180,6 +180,7 @@ La salud sin perfil postgres comprueba el proceso, no conexión a una base de da
 | Pruebas backend | Spring Boot Test y JUnit 5 gestionados por el parent fijado. |
 | Docker / Compose | Motor 29.9.3 y Compose 5.7.0; contenedor PostgreSQL comprobado healthy. |
 | PostgreSQL | Imagen postgres:17.12; JDBC validado en 127.0.0.1:5433 hacia el puerto 5432 del contenedor. |
+| Migraciones | Flyway 11.7.2 gestionado por Spring Boot 3.5.16; esquema inicial de Identidad validado con PostgreSQL 17.12. |
 
 En Windows se usan npm.cmd y mvn.cmd para no depender de la política de scripts
 PowerShell. No se modificó Java, Node, PATH ni configuración global del equipo.
@@ -263,8 +264,12 @@ mvn.cmd spring-boot:run "-Dspring-boot.run.profiles=postgres"
 ```
 
 Con perfil postgres, la salud incluye la disponibilidad de conexión JDBC en su
-resultado agregado, pero no publica detalles. Aún no hay esquema ni migraciones
-de animales. Para detener la BD sin eliminar datos: `docker compose stop postgres`.
+resultado agregado, pero no publica detalles. Flyway valida y aplica en orden las
+migraciones versionadas de `backend/src/main/resources/db/migration`; `clean` está
+deshabilitado y una migración aplicada no debe editarse. El esquema inicial solo
+cubre Identidad (usuarios, ganaderías, membresías y sesiones): no hay endpoints de
+autenticación ni migraciones de animales. Para detener la BD sin eliminar datos:
+`docker compose stop postgres`.
 No ejecutar `down -v` para una parada normal. Si cambia usuario/contraseña en .env,
 la imagen no reconfigura por sí sola un volumen ya inicializado: revisar la
 administración local, sin borrar el volumen como solución automática.
@@ -278,8 +283,10 @@ mvn.cmd -B -ntp "-Dganadoconecta.postgres.integration-test=true" verify
 ```
 
 La prueba ejecuta una consulta mediante `JdbcTemplate`, comprueba la base,
-PostgreSQL 17, el puerto externo 5433, el puerto interno 5432 y que la salud no
-exponga detalles. Una alternativa PostgreSQL local no fue validada. Mantener
+PostgreSQL 17, el puerto externo 5433 y el interno 5432, valida las migraciones y
+las restricciones del esquema de Identidad, y confirma que la salud no exponga
+detalles. Los datos sintéticos se revierten al terminar. Una alternativa PostgreSQL
+local no fue validada. Mantener
 `POSTGRES_PORT=5433` evita conectar por error con el PostgreSQL 18 de Windows en 5432.
 
 ### Problemas de entorno observados
@@ -305,4 +312,6 @@ Docker Desktop fue instalado y validado posteriormente con PostgreSQL 17.12.
 
 Consultar [BASE-01](specs/BASE-01-estructura-ejecutable/spec.md) y el
 [informe de implementación y evidencia](docs/05-preparacion-implementacion/06-base-ejecutable.md)
+para la base ejecutable, y la
+[evidencia del esquema inicial de Identidad](docs/05-preparacion-implementacion/07-esquema-identidad.md)
 para resultados realmente ejecutados y limitaciones.
