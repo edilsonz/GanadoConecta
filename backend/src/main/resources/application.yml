@@ -7,6 +7,9 @@ spring:
     exclude:
       - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
       - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
 server:
   address: ${SERVER_ADDRESS:127.0.0.1}
   port: ${SERVER_PORT:8080}
@@ -29,3 +32,10 @@ management:
 logging:
   level:
     root: INFO
+ganadoconecta:
+  seguridad:
+    origen-permitido: ${GANADOCONECTA_ORIGEN_PERMITIDO:http://127.0.0.1:5173}
+    registro:
+      max-intentos: ${REGISTRO_MAX_INTENTOS:10}
+      ventana: ${REGISTRO_VENTANA:15m}
+      max-origenes: ${REGISTRO_MAX_ORIGENES:10000}

@@ -4,7 +4,8 @@
 > negocio. Consultar el [informe de BASE-01](06-base-ejecutable.md) para pruebas
 > ejecutadas y limitaciones, y la
 > [evidencia del esquema de Identidad](07-esquema-identidad.md) para la parte de
-> persistencia iniciada en T02.1. Los estados de propuesta siguientes describen la
+> persistencia iniciada en T02.1, y la [evidencia de AU01](08-registro-usuarios.md)
+> para el registro real de cuentas. Los estados de propuesta siguientes describen la
 > preparación arquitectónica original, no acreditan implementación de SPEC-01.
 
 > **Estado de consolidación:** las 16 decisiones aprobadas por el responsable

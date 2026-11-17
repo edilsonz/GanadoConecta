@@ -16,7 +16,7 @@
 **Base aprobada:** React PWA/IndexedDB, Spring Boot monolito modular/Clean
 Architecture, PostgreSQL principal, identidad interna única, datos opcionales,
 acceso familiar autorizado, permisos/versiones/duplicados al sincronizar.
-**Decisiones adoptadas por el responsable en esta revisión:** DP02–DP08 según la sección 13, incluidas identidad UUIDv4, sexo obligatorio, alcance individual, conflictos conservadores, máximo offline 168 h sin borrado de pendientes, pruebas y zona America/Lima con instantes UTC. DP01 y SPEC-01 se aprueban documentalmente por autorización expresa del responsable el 16 de noviembre de 2026, con rotación obligatoria de tokens de renovación y verificación de sesión/membresía. La aprobación no equivale a implementación. No se modifican los RF/ADR aprobados; ningún criterio se declara cumplido.
+**Decisiones adoptadas por el responsable en esta revisión:** DP02–DP08 según la sección 13, incluidas identidad UUIDv4, sexo obligatorio, alcance individual, conflictos conservadores, máximo offline 168 h sin borrado de pendientes, pruebas y zona America/Lima con instantes UTC. DP01 y SPEC-01 se aprobaron documentalmente el 16 de noviembre de 2026. Desde el 17 de noviembre existe implementación incremental de esquema y AU01, sin login, sesión, membresías operativas ni animales. No se modifican los RF/ADR aprobados ni se declara completo CA03.
 
 Fuentes locales: [RF](../../docs/01-analisis-de-sistema/03-requisitos-funcionales.md),
 [HU](../../docs/01-analisis-de-sistema/02-historias-de-usuario.md),
@@ -84,7 +84,7 @@ de anuncios en PostgreSQL, sin pagos ni transacciones comerciales; no se ejecuta
 
 ### 5.1. Contrato mínimo DP01 aprobado documentalmente (prerrequisito)
 
-Este contrato es diseño, no acceso ya implementado. La ampliación se justifica
+Este contrato guía la implementación incremental: solo AU01 está implementada. La ampliación se justifica
 por RF01/RF21 y ADR-07/ADR-13: reemplaza la dependencia indefinida de acceso
 por operaciones mínimas verificables, sin alterar arquitectura ni crear servicios.
 
@@ -324,7 +324,7 @@ con precisiones: CA01 exige sexo por la decisión confirmada y CA08 no infiere c
 |---|---|---|---|
 | CA01 | Propietario/editor autenticado, miembro vigente y ganadería activa | Confirma alta con solo sexo MACHO o HEMBRA y datos técnicos generados | Una ficha ACTIVO, version=1, ganadería correcta y animalId estable; no exige nombre, arete, raza, edad, peso ni foto. Sin sexo válido no hay guardado local ni alta remota. |
 | CA02 | Sexo obligatorio y datos opcionales con letras, números, acentos y ausencias | Guarda/consulta o envía sexo omitido/null/vacío/no admitido | Valores opcionales normalizados se conservan; límites y fechas inválidos se rechazan. Sexo inválido produce error de campo sin escritura; la API devuelve 422. |
-| CA03 | Contrato AU01–AU08 pendiente de implementar y cuentas de dos ganaderías | Se prueban registro/login, creación inicial y cada rol con sesión real | Registro no concede roles; ganadería/propietario se crean juntos. Propietario/editor crean y leen; lector solo lee; anónimo -> 401, ajeno/rol insuficiente -> 403/404 seguros. Pruebas sintéticas de editor/lector no equivalen a alta familiar real; AU01–AU08 y sus comprobaciones deben pasar antes de habilitar animales reales. |
+| CA03 | Contrato AU01–AU08 en implementación incremental y cuentas de dos ganaderías | Se prueban registro/login, creación inicial y cada rol con sesión real | Registro no concede roles; ganadería/propietario se crean juntos. Propietario/editor crean y leen; lector solo lee; anónimo -> 401, ajeno/rol insuficiente -> 403/404 seguros. Pruebas sintéticas de editor/lector no equivalen a alta familiar real; AU01–AU08 y sus comprobaciones deben pasar antes de habilitar animales reales. |
 | CA04 | Dispositivo preparado offline con permiso local vigente | Confirma alta, reinicia aplicación y reconecta | Pendiente persiste; tras autorización actual se confirma una sola ficha con los mismos IDs. |
 | CA05 | Alta confirmada cuya respuesta se perdió | Se reenvía concurrentemente el mismo sobre, incluso desde dos pestañas | Un Animal y un recibo de éxito; misma confirmación y ningún efecto adicional. |
 | CA06 | Editor con alta local pendiente | Su membresía se revoca o pasa a lector antes del envío | El backend rechaza; no escribe; el cliente bloquea cola/retira copia según política, sin acceso ajeno. |
@@ -378,11 +378,12 @@ obligatorias para el producto; no aplica caché vacía/poblada a consultas priva
 ### Comprobaciones verificables del contrato de acceso
 
 No añaden criterios CA: precisan CA03, CA06, CA12 y CA14; AU01–AU08 son reglas
-de contrato, no resultados. Todas las siguientes pruebas están NO EJECUTADAS.
+de contrato, no resultados. PA01 tiene evidencia parcial del contrato global;
+PA02–PA08 permanecen no ejecutadas salvo las restricciones de esquema ya documentadas.
 
 | Prueba | Escenario y resultado requerido | Criterios |
 |---|---|---|
-| PA01 | Registro válido crea cuenta sin permisos; correo normalizado duplicado no crea segunda cuenta; inválidos y campos rol/ganadería son rechazados; hash nunca se devuelve. | CA03 |
+| PA01 | **EJECUTADA para AU01:** registro válido crea cuenta sin permisos; correo normalizado duplicado no crea segunda cuenta; inválidos y campos rol/ganadería/estado son rechazados; hash nunca se devuelve. | CA03; [evidencia](../../docs/05-preparacion-implementacion/08-registro-usuarios.md) |
 | PA02 | Login real válido/inválido, cuenta inactiva y límite temporal; JWT alterado, expirado, algoritmo/audiencia/emisor incorrectos y sesión revocada son rechazados sin datos privados. | CA03, CA12 |
 | PA03 | Reloj controlado en límites 10 min/24 h; renovar consume verificador y crea sucesor en un commit. Reutilización revoca familia y JWT previos fallan por sesión. Probar rollback, dos refresh concurrentes, respuesta perdida tras commit y login recuperable sin borrar pendientes ni guardar tokens en servidor/IndexedDB. Nunca ampliar 24 h. | CA12 |
 | PA04 | Logout confirmado revoca sesión/verificadores y el backend rechaza JWT anterior aún no expirado. Revocar membresía impide acceso a su ganadería con JWT previo. Logout offline conserva cola y exige cierre al reconectar; login en otra pestaña no recibe cierre antiguo; sin credenciales en almacenamiento offline/logs. | CA06, CA12, CA14 |
@@ -430,7 +431,8 @@ DP01–DP08 quedan adoptadas y SPEC-01 aprobada documentalmente por autorizació
 | Validación | Estado | Evidencia |
 |---|---|---|
 | Coherencia documental, enlaces y códigos | Comprobada el 16 de noviembre de 2026 | 18 CA con pruebas; 23 tareas superiores y ocho subtareas de acceso; AU01–AU08 y PA01–PA08 definidos; 14 enlaces locales de los tres documentos válidos, tablas y códigos coherentes, git diff --check sin errores. No equivale a pruebas funcionales. |
-| PU01–PU04, PI01–PI05, EE01–EE04, PC01 y PA01–PA08 | No ejecutadas | Sin código de aplicación ni resultados |
+| PA01 / AU01 | Ejecutada el 17 de noviembre de 2026 | Dominio, caso de uso, HTTP, Argon2id y PostgreSQL reales; CA03 no está completo porque AU02–AU08 siguen pendientes. |
+| PU01–PU04, PI01–PI05, EE01–EE04, PC01 y PA02–PA08 | No ejecutadas integralmente | Sin flujos completos de login, sesiones, ganaderías, animales u offline. |
 | Aprobación de SPEC/plan/tareas | Aprobada documentalmente el 16 de noviembre de 2026 | Autorización expresa del responsable con precisiones obligatorias de sesión y rotación; sin implementación. |
 
 ## 15. Condición de finalización

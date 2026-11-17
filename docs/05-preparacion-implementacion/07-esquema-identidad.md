@@ -1,14 +1,15 @@
 # Esquema inicial de Identidad — implementación y evidencia
 
 Fecha: 17 de noviembre de 2026, America/Lima. Estado: **persistencia inicial de
-T02.1 implementada y verificada; autenticación y membresías operativas pendientes**.
+T02.1 implementada y verificada; AU01 se implementó después, mientras login,
+sesiones y membresías operativas siguen pendientes**.
 
 ## Alcance
 
-Esta iteración traduce a PostgreSQL la parte de almacenamiento del contrato
-AU01–AU08 y DP01 de SPEC-01. No implementa registro, login, renovación, logout,
-autorización, endpoints, UI, invitaciones familiares ni animales. Tampoco crea
-usuarios o membresías iniciales mediante datos semilla.
+Esta iteración tradujo a PostgreSQL la parte de almacenamiento del contrato
+AU01–AU08 y DP01 de SPEC-01. El registro AU01 se implementó posteriormente y se
+documenta en [08-registro-usuarios.md](08-registro-usuarios.md). Aún no existen
+login, renovación, logout, membresías operativas, UI, invitaciones ni animales.
 
 Flyway fue seleccionado como herramienta de migraciones porque Spring Boot lo
 integra al arranque y su módulo PostgreSQL es compatible con la versión 17. La
@@ -68,10 +69,10 @@ y luego se ejecutó de nuevo con el resultado anterior.
 
 ## Pendientes y límites
 
-- Completar los modelos y contratos de Identidad de T02.1; la subtarea sigue en curso.
-- Implementar AU01–AU08 en T02.2–T02.8, incluida Argon2id, sesiones, rotación,
+- Completar los modelos y contratos de sesión, ganadería y membresía de T02.1.
+- Implementar AU02–AU08 en T02.2–T02.8: login, sesiones, rotación,
   CSRF, rate limiting, autorización y aislamiento entre ganaderías.
-- Elegir y medir el coste Argon2id antes del registro real.
+- Repetir la medición Argon2id de AU01 en el entorno de despliegue.
 - Mantener fuera de este incremento invitaciones, alta real de editor/lector y animales.
 - Ejecutar pruebas de concurrencia de rotación y autorización cuando existan los
   casos de uso; las restricciones de esquema no acreditan por sí solas PA01–PA08.

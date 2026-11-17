@@ -46,7 +46,8 @@ Son parte de Identidad en el monolito, no un servicio nuevo ni una invitación
 completa. Usa Spring Security y JWT conforme a ADR-07; membresías conforme a
 ADR-13 y persistencia PostgreSQL conforme a ADR-04. React muestra registro,
 login, logout, selección/creación de ganadería y estados de sesión; no asignador
-de roles ni pantalla de invitaciones. No se afirma que exista implementación.
+de roles ni pantalla de invitaciones. AU01 ya tiene implementación backend;
+AU02–AU08 y el cliente React continúan pendientes.
 
 ### API de acceso y creación inicial
 
@@ -86,7 +87,9 @@ Contrato DP01 aprobado con rotación obligatoria de renovación:
 - Contraseña de 15–128 caracteres Unicode, preservada exactamente sin trim,
   normalización ni truncamiento; sin reglas de composición inventadas. Hash
   Argon2id con salt aleatorio por contraseña mediante PasswordEncoder del
-  adaptador Spring; parámetros de coste fijados/medidos en T03 antes del código.
+  adaptador Spring. Para AU01 se fijaron salt 16 bytes, hash 32 bytes,
+  paralelismo 1, memoria 65 536 KiB y 3 iteraciones; la medición real queda en
+  la evidencia y deberá repetirse en el entorno de despliegue.
   No SHA-256 simple para contraseñas. Nunca devolver ni registrar contraseña/hash.
 - Registro no acepta roles, estado ni propietario en cuerpo. Ningún usuario
   puede elegir ADMINISTRADOR o pertenecer a una ganadería por conocer su ID.
@@ -196,11 +199,11 @@ y membresía propietaria en una misma transacción, pero impide confirmarla hué
 La V2 fija en la base el máximo de 24 horas de AU03 para la sesión online. Flyway
 valida las migraciones al iniciar el perfil `postgres`; `clean` está deshabilitado.
 
-Esta persistencia es una parte de T02.1, no su cierre: faltan los modelos y
-contratos del núcleo, Argon2id en el caso de uso, endpoints y flujos AU01–AU08.
-La base solo acepta formatos de hash Argon2id y nunca almacena contraseñas en
-claro ni tokens de renovación. No se agregaron datos semilla ni membresías reales
-de editor/lector.
+Esta persistencia es una parte de T02.1, no su cierre: ya existen el modelo,
+puerto, caso de uso, adaptador JDBC y endpoint de AU01 con Argon2id. Faltan los
+modelos de sesión/ganadería/membresía y los flujos AU02–AU08. La base nunca
+almacena contraseñas en claro ni tokens de renovación. No se agregaron datos
+semilla ni membresías reales de editor/lector.
 
 Alta de cuenta y contraseña codificada confirma una sola cuenta. AU05 crea
 Ganaderia+Membresia juntas con unicidad de ID y recibo lógico por consulta de
@@ -453,8 +456,11 @@ antes del envío no es recuperable por este flujo; se advierte esa limitación.
 - Sin payloads privados completos, JWT o credenciales en logs. Registrar código
   seguro, correlación, resultado técnico, latencia e intentos. Auditoría de alta
   conserva creadoPor/creadoEn en PostgreSQL; no es una garantía de entrega de red.
-- Límites 16 KiB, paginación y backoff son propuestas revisables; limitación de
-  solicitudes a nivel plataforma se definirá con autenticación, no se inventa proveedor.
+- El límite de 16 KiB se aplica a AU01. Como protección inicial se adoptó
+  provisionalmente un máximo configurable de 10 intentos de registro por origen
+  en 15 minutos, local a cada instancia y sin confiar en cabeceras de proxy.
+  Requiere aprobación/estrategia distribuida antes de producción; no cambia el
+  límite persistente de fallos de login aún pendiente.
 - Datos locales no se consideran cifrados/aislados frente al dueño del perfil
   del navegador. Solo opt-in en dispositivo de confianza; no ofrecerlo como
   protección para equipos compartidos. DP06 requiere aceptación explícita.

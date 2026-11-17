@@ -21,14 +21,14 @@ La caducidad offline nunca es una tarea de limpieza de registros pendientes.
 ### T02 — Desglose obligatorio del prerrequisito de acceso
 
 Se conservan 23 tareas de nivel superior; T02 se desglosa en ocho subtareas.
-Solo existe evidencia parcial de persistencia para T02.1; ninguna subtarea está
+Existe evidencia parcial de persistencia y registro para T02.1/T02.2; ninguna subtarea está
 completa. T01 registra la aprobación documental; T02.8 completa
 la base de acceso, sin habilitar animales reales hasta pasar las pruebas conjuntas.
 
 | ID | Trabajo futuro | Dependencias | Verificación / criterios |
 |---|---|---|---|
-| T02.1 | **EN CURSO:** modelar Usuario, SesionDispositivo, Ganaderia y Membresia; migraciones, unicidad y hashes, instantes UTC/fecha de negocio Lima. Las V1/V2 y sus restricciones PostgreSQL están verificadas; faltan modelos/contratos de Identidad y adaptadores. | T01, T03 | [Evidencia parcial](../../docs/05-preparacion-implementacion/07-esquema-identidad.md); PA01/PA05/PA08 y CA03 siguen pendientes de cumplimiento integral. |
-| T02.2 | Implementar registro/login real y errores genéricos, Argon2id, validaciones/rate limit; sin asignar roles desde solicitud. | T02.1 | PA01/PA02; CA03/CA12. |
+| T02.1 | **EN CURSO:** modelar Usuario, SesionDispositivo, Ganaderia y Membresia; migraciones, unicidad y hashes, instantes UTC/fecha de negocio Lima. Las V1/V2 y el modelo/puerto/adaptador JDBC de Usuario están verificados; faltan modelos/contratos de sesión, ganadería y membresía. | T01, T03 | [Esquema](../../docs/05-preparacion-implementacion/07-esquema-identidad.md) y [registro](../../docs/05-preparacion-implementacion/08-registro-usuarios.md); PA05/PA08 y CA03 siguen pendientes de cumplimiento integral. |
+| T02.2 | **EN CURSO:** registro AU01 real completado con Argon2id, validaciones, errores seguros y límite básico configurable; faltan login AU02, límite persistente de fallos de login y sus pruebas. Sin asignar roles desde solicitud. | T02.1 | PA01 ejecutada; PA02, CA03 y CA12 siguen pendientes de cumplimiento integral. [Evidencia](../../docs/05-preparacion-implementacion/08-registro-usuarios.md). |
 | T02.3 | Implementar JWT en memoria, sesión/cookie segura y renovación con rotación atómica, verificadores únicos seguros e historial de consumidos; detectar reuse y revocar familia. Logout/estado de sesión y membresía impiden usar JWT previos; CSRF/mismo origen, sin credenciales en IndexedDB. | T02.2 | PA02/PA03/PA04/PA07; CA03/CA12/CA14. |
 | T02.4 | Implementar alta online de ganadería+propietario atómica, listado propio y GET /acceso; validar pertenencia/rol en toda API protegida. | T02.1, T02.3 | PA05/PA06; CA03. |
 | T02.5 | Implementar revocación de editor/lector existente solo por propietario, protegiendo propietario y orden de bloqueos con registro de animal. | T02.4 | PA06/PA08; CA03/CA06; cierre de pruebas de carrera con T07 antes de habilitar altas. |

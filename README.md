@@ -181,6 +181,7 @@ La salud sin perfil postgres comprueba el proceso, no conexión a una base de da
 | Docker / Compose | Motor 29.9.3 y Compose 5.7.0; contenedor PostgreSQL comprobado healthy. |
 | PostgreSQL | Imagen postgres:17.12; JDBC validado en 127.0.0.1:5433 hacia el puerto 5432 del contenedor. |
 | Migraciones | Flyway 11.7.2 gestionado por Spring Boot 3.5.16; esquema inicial de Identidad validado con PostgreSQL 17.12. |
+| Contraseñas | Argon2id de Spring Security con Bouncy Castle 1.86; parámetros y medición documentados para AU01. |
 
 En Windows se usan npm.cmd y mvn.cmd para no depender de la política de scripts
 PowerShell. No se modificó Java, Node, PATH ni configuración global del equipo.
@@ -289,6 +290,21 @@ detalles. Los datos sintéticos se revierten al terminar. Una alternativa Postgr
 local no fue validada. Mantener
 `POSTGRES_PORT=5433` evita conectar por error con el PostgreSQL 18 de Windows en 5432.
 
+### Registro de cuentas — incremento AU01
+
+Con el perfil `postgres`, `POST /api/v1/auth/registro` acepta únicamente `correo`
+y `contrasena`. Normaliza el correo, exige 15–128 caracteres Unicode sin recortar
+la contraseña, crea una cuenta ACTIVO y no crea sesión, rol ni membresía. Rechaza
+campos adicionales y responde sin hash. Requiere origen configurado y token CSRF;
+el endpoint aprobado `GET /api/v1/auth/csrf` todavía no está implementado, por lo
+que aún no se expone un flujo React utilizable. Las pruebas de integración usan
+la infraestructura de Spring Security para presentar un token válido.
+
+La protección inicial limita de forma configurable diez intentos por origen en
+15 minutos y se reinicia con cada instancia. No confía en `X-Forwarded-For`.
+Antes de producción se debe aprobar un límite distribuido y la configuración de
+proxy confiable. Login, JWT, renovación, invitaciones y animales siguen cerrados.
+
 ### Problemas de entorno observados
 
 Maven falló inicialmente con `PKIX path building failed`. En este equipo funcionó
@@ -314,4 +330,6 @@ Consultar [BASE-01](specs/BASE-01-estructura-ejecutable/spec.md) y el
 [informe de implementación y evidencia](docs/05-preparacion-implementacion/06-base-ejecutable.md)
 para la base ejecutable, y la
 [evidencia del esquema inicial de Identidad](docs/05-preparacion-implementacion/07-esquema-identidad.md)
+para la base de datos, y la
+[evidencia del registro AU01](docs/05-preparacion-implementacion/08-registro-usuarios.md)
 para resultados realmente ejecutados y limitaciones.
