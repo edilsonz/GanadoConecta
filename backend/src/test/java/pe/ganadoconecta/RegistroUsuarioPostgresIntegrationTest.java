@@ -207,6 +207,7 @@ class RegistroUsuarioPostgresIntegrationTest {
                         .content(json(correoNuevo(), CONTRASENA)))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.codigo").value("CSRF_INVALIDO"));
+
         assertThat(cantidadUsuariosSinteticos()).isZero();
     }
 
@@ -257,4 +258,5 @@ class RegistroUsuarioPostgresIntegrationTest {
                 SELECT count(*) FROM identidad.usuario WHERE email_normalizado LIKE ?
                 """, Integer.class, PREFIJO + "%@ganadoconecta.invalid");
     }
+
 }

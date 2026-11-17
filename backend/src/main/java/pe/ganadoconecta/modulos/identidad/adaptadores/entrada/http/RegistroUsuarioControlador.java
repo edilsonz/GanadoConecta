@@ -33,8 +33,16 @@ public class RegistroUsuarioControlador {
     }
 
     record RegistroUsuarioSolicitud(String correo, String contrasena) {
+        @Override
+        public String toString() {
+            return "RegistroUsuarioSolicitud[datos=PROTEGIDOS]";
+        }
     }
 
     record RegistroUsuarioRespuesta(UUID id, String correo, String estado) {
+        @Override
+        public String toString() {
+            return "RegistroUsuarioRespuesta[id=" + id + ", datos=PROTEGIDOS]";
+        }
     }
 }

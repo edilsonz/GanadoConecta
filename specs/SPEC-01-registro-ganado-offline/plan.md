@@ -46,8 +46,9 @@ Son parte de Identidad en el monolito, no un servicio nuevo ni una invitación
 completa. Usa Spring Security y JWT conforme a ADR-07; membresías conforme a
 ADR-13 y persistencia PostgreSQL conforme a ADR-04. React muestra registro,
 login, logout, selección/creación de ganadería y estados de sesión; no asignador
-de roles ni pantalla de invitaciones. AU01 ya tiene implementación backend;
-AU02–AU08 y el cliente React continúan pendientes.
+de roles ni pantalla de invitaciones. AU01 ya tiene implementación y pruebas
+desde el formulario React hasta PostgreSQL; AU02–AU08 y las demás pantallas de
+acceso continúan pendientes.
 
 ### API de acceso y creación inicial
 

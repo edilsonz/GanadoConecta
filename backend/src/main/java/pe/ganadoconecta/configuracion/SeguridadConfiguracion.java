@@ -54,12 +54,20 @@ public class SeguridadConfiguracion {
         return http
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/registro").permitAll()
                         .anyRequest().denyAll())
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfRepository)
                         .csrfTokenRequestHandler(csrfHandler))
-                .exceptionHandling(exceptions -> exceptions.accessDeniedHandler(deniedHandler))
+                .exceptionHandling(exceptions -> exceptions
+                        .accessDeniedHandler(deniedHandler)
+                        .authenticationEntryPoint((request, response, exception) -> writeError(
+                                response,
+                                HttpServletResponse.SC_FORBIDDEN,
+                                "ACCESO_DENEGADO",
+                                "No tiene acceso a este recurso.",
+                                objectMapper)))
                 .addFilterBefore(proteccionRegistro, CsrfFilter.class)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin(AbstractHttpConfigurer::disable)

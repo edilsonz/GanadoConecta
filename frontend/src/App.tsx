@@ -1,4 +1,5 @@
 import { ApiStatus } from './ApiStatus'
+import { RegistroCuenta } from './RegistroCuenta'
 
 const futureSections = [
   { number: '01', title: 'Mi ganado', text: 'La información de cada animal, organizada en un solo lugar.' },
@@ -17,6 +18,7 @@ export default function App() {
         </a>
         <nav aria-label="Navegación principal">
           <a className="nav-active" href="#inicio" aria-current="page">Inicio</a>
+          <a href="#crear-cuenta">Crear cuenta</a>
           <button disabled>Mi ganado <span className="soon-label">Próximamente</span></button>
           <button disabled>Calendario</button>
         </nav>
@@ -29,7 +31,7 @@ export default function App() {
             <p className="eyebrow"><span className="small-rule" /> CERCA DE TU GANADERÍA</p>
             <h1 id="hero-title">Tu ganado.<br />Su cuidado.<br /><span>Todo conectado.</span></h1>
             <p className="hero-description">Estamos construyendo un espacio sencillo para organizar la información y acompañar el cuidado de tu ganado vacuno.</p>
-            <a className="button button-primary" href="#proyecto">Conoce el proyecto <span aria-hidden="true">↗</span></a>
+            <a className="button button-primary" href="#crear-cuenta">Crear mi cuenta <span aria-hidden="true">↗</span></a>
             <p className="hero-note">Primera versión en desarrollo · Sin registros de animales todavía</p>
           </div>
           <div className="landscape" aria-hidden="true">
@@ -53,6 +55,8 @@ export default function App() {
             <div className="landscape-bottom"><span>Una mirada al futuro del cuidado ganadero.</span><span>↗</span></div>
           </div>
         </section>
+
+        <RegistroCuenta />
 
         <section className="project-section" id="proyecto" aria-labelledby="project-title">
           <div className="section-heading">

@@ -96,7 +96,9 @@ de despliegue de infra/ se distingue de los adaptadores internos del backend.
 ## Estado del proyecto
 
 Primera base ejecutable de frontend y backend disponible para revisión.
-SPEC-01 está aprobada documentalmente; autenticación, animales y offline aún no implementados.
+SPEC-01 está aprobada documentalmente y el registro de cuentas AU01 funciona
+desde React hasta PostgreSQL. Login, sesiones, ganaderías, animales y offline
+continúan pendientes.
 
 Se utilizará Redis como caché para consultas frecuentes del catálogo
 público de anuncios. PostgreSQL conservará los datos permanentes
@@ -200,9 +202,10 @@ java -jar target/ganadoconecta-backend-0.1.0-SNAPSHOT.jar
 
 API: http://127.0.0.1:8080/api/health, respuesta `{"status":"UP"}`.
 Alternativamente, ejecutar `mvn.cmd spring-boot:run`. Detener con Ctrl+C.
-Todas las rutas diferentes de GET /api/health están denegadas; no se crea usuario
-ni contraseña automática. El endpoint no expone componentes ni configuración.
-CSRF permanece activado; no hay endpoints de escritura de negocio.
+Sin el perfil `postgres`, las únicas rutas públicas son GET `/api/health` y GET
+`/api/v1/auth/csrf`; el registro no persiste cuentas. Con ese perfil también se
+habilita POST `/api/v1/auth/registro`. Las demás rutas permanecen denegadas. No
+se crea ningún usuario o contraseña automática y la salud no expone detalles.
 
 ### Frontend (segunda terminal)
 
@@ -215,6 +218,8 @@ npm.cmd run dev
 Abrir http://127.0.0.1:5173/. Vite reenvía /api al backend mediante proxy local,
 sin abrir CORS de la API. Si el backend no está listo, la pantalla informa que
 no pudo comprobar conexión y permite volver a intentar. Detener con Ctrl+C.
+La pantalla de creación de cuenta requiere que el backend se ejecute con el
+perfil `postgres`; crear la cuenta no inicia sesión ni asigna una ganadería.
 
 ```powershell
 npm.cmd run typecheck
@@ -261,15 +266,22 @@ Después iniciar backend con el perfil opcional:
 
 ```powershell
 Set-Location backend
+$env:DEBUG = "false"
+$env:LOGGING_LEVEL_ROOT = "INFO"
 mvn.cmd spring-boot:run "-Dspring-boot.run.profiles=postgres"
 ```
+
+Estas dos variables limitan el diagnóstico de esa terminal y evitan salida
+innecesariamente detallada; no desactivan CSRF, TLS ni validaciones. Los DTO de
+registro y CSRF también ocultan sus valores en representaciones de logging.
 
 Con perfil postgres, la salud incluye la disponibilidad de conexión JDBC en su
 resultado agregado, pero no publica detalles. Flyway valida y aplica en orden las
 migraciones versionadas de `backend/src/main/resources/db/migration`; `clean` está
 deshabilitado y una migración aplicada no debe editarse. El esquema inicial solo
-cubre Identidad (usuarios, ganaderías, membresías y sesiones): no hay endpoints de
-autenticación ni migraciones de animales. Para detener la BD sin eliminar datos:
+cubre Identidad (usuarios, ganaderías, membresías y sesiones): de autenticación
+solo está disponible AU01; no hay login, sesión ni migraciones de animales. Para
+detener la BD sin eliminar datos:
 `docker compose stop postgres`.
 No ejecutar `down -v` para una parada normal. Si cambia usuario/contraseña en .env,
 la imagen no reconfigura por sí sola un volumen ya inicializado: revisar la
@@ -295,15 +307,23 @@ local no fue validada. Mantener
 Con el perfil `postgres`, `POST /api/v1/auth/registro` acepta únicamente `correo`
 y `contrasena`. Normaliza el correo, exige 15–128 caracteres Unicode sin recortar
 la contraseña, crea una cuenta ACTIVO y no crea sesión, rol ni membresía. Rechaza
-campos adicionales y responde sin hash. Requiere origen configurado y token CSRF;
-el endpoint aprobado `GET /api/v1/auth/csrf` todavía no está implementado, por lo
-que aún no se expone un flujo React utilizable. Las pruebas de integración usan
-la infraestructura de Spring Security para presentar un token válido.
+campos adicionales y responde sin hash. React obtiene un token no autenticador
+mediante `GET /api/v1/auth/csrf`, conserva el valor solo en memoria y lo envía en
+`X-CSRF-TOKEN`; Spring mantiene además la cookie `__Host-GC-CSRF` como Secure,
+HttpOnly y SameSite=Strict. Un 403 `CSRF_INVALIDO` provoca una sola renovación y
+reintento; no se desactiva CSRF ni se guardan credenciales en almacenamiento web.
+
+El formulario evita doble envío, valida correo, confirmación y la longitud Unicode,
+y diferencia errores de validación, conflicto, límite, seguridad, servicio y red.
+El éxito informa honestamente que no existe una sesión iniciada. Login, JWT,
+renovación, invitaciones y animales continúan cerrados.
+Los DTO sensibles ocultan sus valores en representaciones de diagnóstico y los
+procesadores HTTP que podrían registrar cuerpos permanecen en nivel INFO.
 
 La protección inicial limita de forma configurable diez intentos por origen en
 15 minutos y se reinicia con cada instancia. No confía en `X-Forwarded-For`.
 Antes de producción se debe aprobar un límite distribuido y la configuración de
-proxy confiable. Login, JWT, renovación, invitaciones y animales siguen cerrados.
+proxy confiable.
 
 ### Problemas de entorno observados
 

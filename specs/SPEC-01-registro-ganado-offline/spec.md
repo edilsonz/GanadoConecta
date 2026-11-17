@@ -383,7 +383,7 @@ PA02–PA08 permanecen no ejecutadas salvo las restricciones de esquema ya docum
 
 | Prueba | Escenario y resultado requerido | Criterios |
 |---|---|---|
-| PA01 | **EJECUTADA para AU01:** registro válido crea cuenta sin permisos; correo normalizado duplicado no crea segunda cuenta; inválidos y campos rol/ganadería/estado son rechazados; hash nunca se devuelve. | CA03; [evidencia](../../docs/05-preparacion-implementacion/08-registro-usuarios.md) |
+| PA01 | **EJECUTADA para AU01:** React obtiene CSRF y registra sin persistir credenciales; registro válido crea cuenta sin permisos; correo normalizado duplicado no crea segunda cuenta; inválidos y campos rol/ganadería/estado son rechazados; hash nunca se devuelve. | CA03; [evidencia](../../docs/05-preparacion-implementacion/08-registro-usuarios.md) |
 | PA02 | Login real válido/inválido, cuenta inactiva y límite temporal; JWT alterado, expirado, algoritmo/audiencia/emisor incorrectos y sesión revocada son rechazados sin datos privados. | CA03, CA12 |
 | PA03 | Reloj controlado en límites 10 min/24 h; renovar consume verificador y crea sucesor en un commit. Reutilización revoca familia y JWT previos fallan por sesión. Probar rollback, dos refresh concurrentes, respuesta perdida tras commit y login recuperable sin borrar pendientes ni guardar tokens en servidor/IndexedDB. Nunca ampliar 24 h. | CA12 |
 | PA04 | Logout confirmado revoca sesión/verificadores y el backend rechaza JWT anterior aún no expirado. Revocar membresía impide acceso a su ganadería con JWT previo. Logout offline conserva cola y exige cierre al reconectar; login en otra pestaña no recibe cierre antiguo; sin credenciales en almacenamiento offline/logs. | CA06, CA12, CA14 |
@@ -431,7 +431,7 @@ DP01–DP08 quedan adoptadas y SPEC-01 aprobada documentalmente por autorizació
 | Validación | Estado | Evidencia |
 |---|---|---|
 | Coherencia documental, enlaces y códigos | Comprobada el 16 de noviembre de 2026 | 18 CA con pruebas; 23 tareas superiores y ocho subtareas de acceso; AU01–AU08 y PA01–PA08 definidos; 14 enlaces locales de los tres documentos válidos, tablas y códigos coherentes, git diff --check sin errores. No equivale a pruebas funcionales. |
-| PA01 / AU01 | Ejecutada el 17 de noviembre de 2026 | Dominio, caso de uso, HTTP, Argon2id y PostgreSQL reales; CA03 no está completo porque AU02–AU08 siguen pendientes. |
+| PA01 / AU01 | Ejecutada el 17 de noviembre de 2026 | Formulario React, CSRF/cookie segura, revisión manual en Chrome, HTTP real, dominio, caso de uso, Argon2id y PostgreSQL; CA03 no está completo porque AU02–AU08 y el E2E automatizado de navegador real siguen pendientes. |
 | PU01–PU04, PI01–PI05, EE01–EE04, PC01 y PA02–PA08 | No ejecutadas integralmente | Sin flujos completos de login, sesiones, ganaderías, animales u offline. |
 | Aprobación de SPEC/plan/tareas | Aprobada documentalmente el 16 de noviembre de 2026 | Autorización expresa del responsable con precisiones obligatorias de sesión y rotación; sin implementación. |
 

@@ -32,6 +32,8 @@ management:
 logging:
   level:
     root: INFO
+    org.springframework.web.servlet.mvc.method.annotation.RequestResponseBodyMethodProcessor: INFO
+    org.springframework.web.servlet.mvc.method.annotation.HttpEntityMethodProcessor: INFO
 ganadoconecta:
   seguridad:
     origen-permitido: ${GANADOCONECTA_ORIGEN_PERMITIDO:http://127.0.0.1:5173}
