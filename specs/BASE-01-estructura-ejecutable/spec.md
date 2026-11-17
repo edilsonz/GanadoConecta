@@ -1,8 +1,8 @@
 # BASE-01 — Primera estructura ejecutable
 
 Estado: alcance técnico autorizado por el responsable el 16 de noviembre de 2026;
-base implementada para revisión, con PostgreSQL/Compose pendientes de validación
-por herramientas ausentes. No completa SPEC-01.
+base técnica y conexión PostgreSQL/JDBC verificadas el 17 de noviembre de 2026.
+No completa SPEC-01.
 
 ## Objetivo y trazabilidad
 
@@ -36,7 +36,7 @@ Sin variables obligatorias no se inicia el perfil de persistencia.
 | BASE-CA02 | API arranca sin BD y GET /api/health devuelve solo status. | Prueba HTTP de integración y arranque real local. |
 | BASE-CA03 | Otras rutas se deniegan sin ofrecer autenticación falsa. | Pruebas de seguridad de API. |
 | BASE-CA04 | Conexión fallida o válida se representa según respuesta real. | Pruebas de componente con red controlada. |
-| BASE-CA05 | PostgreSQL tiene configuración reproducible, volumen, healthcheck y secretos externos. | Compose real si Docker existe; de lo contrario, pendiente explícito. |
+| BASE-CA05 | PostgreSQL tiene configuración reproducible, volumen, healthcheck y secretos externos. | Compose healthy, consulta SQL y prueba JDBC real por el puerto publicado. |
 | BASE-CA06 | README permite instalar, ejecutar y probar; variables privadas ignoradas. | Revisión de comandos, gitignore y evidencias. |
 
 No aplican pruebas de carga de animales/anuncios ni CA de negocio de SPEC-01:

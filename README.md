@@ -178,7 +178,8 @@ La salud sin perfil postgres comprueba el proceso, no conexión a una base de da
 | React / TypeScript / Vite | 19.3.1 / 5.9.3 / 8.3.8, dependencias exactas y package-lock. |
 | Pruebas frontend | Vitest 5.1.0, Testing Library React 16.3.3, jest-dom 7.0.1 y happy-dom 21.0.4. |
 | Pruebas backend | Spring Boot Test y JUnit 5 gestionados por el parent fijado. |
-| PostgreSQL | Imagen postgres:17.12 en compose.yaml. Docker/PostgreSQL no detectados en esta computadora; ejecución de BD pendiente. |
+| Docker / Compose | Motor 29.9.3 y Compose 5.7.0; contenedor PostgreSQL comprobado healthy. |
+| PostgreSQL | Imagen postgres:17.12; JDBC validado en 127.0.0.1:5433 hacia el puerto 5432 del contenedor. |
 
 En Windows se usan npm.cmd y mvn.cmd para no depender de la política de scripts
 PowerShell. No se modificó Java, Node, PATH ni configuración global del equipo.
@@ -242,8 +243,8 @@ API_PROXY_TARGET solo cambia el proxy de desarrollo y puede configurarse en .env
 
 ### PostgreSQL opcional
 
-No se requiere para arrancar el modo básico. Una vez instalado y arrancado
-Docker Desktop/Compose, configurar .env y ejecutar desde la raíz:
+No se requiere para arrancar el modo básico. Para usar persistencia en desarrollo,
+configurar `.env` y ejecutar desde la raíz:
 
 ```powershell
 docker compose config --quiet
@@ -252,7 +253,8 @@ docker compose ps
 ```
 
 No publicar la salida completa de `docker compose config`, pues puede contener
-el secreto expandido. Puerto ligado a 127.0.0.1; volumen postgres_data, zona UTC.
+el secreto expandido. El puerto predeterminado queda ligado a `127.0.0.1:5433`;
+el contenedor escucha en 5432. Se mantiene el volumen `postgres_data` y zona UTC.
 Después iniciar backend con el perfil opcional:
 
 ```powershell
@@ -267,10 +269,18 @@ No ejecutar `down -v` para una parada normal. Si cambia usuario/contraseña en .
 la imagen no reconfigura por sí sola un volumen ya inicializado: revisar la
 administración local, sin borrar el volumen como solución automática.
 
-Alternativa: PostgreSQL local 17.12 administrado por el desarrollador, con base/
-usuario propios y las mismas variables de conexión. No se instaló ni validó esa
-alternativa. Docker/PostgreSQL son la única comprobación de entorno pendiente
-que impide verificar persistencia real en esta iteración.
+La prueba real de integración se habilita explícitamente porque necesita el
+contenedor y el `.env` privado; un `verify` ordinario no depende de servicios locales:
+
+```powershell
+Set-Location backend
+mvn.cmd -B -ntp "-Dganadoconecta.postgres.integration-test=true" verify
+```
+
+La prueba ejecuta una consulta mediante `JdbcTemplate`, comprueba la base,
+PostgreSQL 17, el puerto externo 5433, el puerto interno 5432 y que la salud no
+exponga detalles. Una alternativa PostgreSQL local no fue validada. Mantener
+`POSTGRES_PORT=5433` evita conectar por error con el PostgreSQL 18 de Windows en 5432.
 
 ### Problemas de entorno observados
 
@@ -291,10 +301,7 @@ try {
 No aplicar este ajuste en otros sistemas operativos sin comprobar su almacén de
 confianza. Si no funciona, revisar JDK/red/cadena de certificados con el responsable
 del equipo; nunca usar opciones para omitir la validación de certificados.
-Para Docker ausente, instalar/configurar Docker Desktop con WSL2 siguiendo la
-[guía oficial de Windows](https://docs.docker.com/desktop/setup/install/windows-install/),
-reabrir terminal y comprobar `docker version` y `docker compose version`.
-No se instaló software del sistema durante esta tarea.
+Docker Desktop fue instalado y validado posteriormente con PostgreSQL 17.12.
 
 Consultar [BASE-01](specs/BASE-01-estructura-ejecutable/spec.md) y el
 [informe de implementación y evidencia](docs/05-preparacion-implementacion/06-base-ejecutable.md)

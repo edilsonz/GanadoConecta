@@ -31,6 +31,12 @@ Archivo .env.example con contraseña vacía, exige elegirla fuera del repositori
 Perfil postgres conecta por JDBC; sin Docker o servidor local no se afirma conexión.
 No se borra volumen ni se crean credenciales reales en esta tarea.
 
+Validación completada el 17 de noviembre de 2026: `.env` privado se carga desde
+la raíz al ejecutar Spring Boot fuera de Docker; host `127.0.0.1`, puerto publicado
+5433, contenedor 5432 y PostgreSQL 17.12. La prueba JDBC real se habilita mediante
+propiedad explícita para no convertir un servicio local en requisito del `verify`
+ordinario. El esquema y las migraciones continúan fuera de BASE-01.
+
 Fuentes consultadas: requisitos oficiales de Spring Boot 3.5, guía Vite y
 metadatos de Maven Central/npm para versiones y motores. Referencias y resultados
 concretos se registrarán en docs/05-preparacion-implementacion/06-base-ejecutable.md.

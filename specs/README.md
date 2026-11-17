@@ -13,7 +13,7 @@ nuevas especificaciones. Reorganizar un borrador no implica aprobarlo.
 
 | Identificador | Especificación | Plan | Tareas | Estado |
 |---|---|---|---|---|
-| BASE-01 | [Estructura ejecutable](BASE-01-estructura-ejecutable/spec.md) | [Plan](BASE-01-estructura-ejecutable/plan.md) | [Tareas](BASE-01-estructura-ejecutable/tasks.md) | Base implementada para revisión; validación PostgreSQL/Compose pendiente. No completa SPEC-01 |
+| BASE-01 | [Estructura ejecutable](BASE-01-estructura-ejecutable/spec.md) | [Plan](BASE-01-estructura-ejecutable/plan.md) | [Tareas](BASE-01-estructura-ejecutable/tasks.md) | Base y conexión PostgreSQL/JDBC verificadas. No completa SPEC-01 |
 | SPEC-01 | [Registro de ganado y sincronización](SPEC-01-registro-ganado-offline/spec.md) | [Plan](SPEC-01-registro-ganado-offline/plan.md) | [Tareas](SPEC-01-registro-ganado-offline/tasks.md) | Aprobada — Pendiente de implementación; contrato DP01 y plan/tareas aprobados documentalmente |
 
 RF17–RF22 y AC09 ya están integrados en la documentación base. La SPEC-01

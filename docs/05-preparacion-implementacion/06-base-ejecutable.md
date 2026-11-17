@@ -1,8 +1,8 @@
 # BASE-01 — Primera estructura ejecutable y evidencia
 
-Fecha: 16 de noviembre de 2026, America/Lima. Rama `develop`, partiendo de
-`1689b40`. Estado: **base técnica implementada para revisión; PostgreSQL/Compose
-pendientes de validación**. No se ha implementado SPEC-01 ni se habilitan datos reales.
+Fecha inicial: 16 de noviembre de 2026, America/Lima. Validación PostgreSQL/JDBC:
+17 de noviembre de 2026. Estado: **base técnica y conectividad PostgreSQL/JDBC
+verificadas**. No se ha implementado SPEC-01 ni se habilitan datos reales.
 
 ## Alcance realizado
 
@@ -28,7 +28,7 @@ backend/
     modulos/ganado/dominio/package-info.java
     modulos/ganado/aplicacion/package-info.java
   src/main/resources/application.yml, application-postgres.yml
-  src/test/java/pe/ganadoconecta/ApiBaseIntegrationTest.java
+  src/test/java/pe/ganadoconecta/{ApiBase,PostgresConectividad}IntegrationTest.java
 compose.yaml
 .env.example
 .editorconfig
@@ -59,8 +59,8 @@ de sesión DP01; deberá integrarse al desarrollar T02 y sus pruebas.
 | JDK/Javac | Oracle 22.0.1 disponible; JAVA_HOME no definido. Compilación con release 21. JDK 21 LTS recomendado para trabajo habitual, no instalado en esta tarea. |
 | Maven | 3.9.16, `C:\Herramientas\apache-maven-3.9.16\bin\mvn.cmd`. Gradle no disponible. |
 | Node / npm | 22.19.0 / 10.9.3. Se usa `npm.cmd` en PowerShell. |
-| Docker | No se encontró comando, instalación estándar de Docker Desktop ni servicio correspondiente. |
-| PostgreSQL | `psql`, instalación estándar y servicio local no detectados. |
+| Docker | Cliente/servidor 29.9.3 y Compose 5.7.0 disponibles el 17 de noviembre. |
+| PostgreSQL | Contenedor `postgres:17.12`, healthy, base ganadoconecta y volumen Compose. |
 | Navegador | Chrome disponible para comprobación real de pantalla y conexión. |
 
 Versiones fijadas en manifests: Spring Boot 3.5.16, React 19.3.1, TypeScript 5.9.3,
@@ -85,9 +85,10 @@ registro npm; el parent contra Maven Central. No se modificó software del siste
 
 ## Configuración local
 
-`.env.example` contiene campos vacíos para usuario y contraseña; no se creó `.env`
-ni una credencial real. `.gitignore` excluye `.env` privados, dependencias,
-compilaciones, logs y `.cache/`; conserva únicamente el ejemplo público.
+`.env.example` contiene campos vacíos para usuario y contraseña. El `.env` privado
+local fue creado por el responsable y permanece ignorado; sus valores no se
+imprimieron ni incorporaron a archivos versionados. `.gitignore` excluye `.env`
+privados, dependencias, compilaciones, logs y `.cache/`; conserva el ejemplo público.
 Spring importa opcionalmente `.env` de su directorio o padre como propiedades.
 Vite solo utiliza `API_PROXY_TARGET` para su proxy; no inyecta secretos de BD.
 Los comandos de instalación y ejecución están en el [README](../../README.md).
@@ -130,19 +131,36 @@ regeneran con Maven/Vitest. No se ejecutaron pruebas de carga de animales/anunci
 porque esos flujos todavía no existen. Tampoco se acreditan accesibilidad integral,
 offline ni navegadores adicionales mediante esta comprobación visual.
 
-## Pendiente para cerrar la validación de infraestructura
+## Validación PostgreSQL/JDBC posterior
 
-1. Instalar/configurar Docker Desktop/Compose con WSL2 siguiendo el README,
-   o proporcionar PostgreSQL local administrado. No se hizo instalación automática.
-2. Crear `.env` privado con valores elegidos por el desarrollador.
-3. Ejecutar `docker compose config --quiet`, iniciar PostgreSQL y comprobar salud
-   y persistencia del volumen. Estos comandos **no se ejecutaron** por Docker ausente.
-4. Arrancar perfil `postgres`; verificar salud UP con BD disponible y DOWN/503
-   al no poder conectar, sin filtrar credenciales ni detalles. Conexión JDBC real
-   **no validada** en esta iteración. No borrar volúmenes para resolver errores.
-5. Revisar esta base antes del siguiente incremento. Mantener cerrados los flujos
-   de animales hasta implementar autenticación/membresías y gates de SPEC-01.
+El 17 de noviembre de 2026 se completó BASE-CA05 con el entorno local del
+responsable. Se preservaron los secretos únicamente en `.env`, ignorado por Git.
 
-BASE-CA05 permanece parcialmente verificado por revisión de configuración;
-su validación ejecutable está pendiente. Los demás criterios cuentan con la
-evidencia básica indicada, sin equivaler a preparación para producción.
+| Comprobación | Resultado real |
+|---|---|
+| `docker version` y `docker compose version` | Cliente/servidor 29.9.3; Compose 5.7.0. |
+| `docker compose config --quiet` | Configuración válida; no se imprimió la expansión que contiene secretos. |
+| `docker compose ps` e inspección del contenedor | `postgres:17.12`, running/healthy, `127.0.0.1:5433` hacia 5432. |
+| Consultas `psql` de solo lectura dentro del contenedor | Base ganadoconecta, servidor 17.12 y configuración del servidor UTC confirmados. |
+| Primer `mvn ... verify` JDBC | Abrió JDBC pero falló una aserción ajena a conectividad: el driver fijó la zona de sesión en America/Lima. No se declaró exitoso. |
+| `mvn.cmd -B -ntp verify` ordinario final | BUILD SUCCESS; 3 pruebas ejecutadas y 2 JDBC omitidas expresamente por depender del entorno local. |
+| `mvn.cmd -B -ntp "-Dganadoconecta.postgres.integration-test=true" verify` corregido | BUILD SUCCESS; 5 pruebas, 0 fallos/errores/omitidas. Dos pruebas validaron JDBC y salud con BD. |
+| JAR con `--spring.profiles.active=postgres` | Backend arrancó, salud UP y `/api/animales` continuó en 403. |
+| Conexiones TCP del PID Java | Tres conexiones establecidas a 127.0.0.1:5433; ninguna a 5432. |
+
+La consulta JDBC verificó `current_database()`, `inet_server_port()` y
+`server_version_num`: base ganadoconecta, puerto del servidor 5432 y versión mayor
+17. La URL configurada fue exactamente `jdbc:postgresql://127.0.0.1:5433/ganadoconecta`.
+No se añadió un endpoint de diagnóstico ni se expusieron URL, usuario o contraseña
+en `/api/health`; la respuesta se mantuvo en `{"status":"UP"}`.
+
+El ajuste de zona horaria retirado de la prueba no oculta un fallo de conexión:
+el servidor Compose arranca con UTC, mientras el driver adapta la zona de la sesión
+JDBC al proceso Java en America/Lima. La persistencia futura deberá probar por
+separado instantes UTC y fechas de negocio según DP08.
+
+Quedan pendientes el esquema, las migraciones y toda persistencia de negocio.
+También queda pendiente verificar el comportamiento de salud con PostgreSQL caído;
+no se detuvo el contenedor healthy del responsable durante esta tarea. Mantener
+cerrados los flujos de animales hasta implementar autenticación/membresías y los
+gates de SPEC-01. Esta evidencia no equivale a preparación para producción.
