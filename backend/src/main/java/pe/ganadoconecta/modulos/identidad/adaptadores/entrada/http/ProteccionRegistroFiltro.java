@@ -20,12 +20,13 @@ import java.util.UUID;
 import org.springframework.http.MediaType;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-/** Origen y tamaño para cambios de autenticación; limita el registro antes de Argon2id. */
+/** Origen y tamaño para escrituras públicas/privadas; limita el registro antes de Argon2id. */
 public final class ProteccionRegistroFiltro extends OncePerRequestFilter {
     static final int MAXIMO_CUERPO_BYTES = 16 * 1024;
     private static final String RUTA = "/api/v1/auth/registro";
-    private static final java.util.Set<String> RUTAS_AUTENTICACION = java.util.Set.of(
-            RUTA, "/api/v1/auth/login", "/api/v1/auth/renovar", "/api/v1/auth/logout");
+    private static final java.util.Set<String> RUTAS_PROTEGIDAS = java.util.Set.of(
+            RUTA, "/api/v1/auth/login", "/api/v1/auth/renovar", "/api/v1/auth/logout",
+            "/api/v1/ganaderias");
 
     private final String origenPermitido;
     private final LimitadorRegistro limitador;
@@ -47,7 +48,7 @@ public final class ProteccionRegistroFiltro extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         return !"POST".equals(request.getMethod())
-                || !RUTAS_AUTENTICACION.contains(request.getRequestURI());
+                || !RUTAS_PROTEGIDAS.contains(request.getRequestURI());
     }
 
     @Override

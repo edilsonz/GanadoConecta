@@ -11,17 +11,21 @@ import pe.ganadoconecta.modulos.identidad.adaptadores.salida.CodificadorContrase
 import pe.ganadoconecta.modulos.identidad.adaptadores.salida.GeneradorCredencialesRenovacionSeguras;
 import pe.ganadoconecta.modulos.identidad.adaptadores.salida.LimiteIntentosLoginPostgres;
 import pe.ganadoconecta.modulos.identidad.adaptadores.salida.RepositorioCredencialesPostgres;
+import pe.ganadoconecta.modulos.identidad.adaptadores.salida.RepositorioGanaderiasPostgres;
 import pe.ganadoconecta.modulos.identidad.adaptadores.salida.RepositorioSesionesPostgres;
 import pe.ganadoconecta.modulos.identidad.adaptadores.salida.RepositorioUsuariosPostgres;
 import pe.ganadoconecta.modulos.identidad.aplicacion.CodificadorContrasena;
 import pe.ganadoconecta.modulos.identidad.aplicacion.CerrarSesion;
+import pe.ganadoconecta.modulos.identidad.aplicacion.CrearGanaderia;
 import pe.ganadoconecta.modulos.identidad.aplicacion.GeneradorCredencialesRenovacion;
 import pe.ganadoconecta.modulos.identidad.aplicacion.GeneradorIdUsuario;
+import pe.ganadoconecta.modulos.identidad.aplicacion.GeneradorIdMembresia;
 import pe.ganadoconecta.modulos.identidad.aplicacion.LimiteIntentosLogin;
 import pe.ganadoconecta.modulos.identidad.aplicacion.IniciarSesion;
 import pe.ganadoconecta.modulos.identidad.aplicacion.RenovarSesion;
 import pe.ganadoconecta.modulos.identidad.aplicacion.RegistrarUsuario;
 import pe.ganadoconecta.modulos.identidad.aplicacion.RepositorioCredenciales;
+import pe.ganadoconecta.modulos.identidad.aplicacion.RepositorioGanaderias;
 import pe.ganadoconecta.modulos.identidad.aplicacion.RepositorioSesiones;
 import pe.ganadoconecta.modulos.identidad.aplicacion.RepositorioUsuarios;
 import pe.ganadoconecta.modulos.identidad.aplicacion.TokensAcceso;
@@ -38,6 +42,12 @@ public class IdentidadConfiguracion {
     @Bean
     RepositorioCredenciales repositorioCredenciales(JdbcTemplate jdbc) {
         return new RepositorioCredencialesPostgres(jdbc);
+    }
+
+    @Bean
+    RepositorioGanaderias repositorioGanaderias(
+            JdbcTemplate jdbc, TransactionTemplate transacciones) {
+        return new RepositorioGanaderiasPostgres(jdbc, transacciones);
     }
 
     @Bean
@@ -69,9 +79,20 @@ public class IdentidadConfiguracion {
     }
 
     @Bean
+    GeneradorIdMembresia generadorIdMembresia() {
+        return UUID::randomUUID;
+    }
+
+    @Bean
     RegistrarUsuario registrarUsuario(RepositorioUsuarios repositorio,
             CodificadorContrasena codificador, GeneradorIdUsuario generadorId) {
         return new RegistrarUsuario(repositorio, codificador, generadorId);
+    }
+
+    @Bean
+    CrearGanaderia crearGanaderia(RepositorioGanaderias repositorio,
+            GeneradorIdMembresia generadorId) {
+        return new CrearGanaderia(repositorio, generadorId);
     }
 
     @Bean

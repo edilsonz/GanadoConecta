@@ -9,7 +9,9 @@
 > [evidencia AU02–AU04](09-nucleo-autenticacion-sesiones.md) documenta
 > sesiones, JWT, rotación y endpoints backend; la
 > [evidencia del cliente React](10-login-react.md) cubre login, restauración y
-> logout automatizados. Los estados de propuesta siguientes describen la
+> logout automatizados, y la
+> [evidencia de AU05](11-creacion-ganaderia.md) documenta la creación backend de
+> ganadería y propietario inicial. Los estados de propuesta siguientes describen la
 > preparación arquitectónica original, no acreditan implementación de SPEC-01.
 
 > **Estado de consolidación:** las 16 decisiones aprobadas por el responsable

@@ -100,7 +100,8 @@ SPEC-01 está aprobada documentalmente y el registro de cuentas AU01 funciona
 desde React hasta PostgreSQL. El backend expone AU02–AU04 para login, renovación,
 logout y consulta de sesión con JWT/cookie segura. React ya integra inicio,
 restauración y cierre de sesión sin persistir el JWT. Ganaderías, membresías
-operativas, animales y funcionamiento offline continúan pendientes.
+operativas, animales y funcionamiento offline continúan pendientes; el backend
+ya permite crear una ganadería con su propietario inicial mediante AU05.
 
 Se utilizará Redis como caché para consultas frecuentes del catálogo
 público de anuncios. PostgreSQL conservará los datos permanentes
@@ -373,7 +374,13 @@ React implementa login, restauración mediante renovación, consulta de identida
 logout. El JWT de acceso se conserva solo en memoria y JavaScript no intenta leer
 la cookie HttpOnly. Solo una marca no secreta de cierre remoto pendiente puede
 guardarse en `localStorage`. No están disponibles creación de ganaderías,
-invitaciones, membresías familiares ni animales.
+invitaciones, membresías familiares ni animales desde React.
+
+`POST /api/v1/ganaderias` implementa el primer incremento backend AU05. Exige
+Bearer JWT y CSRF, acepta solo UUIDv4 y nombre, y crea en una transacción la
+ganadería ACTIVA y la membresía PROPIETARIO del actor autenticado. No acepta un
+propietario o rol enviado por el cliente. Listado, contexto `/acceso` e interfaz
+React de ganaderías continúan pendientes.
 
 ### Problemas de entorno observados
 
@@ -404,4 +411,5 @@ para la base de datos, y la
 [evidencia del registro AU01](docs/05-preparacion-implementacion/08-registro-usuarios.md)
 y la [evidencia backend AU02–AU04](docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md),
 además de la [evidencia del cliente React](docs/05-preparacion-implementacion/10-login-react.md),
+y la [evidencia de creación de ganadería AU05](docs/05-preparacion-implementacion/11-creacion-ganaderia.md),
 para resultados realmente ejecutados y limitaciones.

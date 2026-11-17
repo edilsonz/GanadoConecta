@@ -63,6 +63,7 @@ public class SeguridadConfiguracion {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/renovar").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/ganaderias").authenticated()
                         .anyRequest().denyAll())
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfRepository)
