@@ -1,4 +1,5 @@
 import { ApiStatus } from './ApiStatus'
+import { AccesoCuenta } from './AccesoCuenta'
 import { RegistroCuenta } from './RegistroCuenta'
 
 const futureSections = [
@@ -18,6 +19,7 @@ export default function App() {
         </a>
         <nav aria-label="Navegación principal">
           <a className="nav-active" href="#inicio" aria-current="page">Inicio</a>
+          <a href="#iniciar-sesion">Iniciar sesión</a>
           <a href="#crear-cuenta">Crear cuenta</a>
           <button disabled>Mi ganado <span className="soon-label">Próximamente</span></button>
           <button disabled>Calendario</button>
@@ -56,6 +58,7 @@ export default function App() {
           </div>
         </section>
 
+        <AccesoCuenta />
         <RegistroCuenta />
 
         <section className="project-section" id="proyecto" aria-labelledby="project-title">

@@ -103,7 +103,7 @@ export function RegistroCuenta() {
           <div className="form-notice success-notice" role="status">
             <strong>Cuenta creada correctamente.</strong>
             <span>{correoCreado}</span>
-            <p>Tu sesión no se ha iniciado. El acceso estará disponible en una siguiente etapa.</p>
+            <p>Tu sesión no se ha iniciado. Ya puedes usar el formulario de inicio de sesión.</p>
           </div>
         )}
         {mensajeError && <div className="form-notice error-notice" role="alert">{mensajeError}</div>}

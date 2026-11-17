@@ -98,8 +98,9 @@ de despliegue de infra/ se distingue de los adaptadores internos del backend.
 Primera base ejecutable de frontend y backend disponible para revisión.
 SPEC-01 está aprobada documentalmente y el registro de cuentas AU01 funciona
 desde React hasta PostgreSQL. El backend expone AU02–AU04 para login, renovación,
-logout y consulta de sesión con JWT/cookie segura; React todavía no tiene pantalla
-de login. Ganaderías, membresías operativas, animales y offline continúan pendientes.
+logout y consulta de sesión con JWT/cookie segura. React ya integra inicio,
+restauración y cierre de sesión sin persistir el JWT. Ganaderías, membresías
+operativas, animales y funcionamiento offline continúan pendientes.
 
 Se utilizará Redis como caché para consultas frecuentes del catálogo
 público de anuncios. PostgreSQL conservará los datos permanentes
@@ -165,9 +166,10 @@ sin fuentes editables encontradas en el repositorio.
 
 ## Ejecutar la primera base local
 
-Esta iteración incluye inicio React responsivo y salud de la API. Los botones
+Esta iteración incluye una interfaz React responsiva, registro, login/logout y
+salud de la API. Los botones
 «Mi ganado» y «Calendario» están deshabilitados porque esas funciones aún no
-existen. No hay usuarios de demostración, login, animales, PWA ni sincronización.
+existen. No hay usuarios de demostración, ganaderías, animales, PWA ni sincronización.
 La salud sin perfil postgres comprueba el proceso, no conexión a una base de datos.
 
 ### Herramientas y versiones
@@ -204,9 +206,10 @@ java -jar target/ganadoconecta-backend-0.1.0-SNAPSHOT.jar
 API: http://127.0.0.1:8080/api/health, respuesta `{"status":"UP"}`.
 Alternativamente, ejecutar `mvn.cmd spring-boot:run`. Detener con Ctrl+C.
 Sin el perfil `postgres`, las únicas rutas públicas son GET `/api/health` y GET
-`/api/v1/auth/csrf`; el registro no persiste cuentas. Con ese perfil también se
-habilita POST `/api/v1/auth/registro`. Las demás rutas permanecen denegadas. No
-se crea ningún usuario o contraseña automática y la salud no expone detalles.
+`/api/v1/auth/csrf`; el registro no persiste cuentas. Con ese perfil se habilitan
+registro, login, renovación, logout y consulta de identidad. Las demás rutas
+permanecen denegadas. No se crea ningún usuario o contraseña automática y la
+salud no expone detalles.
 
 ### Frontend (segunda terminal)
 
@@ -220,7 +223,8 @@ Abrir http://127.0.0.1:5173/. Vite reenvía /api al backend mediante proxy local
 sin abrir CORS de la API. Si el backend no está listo, la pantalla informa que
 no pudo comprobar conexión y permite volver a intentar. Detener con Ctrl+C.
 La pantalla de creación de cuenta requiere que el backend se ejecute con el
-perfil `postgres`; crear la cuenta no inicia sesión ni asigna una ganadería.
+perfil `postgres`; crear la cuenta no inicia sesión ni asigna una ganadería. El
+formulario de acceso tampoco crea roles, membresías ni ganaderías.
 
 ```powershell
 npm.cmd run typecheck
@@ -261,6 +265,16 @@ openssl pkey -in C:/ruta-privada/ganadoconecta-private.pem -pubout -out C:/ruta-
 
 No guardar esas claves en el repositorio ni mostrar su contenido en logs.
 
+La cookie `__Host-GC-Refresh` conserva `Secure`, por lo que el flujo real de
+sesión debe revisarse bajo HTTPS también en desarrollo. Vite acepta las rutas
+externas `DEV_HTTPS_CERT_PATH` y `DEV_HTTPS_KEY_PATH`; ambas se configuran juntas
+y nunca se versionan. El certificado debe ser confiable para el navegador y
+válido para `127.0.0.1` o el nombre local elegido. Al usarlas, establecer también
+`GANADOCONECTA_ORIGEN_PERMITIDO=https://127.0.0.1:5173` y abrir esa URL. El proxy
+puede seguir apuntando internamente a `http://127.0.0.1:8080`. La generación e
+instalación del certificado local depende de la herramienta administrada por el
+equipo; no se incluye certificado ni clave privada en este repositorio.
+
 ### PostgreSQL opcional
 
 No se requiere para arrancar el modo básico. Para usar persistencia en desarrollo,
@@ -293,8 +307,8 @@ resultado agregado, pero no publica detalles. Flyway valida y aplica en orden la
 migraciones versionadas de `backend/src/main/resources/db/migration`; `clean` está
 deshabilitado y una migración aplicada no debe editarse. El esquema inicial solo
 cubre Identidad (usuarios, ganaderías, membresías y sesiones): de autenticación
-están disponibles AU01 y los endpoints backend AU02–AU04; no hay interfaz React
-de login, ganaderías operativas ni migraciones de animales. Para
+están disponibles AU01, los endpoints backend AU02–AU04 y su cliente React de
+login/logout; no hay ganaderías operativas ni migraciones de animales. Para
 detener la BD sin eliminar datos:
 `docker compose stop postgres`.
 No ejecutar `down -v` para una parada normal. Si cambia usuario/contraseña en .env,
@@ -329,8 +343,8 @@ reintento; no se desactiva CSRF ni se guardan credenciales en almacenamiento web
 
 El formulario evita doble envío, valida correo, confirmación y la longitud Unicode,
 y diferencia errores de validación, conflicto, límite, seguridad, servicio y red.
-El éxito informa honestamente que no existe una sesión iniciada. La pantalla
-React de login, invitaciones y animales continúan cerrados.
+El éxito informa honestamente que no existe una sesión iniciada y permite pasar
+al formulario de acceso. Invitaciones, ganaderías y animales continúan cerrados.
 Los DTO sensibles ocultan sus valores en representaciones de diagnóstico y los
 procesadores HTTP que podrían registrar cuerpos permanecen en nivel INFO.
 
@@ -355,8 +369,11 @@ el JWT de acceso se devuelve para memoria del cliente. Cada petición protegida
 revalida sesión y cuenta en PostgreSQL. Las claves RSA se cargan desde rutas
 externas obligatorias y las pruebas generan pares efímeros bajo `target/`.
 
-React todavía no implementa login ni guarda tokens. No están disponibles creación
-de ganaderías, invitaciones, membresías familiares ni animales.
+React implementa login, restauración mediante renovación, consulta de identidad y
+logout. El JWT de acceso se conserva solo en memoria y JavaScript no intenta leer
+la cookie HttpOnly. Solo una marca no secreta de cierre remoto pendiente puede
+guardarse en `localStorage`. No están disponibles creación de ganaderías,
+invitaciones, membresías familiares ni animales.
 
 ### Problemas de entorno observados
 
@@ -385,5 +402,6 @@ para la base ejecutable, y la
 [evidencia del esquema inicial de Identidad](docs/05-preparacion-implementacion/07-esquema-identidad.md)
 para la base de datos, y la
 [evidencia del registro AU01](docs/05-preparacion-implementacion/08-registro-usuarios.md)
-y la [evidencia backend AU02–AU04](docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md)
+y la [evidencia backend AU02–AU04](docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md),
+además de la [evidencia del cliente React](docs/05-preparacion-implementacion/10-login-react.md),
 para resultados realmente ejecutados y limitaciones.

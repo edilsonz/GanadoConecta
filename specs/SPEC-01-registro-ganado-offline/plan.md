@@ -48,7 +48,8 @@ ADR-13 y persistencia PostgreSQL conforme a ADR-04. React muestra registro,
 login, logout, selección/creación de ganadería y estados de sesión; no asignador
 de roles ni pantalla de invitaciones. AU01 ya tiene implementación y pruebas
 desde el formulario React hasta PostgreSQL. AU02–AU04 exponen en backend login,
-renovación, logout y consulta de sesión con cookie/JWT; la pantalla React de login,
+renovación, logout y consulta de sesión con cookie/JWT; React integra esos contratos
+con JWT solo en memoria, restauración y cierre. Su E2E en navegador HTTPS,
 AU05–AU08 y las demás pantallas de acceso continúan pendientes.
 
 ### API de acceso y creación inicial
@@ -206,8 +207,9 @@ valida las migraciones al iniciar el perfil `postgres`; `clean` está deshabilit
 
 Esta persistencia es una parte de T02.1, no su cierre: ya existen el modelo,
 puerto, caso de uso, adaptador JDBC y endpoint de AU01 con Argon2id, además de
-sesión/rotación y endpoints backend AU02–AU04. Faltan el cliente React de login y
-los modelos funcionales de ganadería/membresía de AU05–AU08. La base nunca
+sesión/rotación, endpoints backend AU02–AU04 y cliente React automatizado. Falta
+validar este último en navegador HTTPS real. También faltan los modelos funcionales
+de ganadería/membresía de AU05–AU08. La base nunca
 almacena contraseñas en claro ni tokens de renovación. No se agregaron datos
 semilla ni membresías reales de editor/lector.
 

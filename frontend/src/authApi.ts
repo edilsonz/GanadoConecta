@@ -27,7 +27,7 @@ export class ErrorRegistro extends Error {
   }
 }
 
-async function leerJson(response: Response): Promise<unknown> {
+export async function leerJson(response: Response): Promise<unknown> {
   try {
     return await response.json()
   } catch {
@@ -35,7 +35,7 @@ async function leerJson(response: Response): Promise<unknown> {
   }
 }
 
-function esObjeto(value: unknown): value is Record<string, unknown> {
+export function esObjeto(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
@@ -46,14 +46,14 @@ function erroresPorCampo(body: unknown): Record<string, string> {
     .filter((entry): entry is [string, string] => typeof entry[1] === 'string'))
 }
 
-function codigoError(body: unknown): string | undefined {
+export function codigoError(body: unknown): string | undefined {
   if (!esObjeto(body)) return undefined
   return typeof (body as ErrorApi).codigo === 'string'
     ? (body as ErrorApi).codigo as string
     : undefined
 }
 
-async function obtenerTokenCsrf(): Promise<string> {
+export async function obtenerTokenCsrf(): Promise<string> {
   const response = await fetch('/api/v1/auth/csrf', {
     method: 'GET',
     credentials: 'same-origin',

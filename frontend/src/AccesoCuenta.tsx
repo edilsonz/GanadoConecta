@@ -1,0 +1,213 @@
+import { FormEvent, useEffect, useRef, useState } from 'react'
+import {
+  cerrarSesionRemota,
+  ErrorSesion,
+  iniciarSesion,
+  renovarSesionControlada,
+  type SesionActiva,
+} from './sesionApi'
+
+const MARCA_CIERRE_PENDIENTE = 'ganadoconecta:salida-remota-pendiente'
+
+const mensajesError = {
+  credenciales: 'El correo o la contraseña no son válidos.',
+  limite: 'Se alcanzó el límite temporal de intentos. Espera unos minutos antes de volver a intentar.',
+  seguridad: 'No pudimos validar la seguridad de la solicitud. Actualiza la página e inténtalo otra vez.',
+  conexion: 'No fue posible conectar con el servicio. Revisa tu conexión e inténtalo nuevamente.',
+  sesion: 'Tu sesión terminó. Vuelve a iniciar sesión para continuar.',
+  servicio: 'El acceso no está disponible en este momento. Inténtalo más tarde.',
+} as const
+
+function leerCierrePendiente() {
+  try {
+    return localStorage.getItem(MARCA_CIERRE_PENDIENTE) === '1'
+  } catch {
+    return false
+  }
+}
+
+function guardarCierrePendiente(pendiente: boolean) {
+  try {
+    if (pendiente) localStorage.setItem(MARCA_CIERRE_PENDIENTE, '1')
+    else localStorage.removeItem(MARCA_CIERRE_PENDIENTE)
+  } catch {
+    // La sesión sigue cerrada localmente aunque el almacenamiento no esté disponible.
+  }
+}
+
+export function AccesoCuenta() {
+  const [correo, setCorreo] = useState('')
+  const [contrasena, setContrasena] = useState('')
+  const [sesion, setSesion] = useState<SesionActiva | null>(null)
+  const [restaurando, setRestaurando] = useState(true)
+  const [enviando, setEnviando] = useState(false)
+  const [mensajeError, setMensajeError] = useState<string | null>(null)
+  const [errorCorreo, setErrorCorreo] = useState<string | null>(null)
+  const envioEnCurso = useRef(false)
+
+  useEffect(() => {
+    let activo = true
+    async function restaurar() {
+      if (leerCierrePendiente()) {
+        try {
+          await cerrarSesionRemota()
+          guardarCierrePendiente(false)
+        } catch {
+          if (activo) setMensajeError('El cierre remoto sigue pendiente. Tus datos permanecen bloqueados en este dispositivo.')
+        } finally {
+          if (activo) setRestaurando(false)
+        }
+        return
+      }
+
+      try {
+        const restaurada = await renovarSesionControlada()
+        if (activo) setSesion(restaurada)
+      } catch (error) {
+        if (activo && error instanceof ErrorSesion && error.tipo !== 'sesion') {
+          setMensajeError('No pudimos restaurar la sesión. Puedes iniciar sesión nuevamente.')
+        }
+      } finally {
+        if (activo) setRestaurando(false)
+      }
+    }
+    void restaurar()
+    return () => { activo = false }
+  }, [])
+
+  useEffect(() => {
+    if (!sesion) return
+    const demora = Math.min(
+      2_147_000_000,
+      Math.max(0, Date.parse(sesion.expiresAt) - Date.now() - 60_000),
+    )
+    const temporizador = window.setTimeout(async () => {
+      try {
+        const renovada = await renovarSesionControlada()
+        setSesion(actual => actual ? { ...renovada, correo: actual.correo } : null)
+      } catch {
+        setSesion(null)
+        setMensajeError('No pudimos renovar la sesión de forma segura. Vuelve a iniciar sesión.')
+      }
+    }, demora)
+    return () => window.clearTimeout(temporizador)
+  }, [sesion?.expiresAt])
+
+  async function enviar(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (envioEnCurso.current) return
+    const normalizado = correo.trim()
+    if (!normalizado || !normalizado.includes('@')) {
+      setErrorCorreo('Ingresa un correo electrónico válido.')
+      return
+    }
+    if (!contrasena) {
+      setMensajeError('Ingresa tu contraseña para continuar.')
+      return
+    }
+
+    envioEnCurso.current = true
+    setEnviando(true)
+    setErrorCorreo(null)
+    setMensajeError(null)
+    try {
+      const nuevaSesion = await iniciarSesion(correo, contrasena)
+      guardarCierrePendiente(false)
+      setSesion(nuevaSesion)
+      setContrasena('')
+    } catch (error) {
+      const fallo = error instanceof ErrorSesion ? error : new ErrorSesion('servicio')
+      setMensajeError(mensajesError[fallo.tipo])
+    } finally {
+      envioEnCurso.current = false
+      setEnviando(false)
+    }
+  }
+
+  async function cerrar() {
+    if (envioEnCurso.current) return
+    envioEnCurso.current = true
+    setSesion(null)
+    setEnviando(true)
+    setMensajeError(null)
+    try {
+      await cerrarSesionRemota()
+      guardarCierrePendiente(false)
+    } catch {
+      guardarCierrePendiente(true)
+      setMensajeError('Cierre remoto pendiente. La sesión está bloqueada en este dispositivo y se reintentará al volver.')
+    } finally {
+      envioEnCurso.current = false
+      setEnviando(false)
+    }
+  }
+
+  return (
+    <section className="login-section" id="iniciar-sesion" aria-labelledby="login-title">
+      <div className="login-intro">
+        <p className="eyebrow"><span className="small-rule" /> ACCESO SEGURO</p>
+        <h2 id="login-title">Vuelve a tu cuenta.</h2>
+        <p>Tu sesión permite identificarte. Todavía no crea una ganadería, membresía ni rol.</p>
+      </div>
+
+      <div className="login-card">
+        {restaurando ? (
+          <div className="session-loading" role="status" aria-live="polite">
+            <span className="status-dot" aria-hidden="true" /> Comprobando tu sesión…
+          </div>
+        ) : sesion ? (
+          <div className="authenticated-view" aria-live="polite">
+            <span className="session-icon" aria-hidden="true">✓</span>
+            <p className="eyebrow">SESIÓN ACTIVA</p>
+            <h3>Hola de nuevo.</h3>
+            {sesion.correo
+              ? <p className="session-email">{sesion.correo}</p>
+              : <p className="session-email">Cuenta verificada</p>}
+            <p className="session-note">Mi ganado y las ganaderías todavía no están disponibles.</p>
+            <button className="button button-outline logout-button" type="button" onClick={cerrar} disabled={enviando}>
+              {enviando ? 'Cerrando sesión…' : 'Cerrar sesión'}
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={enviar} noValidate aria-busy={enviando}>
+            {mensajeError && <div className="form-notice error-notice" role="alert">{mensajeError}</div>}
+            <div className="form-field">
+              <label htmlFor="login-correo">Correo electrónico</label>
+              <input
+                id="login-correo"
+                name="correo"
+                type="email"
+                autoComplete="username"
+                inputMode="email"
+                value={correo}
+                onChange={event => setCorreo(event.target.value)}
+                aria-invalid={Boolean(errorCorreo)}
+                aria-describedby={errorCorreo ? 'login-error-correo' : undefined}
+                disabled={enviando}
+                placeholder="nombre@correo.com"
+              />
+              {errorCorreo && <span className="field-error" id="login-error-correo">{errorCorreo}</span>}
+            </div>
+            <div className="form-field">
+              <label htmlFor="login-contrasena">Contraseña</label>
+              <input
+                id="login-contrasena"
+                name="contrasena"
+                type="password"
+                autoComplete="current-password"
+                value={contrasena}
+                onChange={event => setContrasena(event.target.value)}
+                disabled={enviando}
+              />
+            </div>
+            <button className="button button-primary submit-button" type="submit" disabled={enviando}>
+              {enviando ? 'Iniciando sesión…' : 'Iniciar sesión'} <span aria-hidden="true">→</span>
+            </button>
+            <p className="privacy-note">La contraseña y el JWT de acceso no se guardan en localStorage, sessionStorage ni IndexedDB.</p>
+          </form>
+        )}
+        {!sesion && restaurando && mensajeError && <div className="form-notice error-notice" role="alert">{mensajeError}</div>}
+      </div>
+    </section>
+  )
+}

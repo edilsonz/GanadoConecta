@@ -22,12 +22,16 @@ import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {"debug=false", "logging.level.root=INFO"})
+        properties = {
+                "debug=false",
+                "logging.level.root=INFO",
+                "ganadoconecta.seguridad.origen-permitido=https://127.0.0.1:5173"
+        })
 @ActiveProfiles("postgres")
 @EnabledIfSystemProperty(named = "ganadoconecta.postgres.integration-test", matches = "true")
 class RegistroUsuarioCsrfPostgresIntegrationTest extends SoporteJwtPostgres {
     private static final String PREFIJO = "registro-csrf-test-";
-    private static final String ORIGEN = "http://127.0.0.1:5173";
+    private static final String ORIGEN = "https://127.0.0.1:5173";
 
     @Autowired
     private TestRestTemplate rest;

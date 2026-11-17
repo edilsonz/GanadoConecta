@@ -2,6 +2,10 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import App from './App'
 
+vi.mock('./AccesoCuenta', () => ({
+  AccesoCuenta: () => <section aria-label="Acceso de cuenta" />,
+}))
+
 function mockHealth(status = 'UP', ok = true) {
   const fetchMock = vi.fn().mockResolvedValue({ ok, json: async () => ({ status }) })
   vi.stubGlobal('fetch', fetchMock)
