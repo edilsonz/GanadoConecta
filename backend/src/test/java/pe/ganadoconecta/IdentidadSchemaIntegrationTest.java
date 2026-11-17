@@ -47,7 +47,7 @@ class IdentidadSchemaIntegrationTest {
                 WHERE success
                 ORDER BY installed_rank DESC
                 LIMIT 1
-                """, String.class)).isEqualTo("2");
+                """, String.class)).isEqualTo("3");
         assertThat(jdbc.queryForList("""
                 SELECT table_name
                 FROM information_schema.tables
@@ -55,6 +55,7 @@ class IdentidadSchemaIntegrationTest {
                 ORDER BY table_name
                 """, String.class)).containsExactly(
                         "ganaderia",
+                        "intento_login",
                         "membresia",
                         "sesion_dispositivo",
                         "usuario",
@@ -75,6 +76,14 @@ class IdentidadSchemaIntegrationTest {
                 """, String.class))
                 .contains("huella_sha256")
                 .doesNotContain("token", "token_renovacion");
+        assertThat(jdbc.queryForList("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_schema = 'identidad'
+                  AND table_name = 'intento_login'
+                """, String.class))
+                .contains("clave_sha256", "fallos", "bloqueado_hasta")
+                .doesNotContain("correo", "origen");
     }
 
     @Test

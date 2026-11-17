@@ -47,8 +47,9 @@ completa. Usa Spring Security y JWT conforme a ADR-07; membresías conforme a
 ADR-13 y persistencia PostgreSQL conforme a ADR-04. React muestra registro,
 login, logout, selección/creación de ganadería y estados de sesión; no asignador
 de roles ni pantalla de invitaciones. AU01 ya tiene implementación y pruebas
-desde el formulario React hasta PostgreSQL; AU02–AU08 y las demás pantallas de
-acceso continúan pendientes.
+desde el formulario React hasta PostgreSQL. De AU02/AU03 existe el núcleo backend
+de credenciales, sesión, JWT y rotación, todavía sin endpoints/cookies; AU04–AU08
+y las demás pantallas de acceso continúan pendientes.
 
 ### API de acceso y creación inicial
 
@@ -178,9 +179,10 @@ No se afirma que otros dispositivos hayan sido desconectados ni se borra su cola
 
 ### Modelo e invariantes transaccionales de Identidad
 
-El modelo siguiente fue conceptual al aprobarse la SPEC. Su primera traducción
-física, limitada a Identidad, se implementó con migraciones Flyway V1 y V2 el
-17 de noviembre de 2026; los contratos y casos de uso continúan pendientes:
+El modelo siguiente fue conceptual al aprobarse la SPEC. Su traducción física,
+limitada a Identidad, se implementó con Flyway V1/V2 y se amplió con V3 para el
+límite persistente de fallos de login el 17 de noviembre de 2026. El núcleo de
+AU02/AU03 está probado; sus adaptadores HTTP continúan pendientes:
 
 | Entidad | Restricciones/operación |
 |---|---|
@@ -197,12 +199,15 @@ unicidad de correo normalizado y membresía, un propietario activo por ganaderí
 un verificador activo por sesión y una huella SHA-256 de 32 bytes en lugar del
 token de renovación. Un trigger de restricción diferible permite crear ganadería
 y membresía propietaria en una misma transacción, pero impide confirmarla huérfana.
-La V2 fija en la base el máximo de 24 horas de AU03 para la sesión online. Flyway
+La V2 fija en la base el máximo de 24 horas de AU03 para la sesión online. V3
+agrega `intento_login`, que conserva solo huellas SHA-256 por correo/origen,
+ventana, contador y bloqueo temporal; no guarda esos identificadores en claro. Flyway
 valida las migraciones al iniciar el perfil `postgres`; `clean` está deshabilitado.
 
 Esta persistencia es una parte de T02.1, no su cierre: ya existen el modelo,
-puerto, caso de uso, adaptador JDBC y endpoint de AU01 con Argon2id. Faltan los
-modelos de sesión/ganadería/membresía y los flujos AU02–AU08. La base nunca
+puerto, caso de uso, adaptador JDBC y endpoint de AU01 con Argon2id, además del
+núcleo de sesión/rotación de AU02/AU03. Faltan sus endpoints/cookies, logout y los
+modelos funcionales de ganadería/membresía de AU04–AU08. La base nunca
 almacena contraseñas en claro ni tokens de renovación. No se agregaron datos
 semilla ni membresías reales de editor/lector.
 

@@ -97,8 +97,10 @@ de despliegue de infra/ se distingue de los adaptadores internos del backend.
 
 Primera base ejecutable de frontend y backend disponible para revisión.
 SPEC-01 está aprobada documentalmente y el registro de cuentas AU01 funciona
-desde React hasta PostgreSQL. Login, sesiones, ganaderías, animales y offline
-continúan pendientes.
+desde React hasta PostgreSQL. El núcleo backend de AU02/AU03 verifica
+credenciales, persiste sesiones y prueba JWT/rotación, pero login y renovación
+no tienen endpoints ni están disponibles para usuarios. Ganaderías, animales y
+offline continúan pendientes.
 
 Se utilizará Redis como caché para consultas frecuentes del catálogo
 público de anuncios. PostgreSQL conservará los datos permanentes
@@ -325,6 +327,20 @@ La protección inicial limita de forma configurable diez intentos por origen en
 Antes de producción se debe aprobar un límite distribuido y la configuración de
 proxy confiable.
 
+### Núcleo de autenticación y sesiones — primera fase AU02/AU03
+
+El backend contiene casos de uso y adaptadores internos para verificar
+credenciales Argon2id, crear sesiones con máximo absoluto de 24 horas, emitir y
+validar JWT RS256 de hasta 10 minutos y rotar credenciales opacas de renovación.
+PostgreSQL guarda únicamente huellas SHA-256 de los valores de renovación y de
+las claves de los contadores de fallos. La migración V3 agrega esos contadores
+persistentes sin modificar V1/V2.
+
+Esta fase **no expone** `POST /api/v1/auth/login`, renovación, logout ni `/me`.
+Tampoco configura claves privadas de despliegue ni cookies de renovación. Las
+pruebas usan pares RSA efímeros. Por tanto, el inicio de sesión aún no es una
+funcionalidad disponible desde React o mediante la API pública.
+
 ### Problemas de entorno observados
 
 Maven falló inicialmente con `PKIX path building failed`. En este equipo funcionó
@@ -352,4 +368,5 @@ para la base ejecutable, y la
 [evidencia del esquema inicial de Identidad](docs/05-preparacion-implementacion/07-esquema-identidad.md)
 para la base de datos, y la
 [evidencia del registro AU01](docs/05-preparacion-implementacion/08-registro-usuarios.md)
+y la [evidencia del núcleo AU02/AU03](docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md)
 para resultados realmente ejecutados y limitaciones.

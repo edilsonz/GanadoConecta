@@ -16,7 +16,7 @@
 **Base aprobada:** React PWA/IndexedDB, Spring Boot monolito modular/Clean
 Architecture, PostgreSQL principal, identidad interna única, datos opcionales,
 acceso familiar autorizado, permisos/versiones/duplicados al sincronizar.
-**Decisiones adoptadas por el responsable en esta revisión:** DP02–DP08 según la sección 13, incluidas identidad UUIDv4, sexo obligatorio, alcance individual, conflictos conservadores, máximo offline 168 h sin borrado de pendientes, pruebas y zona America/Lima con instantes UTC. DP01 y SPEC-01 se aprobaron documentalmente el 16 de noviembre de 2026. Desde el 17 de noviembre existe implementación incremental de esquema y AU01, sin login, sesión, membresías operativas ni animales. No se modifican los RF/ADR aprobados ni se declara completo CA03.
+**Decisiones adoptadas por el responsable en esta revisión:** DP02–DP08 según la sección 13, incluidas identidad UUIDv4, sexo obligatorio, alcance individual, conflictos conservadores, máximo offline 168 h sin borrado de pendientes, pruebas y zona America/Lima con instantes UTC. DP01 y SPEC-01 se aprobaron documentalmente el 16 de noviembre de 2026. Desde el 17 de noviembre existe implementación incremental de esquema, AU01 y núcleo backend AU02/AU03; login/renovación aún no tienen endpoints, y no existen membresías operativas ni animales. No se modifican los RF/ADR aprobados ni se declara completo CA03.
 
 Fuentes locales: [RF](../../docs/01-analisis-de-sistema/03-requisitos-funcionales.md),
 [HU](../../docs/01-analisis-de-sistema/02-historias-de-usuario.md),
@@ -379,13 +379,14 @@ obligatorias para el producto; no aplica caché vacía/poblada a consultas priva
 
 No añaden criterios CA: precisan CA03, CA06, CA12 y CA14; AU01–AU08 son reglas
 de contrato, no resultados. PA01 tiene evidencia parcial del contrato global;
-PA02–PA08 permanecen no ejecutadas salvo las restricciones de esquema ya documentadas.
+PA02/PA03 tienen ejecución parcial de núcleo; PA04–PA08 permanecen no ejecutadas
+salvo las restricciones de esquema ya documentadas.
 
 | Prueba | Escenario y resultado requerido | Criterios |
 |---|---|---|
 | PA01 | **EJECUTADA para AU01:** React obtiene CSRF y registra sin persistir credenciales; registro válido crea cuenta sin permisos; correo normalizado duplicado no crea segunda cuenta; inválidos y campos rol/ganadería/estado son rechazados; hash nunca se devuelve. | CA03; [evidencia](../../docs/05-preparacion-implementacion/08-registro-usuarios.md) |
-| PA02 | Login real válido/inválido, cuenta inactiva y límite temporal; JWT alterado, expirado, algoritmo/audiencia/emisor incorrectos y sesión revocada son rechazados sin datos privados. | CA03, CA12 |
-| PA03 | Reloj controlado en límites 10 min/24 h; renovar consume verificador y crea sucesor en un commit. Reutilización revoca familia y JWT previos fallan por sesión. Probar rollback, dos refresh concurrentes, respuesta perdida tras commit y login recuperable sin borrar pendientes ni guardar tokens en servidor/IndexedDB. Nunca ampliar 24 h. | CA12 |
+| PA02 | **EJECUCIÓN PARCIAL DE NÚCLEO:** contraseña válida/inválida, cuenta inexistente/inactiva y límite persistente; JWT alterado, expirado, audiencia/emisor incorrectos y sesión revocada se rechazan. Faltan endpoint, HTTP 401/429 e integración del filtro JWT. | CA03, CA12; [evidencia](../../docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md) |
+| PA03 | **EJECUCIÓN PARCIAL DE NÚCLEO:** reloj controlado 10 min/24 h; rotación consume el verificador, crea sucesor y reutilizarlo revoca la familia. Faltan dos refresh concurrentes, respuesta perdida, cookie/endpoints y flujo recuperable de navegador. | CA12; [evidencia](../../docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md) |
 | PA04 | Logout confirmado revoca sesión/verificadores y el backend rechaza JWT anterior aún no expirado. Revocar membresía impide acceso a su ganadería con JWT previo. Logout offline conserva cola y exige cierre al reconectar; login en otra pestaña no recibe cierre antiguo; sin credenciales en almacenamiento offline/logs. | CA06, CA12, CA14 |
 | PA05 | Crear ganadería confirma propietario y membresía juntos; fallo entre inserts revierte ambos; repetición mismo ID no duplica y el cliente no puede elegir otro propietario. | CA03 |
 | PA06 | Matriz de roles y dos ganaderías: no escalar rol manipulando cuerpo/JWT, ni leer ficha/recibo ajeno. Revocación y alta concurrente ordenadas; token previo no conserva permiso revocado. | CA03, CA06 |
@@ -424,7 +425,7 @@ Referencia: [matriz global](../../docs/06-evaluacion-sdd/matriz-trazabilidad.md)
 | DP07 | Adoptada: unitarias, integración, E2E, offline y carga con herramientas del plan. | Fijar versiones/compatibilidad cuando se prepare el proyecto ejecutable (T03), no cambiar herramientas silenciosamente. |
 | DP08 | Adoptada: zona de negocio America/Lima, instantes UTC y fecha/paginación documentadas. | Validar límites de fecha y cursor en pruebas, sin convertir fechaNacimiento en instante. |
 
-DP01–DP08 quedan adoptadas y SPEC-01 aprobada documentalmente por autorización expresa del responsable el 16 de noviembre de 2026. Las precisiones de rotación sustituyen la propuesta anterior de refresh estable; no se reabren las demás decisiones. Plan y tareas forman parte de esta aprobación. Desde el 17 de noviembre solo existe implementación y evidencia parcial del esquema de Identidad de T02.1; los flujos funcionales y criterios de aceptación siguen pendientes.
+DP01–DP08 quedan adoptadas y SPEC-01 aprobada documentalmente por autorización expresa del responsable el 16 de noviembre de 2026. Las precisiones de rotación sustituyen la propuesta anterior de refresh estable; no se reabren las demás decisiones. Plan y tareas forman parte de esta aprobación. Desde el 17 de noviembre existen AU01 y evidencia parcial del núcleo AU02/AU03, todavía sin login HTTP; los flujos funcionales restantes y criterios de aceptación integrales siguen pendientes.
 
 ## 14. Evidencia de validación
 
@@ -432,6 +433,7 @@ DP01–DP08 quedan adoptadas y SPEC-01 aprobada documentalmente por autorizació
 |---|---|---|
 | Coherencia documental, enlaces y códigos | Comprobada el 16 de noviembre de 2026 | 18 CA con pruebas; 23 tareas superiores y ocho subtareas de acceso; AU01–AU08 y PA01–PA08 definidos; 14 enlaces locales de los tres documentos válidos, tablas y códigos coherentes, git diff --check sin errores. No equivale a pruebas funcionales. |
 | PA01 / AU01 | Ejecutada el 17 de noviembre de 2026 | Formulario React, CSRF/cookie segura, revisión manual en Chrome, HTTP real, dominio, caso de uso, Argon2id y PostgreSQL; CA03 no está completo porque AU02–AU08 y el E2E automatizado de navegador real siguen pendientes. |
+| PA02–PA03 / AU02–AU03 | Núcleo parcial ejecutado el 17 de noviembre de 2026 | Credenciales, límite persistente, sesiones, JWT RS256, rotación y reutilización probados sin endpoints/cookies ni claves de despliegue. No equivale a login funcional. [Evidencia](../../docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md). |
 | PU01–PU04, PI01–PI05, EE01–EE04, PC01 y PA02–PA08 | No ejecutadas integralmente | Sin flujos completos de login, sesiones, ganaderías, animales u offline. |
 | Aprobación de SPEC/plan/tareas | Aprobada documentalmente el 16 de noviembre de 2026 | Autorización expresa del responsable con precisiones obligatorias de sesión y rotación; sin implementación. |
 

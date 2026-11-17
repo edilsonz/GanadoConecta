@@ -69,9 +69,11 @@ y luego se ejecutó de nuevo con el resultado anterior.
 
 ## Pendientes y límites
 
-- Completar los modelos y contratos de sesión, ganadería y membresía de T02.1.
-- Implementar AU02–AU08 en T02.2–T02.8: login, sesiones, rotación,
-  CSRF, rate limiting, autorización y aislamiento entre ganaderías.
+- Completar los modelos y casos de uso de ganadería y membresía de T02.1.
+- Continuar AU02–AU08 en T02.2–T02.8: el núcleo de login, sesiones, rotación y
+  validación JWT se documenta en [09-nucleo-autenticacion-sesiones.md](09-nucleo-autenticacion-sesiones.md),
+  pero faltan sus endpoints/cookies y los flujos de
+  CSRF, respuestas HTTP 401/429, autorización y aislamiento entre ganaderías.
 - Repetir la medición Argon2id de AU01 en el entorno de despliegue.
 - Mantener fuera de este incremento invitaciones, alta real de editor/lector y animales.
 - Ejecutar pruebas de concurrencia de rotación y autorización cuando existan los

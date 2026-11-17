@@ -121,7 +121,7 @@ prueba y luego pasó la suite completa.
   y los navegadores objetivo siguen pendientes de fijar según DP07.
 - No se ejecutaron pruebas de carga porque todavía no existe el flujo completo
   de autenticación ni las consultas de animales.
-- No se modificaron V1/V2. Cualquier cambio futuro de esquema utilizará V3 o una
-  versión posterior.
+- No se modificaron V1/V2. El incremento posterior de núcleo AU02/AU03 agregó V3,
+  documentada por separado en [09-nucleo-autenticacion-sesiones.md](09-nucleo-autenticacion-sesiones.md).
 
 No se agregó staging, commit ni push durante esta iteración.

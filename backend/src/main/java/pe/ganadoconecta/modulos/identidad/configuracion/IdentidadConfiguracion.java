@@ -5,11 +5,20 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.support.TransactionTemplate;
 import pe.ganadoconecta.modulos.identidad.adaptadores.salida.CodificadorContrasenaArgon2;
+import pe.ganadoconecta.modulos.identidad.adaptadores.salida.GeneradorCredencialesRenovacionSeguras;
+import pe.ganadoconecta.modulos.identidad.adaptadores.salida.LimiteIntentosLoginPostgres;
+import pe.ganadoconecta.modulos.identidad.adaptadores.salida.RepositorioCredencialesPostgres;
+import pe.ganadoconecta.modulos.identidad.adaptadores.salida.RepositorioSesionesPostgres;
 import pe.ganadoconecta.modulos.identidad.adaptadores.salida.RepositorioUsuariosPostgres;
 import pe.ganadoconecta.modulos.identidad.aplicacion.CodificadorContrasena;
+import pe.ganadoconecta.modulos.identidad.aplicacion.GeneradorCredencialesRenovacion;
 import pe.ganadoconecta.modulos.identidad.aplicacion.GeneradorIdUsuario;
+import pe.ganadoconecta.modulos.identidad.aplicacion.LimiteIntentosLogin;
 import pe.ganadoconecta.modulos.identidad.aplicacion.RegistrarUsuario;
+import pe.ganadoconecta.modulos.identidad.aplicacion.RepositorioCredenciales;
+import pe.ganadoconecta.modulos.identidad.aplicacion.RepositorioSesiones;
 import pe.ganadoconecta.modulos.identidad.aplicacion.RepositorioUsuarios;
 
 @Configuration(proxyBeanMethods = false)
@@ -18,6 +27,29 @@ public class IdentidadConfiguracion {
     @Bean
     RepositorioUsuarios repositorioUsuarios(JdbcTemplate jdbc) {
         return new RepositorioUsuariosPostgres(jdbc);
+    }
+
+    @Bean
+    RepositorioCredenciales repositorioCredenciales(JdbcTemplate jdbc) {
+        return new RepositorioCredencialesPostgres(jdbc);
+    }
+
+    @Bean
+    RepositorioSesiones repositorioSesiones(
+            JdbcTemplate jdbc, TransactionTemplate transacciones) {
+        return new RepositorioSesionesPostgres(jdbc, transacciones);
+    }
+
+    @Bean
+    GeneradorCredencialesRenovacion generadorCredencialesRenovacion() {
+        return new GeneradorCredencialesRenovacionSeguras();
+    }
+
+    @Bean
+    LimiteIntentosLogin limiteIntentosLogin(JdbcTemplate jdbc,
+            TransactionTemplate transacciones) {
+        return new LimiteIntentosLoginPostgres(
+                jdbc, transacciones, 10, java.time.Duration.ofMinutes(15));
     }
 
     @Bean
