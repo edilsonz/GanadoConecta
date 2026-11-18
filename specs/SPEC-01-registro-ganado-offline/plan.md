@@ -50,10 +50,11 @@ de roles ni pantalla de invitaciones. AU01 ya tiene implementación y pruebas
 desde el formulario React hasta PostgreSQL. AU02–AU04 exponen en backend login,
 renovación, logout y consulta de sesión con cookie/JWT; React integra esos contratos
 con JWT solo en memoria, restauración y cierre. Su E2E en navegador HTTPS,
-las operaciones restantes de AU06–AU08 y las demás pantallas de acceso continúan
+las operaciones restantes de AU07–AU08 y las demás pantallas de acceso continúan
 pendientes. AU05 ya crea atómicamente ganadería y propietario inicial; el backend
 lista solo membresías activas y React permite crear, listar y seleccionar en
-memoria. Aún no se expone el contexto `/acceso`.
+memoria. AU06 expone el contexto online `/acceso`; su integración en React y la
+preparación offline siguen pendientes.
 
 ### API de acceso y creación inicial
 
@@ -212,8 +213,9 @@ Esta persistencia es una parte de T02.1, no su cierre: ya existen el modelo,
 puerto, caso de uso, adaptador JDBC y endpoint de AU01 con Argon2id, además de
 sesión/rotación, endpoints backend AU02–AU04 y cliente React automatizado. Falta
 validar coordinación multipestaña en navegador real. AU05 ya usa los modelos
-funcionales de ganadería/membresía para crear al propietario inicial; faltan
-listado, contexto, autorización y revocación de AU06–AU08. La base nunca
+funcionales de ganadería/membresía para crear al propietario inicial; listado y
+contexto online ya revalidan membresía activa. Faltan autorización de futuros
+recursos y revocación de AU07–AU08. La base nunca
 almacena contraseñas en claro ni tokens de renovación. No se agregaron datos
 semilla ni membresías reales de editor/lector.
 

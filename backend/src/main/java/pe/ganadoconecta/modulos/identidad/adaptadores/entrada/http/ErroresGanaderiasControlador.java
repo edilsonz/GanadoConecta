@@ -10,8 +10,10 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import pe.ganadoconecta.modulos.identidad.aplicacion.AccesoGanaderiaDenegadoException;
 import pe.ganadoconecta.modulos.identidad.aplicacion.GanaderiaNoDisponibleException;
 import pe.ganadoconecta.modulos.identidad.aplicacion.PersistenciaGanaderiaException;
 import pe.ganadoconecta.modulos.identidad.dominio.DatoGanaderiaInvalidoException;
@@ -34,6 +36,18 @@ public class ErroresGanaderiasControlador {
                 "No fue posible crear la ganadería.", Map.of());
     }
 
+    @ExceptionHandler(AccesoGanaderiaDenegadoException.class)
+    ResponseEntity<RespuestaError> accesoDenegado() {
+        return respuesta(HttpStatus.FORBIDDEN, "ACCESO_GANADERIA_DENEGADO",
+                "No tiene acceso a la ganadería solicitada.", Map.of());
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    ResponseEntity<RespuestaError> identificadorInvalido() {
+        return respuesta(HttpStatus.BAD_REQUEST, "SOLICITUD_INVALIDA",
+                "La solicitud no tiene un identificador válido.", Map.of());
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     ResponseEntity<RespuestaError> cuerpoInvalido(HttpMessageNotReadableException exception) {
         if (exception.getCause() instanceof UnrecognizedPropertyException unknown) {
@@ -48,12 +62,13 @@ public class ErroresGanaderiasControlador {
     @ExceptionHandler(PersistenciaGanaderiaException.class)
     ResponseEntity<RespuestaError> persistenciaNoDisponible() {
         String correlacionId = UUID.randomUUID().toString();
-        LOGGER.error("Fallo de persistencia al crear ganadería; correlacionId={}",
+        LOGGER.error("Fallo de persistencia de ganadería; correlacionId={}",
                 correlacionId);
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .cacheControl(CacheControl.noStore())
                 .body(new RespuestaError("GANADERIA_NO_DISPONIBLE",
-                        "No fue posible crear la ganadería.", Map.of(), correlacionId));
+                        "No fue posible procesar la solicitud de ganadería.",
+                        Map.of(), correlacionId));
     }
 
     private ResponseEntity<RespuestaError> respuesta(HttpStatus status, String codigo,

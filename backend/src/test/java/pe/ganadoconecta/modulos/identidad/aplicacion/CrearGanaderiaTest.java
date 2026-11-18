@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
@@ -92,6 +93,12 @@ class CrearGanaderiaTest {
             public List<pe.ganadoconecta.modulos.identidad.dominio.GanaderiaAccesible>
                     listarActivas(UUID usuarioId) {
                 return List.of();
+            }
+
+            @Override
+            public Optional<pe.ganadoconecta.modulos.identidad.dominio.GanaderiaAccesible>
+                    buscarActiva(UUID usuarioId, UUID ganaderiaId) {
+                return Optional.empty();
             }
         };
     }

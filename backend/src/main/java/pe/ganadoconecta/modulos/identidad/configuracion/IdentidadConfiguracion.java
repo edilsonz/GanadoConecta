@@ -1,7 +1,7 @@
 package pe.ganadoconecta.modulos.identidad.configuracion;
 
-import java.util.UUID;
 import java.time.Clock;
+import java.util.UUID;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -17,6 +17,7 @@ import pe.ganadoconecta.modulos.identidad.adaptadores.salida.RepositorioUsuarios
 import pe.ganadoconecta.modulos.identidad.aplicacion.CodificadorContrasena;
 import pe.ganadoconecta.modulos.identidad.aplicacion.CerrarSesion;
 import pe.ganadoconecta.modulos.identidad.aplicacion.CrearGanaderia;
+import pe.ganadoconecta.modulos.identidad.aplicacion.ConsultarAccesoGanaderia;
 import pe.ganadoconecta.modulos.identidad.aplicacion.GeneradorCredencialesRenovacion;
 import pe.ganadoconecta.modulos.identidad.aplicacion.GeneradorIdUsuario;
 import pe.ganadoconecta.modulos.identidad.aplicacion.GeneradorIdMembresia;
@@ -99,6 +100,12 @@ public class IdentidadConfiguracion {
     @Bean
     ListarGanaderias listarGanaderias(RepositorioGanaderias repositorio) {
         return new ListarGanaderias(repositorio);
+    }
+
+    @Bean
+    ConsultarAccesoGanaderia consultarAccesoGanaderia(
+            RepositorioGanaderias repositorio, Clock reloj) {
+        return new ConsultarAccesoGanaderia(repositorio, reloj);
     }
 
     @Bean

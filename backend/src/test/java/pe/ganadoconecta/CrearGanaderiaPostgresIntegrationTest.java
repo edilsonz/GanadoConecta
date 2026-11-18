@@ -256,6 +256,90 @@ class CrearGanaderiaPostgresIntegrationTest extends SoporteJwtPostgres {
                 .andExpect(status().isUnauthorized());
     }
 
+    @Test
+    void consultaContextoDePropietarioConValidacionUtc() throws Exception {
+        Cuenta cuenta = crearCuentaAutenticada("acceso-propietario");
+        UUID ganaderiaId = UUID.randomUUID();
+        crear(cuenta.jwt(), json(ganaderiaId, "Los Pinos"))
+                .andExpect(status().isCreated());
+
+        acceso(cuenta.jwt(), ganaderiaId.toString())
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"))
+                .andExpect(jsonPath("$.ganaderiaId").value(ganaderiaId.toString()))
+                .andExpect(jsonPath("$.rol").value("PROPIETARIO"))
+                .andExpect(jsonPath("$.estado").value("ACTIVA"))
+                .andExpect(jsonPath("$.validadoEn")
+                        .value(org.hamcrest.Matchers.endsWith("Z")))
+                .andExpect(jsonPath("$.nombre").doesNotExist())
+                .andExpect(jsonPath("$.usuarioId").doesNotExist());
+    }
+
+    @Test
+    void consultaContextoParaEditorYLectorConMembresiaActiva() throws Exception {
+        Cuenta actor = crearCuentaAutenticada("acceso-familiar");
+        Cuenta otro = crearCuentaAutenticada("acceso-dueno");
+        UUID editableId = UUID.randomUUID();
+        UUID lecturaId = UUID.randomUUID();
+        crear(otro.jwt(), json(editableId, "La Esperanza")).andExpect(status().isCreated());
+        crear(otro.jwt(), json(lecturaId, "El Retiro")).andExpect(status().isCreated());
+        agregarMembresia(editableId, actor.usuarioId(), "EDITOR");
+        agregarMembresia(lecturaId, actor.usuarioId(), "LECTOR");
+
+        acceso(actor.jwt(), editableId.toString())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rol").value("EDITOR"));
+        acceso(actor.jwt(), lecturaId.toString())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rol").value("LECTOR"));
+    }
+
+    @Test
+    void niegaSinDistinguirGanaderiaAjenaRevocadaInactivaOInexistente() throws Exception {
+        Cuenta actor = crearCuentaAutenticada("acceso-denegado");
+        Cuenta otro = crearCuentaAutenticada("acceso-ajeno");
+        UUID ajenaId = UUID.randomUUID();
+        UUID revocadaId = UUID.randomUUID();
+        UUID inactivaId = UUID.randomUUID();
+        crear(otro.jwt(), json(ajenaId, "Ajena")).andExpect(status().isCreated());
+        crear(otro.jwt(), json(revocadaId, "Revocada")).andExpect(status().isCreated());
+        crear(actor.jwt(), json(inactivaId, "Inactiva")).andExpect(status().isCreated());
+        agregarMembresia(revocadaId, actor.usuarioId(), "LECTOR");
+        jdbc.update("""
+                UPDATE identidad.membresia
+                SET estado = 'REVOCADA', revocado_en = CURRENT_TIMESTAMP,
+                    actualizado_en = CURRENT_TIMESTAMP
+                WHERE ganaderia_id = ? AND usuario_id = ?
+                """, revocadaId, actor.usuarioId());
+        jdbc.update("""
+                UPDATE identidad.ganaderia
+                SET estado = 'INACTIVA', actualizado_en = CURRENT_TIMESTAMP
+                WHERE id = ?
+                """, inactivaId);
+
+        for (UUID id : java.util.List.of(ajenaId, revocadaId, inactivaId,
+                UUID.randomUUID())) {
+            acceso(actor.jwt(), id.toString())
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.codigo").value("ACCESO_GANADERIA_DENEGADO"))
+                    .andExpect(jsonPath("$.mensajeSeguro")
+                            .value("No tiene acceso a la ganadería solicitada."))
+                    .andExpect(jsonPath("$.ganaderiaId").doesNotExist())
+                    .andExpect(jsonPath("$.rol").doesNotExist());
+        }
+    }
+
+    @Test
+    void rechazaContextoSinAutenticacionOIdentificadorValido() throws Exception {
+        Cuenta cuenta = crearCuentaAutenticada("acceso-id-invalido");
+
+        mvc.perform(get("/api/v1/ganaderias/{id}/acceso", UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());
+        acceso(cuenta.jwt(), "no-es-uuid")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("SOLICITUD_INVALIDA"));
+    }
+
     private Cuenta crearCuentaAutenticada(String sufijo) throws Exception {
         RegistrarUsuario.Resultado cuenta = registrar.ejecutar(new RegistrarUsuario.Comando(
                 correo(sufijo), CONTRASENA));
@@ -286,6 +370,21 @@ class CrearGanaderiaPostgresIntegrationTest extends SoporteJwtPostgres {
         return mvc.perform(get("/api/v1/ganaderias")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
                 .accept(MediaType.APPLICATION_JSON));
+    }
+
+    private org.springframework.test.web.servlet.ResultActions acceso(
+            String jwt, String ganaderiaId) throws Exception {
+        return mvc.perform(get("/api/v1/ganaderias/{id}/acceso", ganaderiaId)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
+                .accept(MediaType.APPLICATION_JSON));
+    }
+
+    private void agregarMembresia(UUID ganaderiaId, UUID usuarioId, String rol) {
+        jdbc.update("""
+                INSERT INTO identidad.membresia
+                    (id, ganaderia_id, usuario_id, rol, estado)
+                VALUES (?, ?, ?, ?, 'ACTIVA')
+                """, UUID.randomUUID(), ganaderiaId, usuarioId, rol);
     }
 
     private String json(UUID id, String nombre) throws Exception {

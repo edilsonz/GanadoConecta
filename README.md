@@ -380,8 +380,10 @@ No están disponibles invitaciones, altas familiares, animales ni acceso offline
 Bearer JWT y CSRF, acepta solo UUIDv4 y nombre, y crea en una transacción la
 ganadería ACTIVA y la membresía PROPIETARIO del actor autenticado. No acepta un
 propietario o rol enviado por el cliente. `GET /api/v1/ganaderias` devuelve solo
-ganaderías activas donde el actor tiene membresía activa. El contexto `/acceso`,
-la revocación y la autorización de futuros recursos continúan pendientes.
+ganaderías activas donde el actor tiene membresía activa.
+`GET /api/v1/ganaderias/{id}/acceso` revalida en PostgreSQL la ganadería y
+membresía activas y devuelve rol/estado con hora UTC. La revocación y la
+autorización de futuros recursos continúan pendientes.
 
 ### Problemas de entorno observados
 
@@ -414,4 +416,5 @@ y la [evidencia backend AU02–AU04](docs/05-preparacion-implementacion/09-nucle
 además de la [evidencia del cliente React](docs/05-preparacion-implementacion/10-login-react.md),
 y la [evidencia de creación de ganadería AU05](docs/05-preparacion-implementacion/11-creacion-ganaderia.md)
 y de su [listado/cliente React](docs/05-preparacion-implementacion/12-ganaderias-react-listado.md),
+y la [evidencia de contexto AU06](docs/05-preparacion-implementacion/13-acceso-ganaderia.md),
 para resultados realmente ejecutados y limitaciones.

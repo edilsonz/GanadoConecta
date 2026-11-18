@@ -3,6 +3,7 @@ package pe.ganadoconecta.modulos.identidad.aplicacion;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import pe.ganadoconecta.modulos.identidad.dominio.GanaderiaAccesible;
@@ -24,6 +25,12 @@ class ListarGanaderiasTest {
             public List<GanaderiaAccesible> listarActivas(UUID usuarioId) {
                 assertThat(usuarioId).isEqualTo(actor);
                 return List.of(accesible);
+            }
+
+            @Override
+            public Optional<GanaderiaAccesible> buscarActiva(
+                    UUID usuarioId, UUID ganaderiaId) {
+                return Optional.empty();
             }
         };
 

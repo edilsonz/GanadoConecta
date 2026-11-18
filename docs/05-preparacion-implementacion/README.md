@@ -13,7 +13,9 @@
 > [evidencia de AU05](11-creacion-ganaderia.md) documenta la creación backend de
 > ganadería y propietario inicial; la
 > [evidencia de creación/listado React](12-ganaderias-react-listado.md) registra
-> el incremento de consulta aislada y selección en memoria. Los estados de propuesta siguientes describen la
+> el incremento de consulta aislada y selección en memoria, y la
+> [evidencia de AU06](13-acceso-ganaderia.md) cubre la revalidación online del
+> contexto por membresía. Los estados de propuesta siguientes describen la
 > preparación arquitectónica original, no acreditan implementación de SPEC-01.
 
 > **Estado de consolidación:** las 16 decisiones aprobadas por el responsable

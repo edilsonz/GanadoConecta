@@ -2,6 +2,7 @@ package pe.ganadoconecta.modulos.identidad.adaptadores.salida;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -78,6 +79,30 @@ public final class RepositorioGanaderiasPostgres implements RepositorioGanaderia
                             resultado.getString("estado"),
                             resultado.getString("rol")),
                     usuarioId);
+        } catch (DataAccessException exception) {
+            throw new PersistenciaGanaderiaException(exception);
+        }
+    }
+
+    @Override
+    public Optional<GanaderiaAccesible> buscarActiva(UUID usuarioId, UUID ganaderiaId) {
+        Objects.requireNonNull(usuarioId);
+        Objects.requireNonNull(ganaderiaId);
+        try {
+            return jdbc.query("""
+                    SELECT g.id, g.nombre, g.estado, m.rol
+                    FROM identidad.membresia m
+                    JOIN identidad.ganaderia g ON g.id = m.ganaderia_id
+                    WHERE m.usuario_id = ?
+                      AND m.ganaderia_id = ?
+                      AND m.estado = 'ACTIVA'
+                      AND g.estado = 'ACTIVA'
+                    """, (resultado, fila) -> new GanaderiaAccesible(
+                            resultado.getObject("id", UUID.class),
+                            resultado.getString("nombre"),
+                            resultado.getString("estado"),
+                            resultado.getString("rol")),
+                    usuarioId, ganaderiaId).stream().findFirst();
         } catch (DataAccessException exception) {
             throw new PersistenciaGanaderiaException(exception);
         }

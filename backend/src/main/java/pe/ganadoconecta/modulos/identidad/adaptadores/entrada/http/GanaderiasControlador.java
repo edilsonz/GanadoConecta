@@ -1,5 +1,6 @@
 package pe.ganadoconecta.modulos.identidad.adaptadores.entrada.http;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.context.annotation.Profile;
@@ -8,11 +9,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pe.ganadoconecta.modulos.identidad.aplicacion.CrearGanaderia;
+import pe.ganadoconecta.modulos.identidad.aplicacion.ConsultarAccesoGanaderia;
 import pe.ganadoconecta.modulos.identidad.aplicacion.ListarGanaderias;
 
 /** Adaptador HTTP de AU05 y del listado autorizado parcial de AU06. */
@@ -22,10 +25,24 @@ import pe.ganadoconecta.modulos.identidad.aplicacion.ListarGanaderias;
 public class GanaderiasControlador {
     private final CrearGanaderia crear;
     private final ListarGanaderias listar;
+    private final ConsultarAccesoGanaderia consultarAcceso;
 
-    public GanaderiasControlador(CrearGanaderia crear, ListarGanaderias listar) {
+    public GanaderiasControlador(CrearGanaderia crear, ListarGanaderias listar,
+            ConsultarAccesoGanaderia consultarAcceso) {
         this.crear = crear;
         this.listar = listar;
+        this.consultarAcceso = consultarAcceso;
+    }
+
+    @GetMapping("/{ganaderiaId}/acceso")
+    ResponseEntity<AccesoRespuesta> consultarAcceso(
+            @PathVariable UUID ganaderiaId,
+            @AuthenticationPrincipal IdentidadAutenticada identidad) {
+        var resultado = consultarAcceso.ejecutar(identidad.usuarioId(), ganaderiaId);
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(new AccesoRespuesta(resultado.ganaderiaId(), resultado.rol(),
+                        resultado.estado(), resultado.validadoEn()));
     }
 
     @GetMapping
@@ -61,5 +78,9 @@ public class GanaderiasControlador {
     }
 
     record GanaderiaRespuesta(UUID id, String nombre, String estado, String rol) {
+    }
+
+    record AccesoRespuesta(UUID ganaderiaId, String rol, String estado,
+            Instant validadoEn) {
     }
 }
