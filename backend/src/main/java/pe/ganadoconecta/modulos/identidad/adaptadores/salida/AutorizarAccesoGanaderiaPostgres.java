@@ -72,10 +72,16 @@ public final class AutorizarAccesoGanaderiaPostgres
                     """, (resultado, fila) -> new MembresiaBloqueada(
                             resultado.getString("rol"), resultado.getString("estado")),
                     ganaderiaId, actorUsuarioId);
-            if (membresias.isEmpty()
-                    || !"ACTIVA".equals(membresias.getFirst().estado())
-                    || !permiso.permite(membresias.getFirst().rol())) {
+            if (membresias.isEmpty()) {
                 throw new AccesoGanaderiaDenegadoException();
+            }
+            if (!"ACTIVA".equals(membresias.getFirst().estado())) {
+                throw new AccesoGanaderiaDenegadoException(
+                        AccesoGanaderiaDenegadoException.Motivo.MEMBRESIA_REVOCADA);
+            }
+            if (!permiso.permite(membresias.getFirst().rol())) {
+                throw new AccesoGanaderiaDenegadoException(
+                        AccesoGanaderiaDenegadoException.Motivo.ROL_INSUFICIENTE);
             }
             GanaderiaBloqueada ganaderia = ganaderias.getFirst();
             return new GanaderiaAccesible(ganaderia.id(), ganaderia.nombre(),

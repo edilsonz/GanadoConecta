@@ -1,7 +1,7 @@
 # SPEC-01 — Plan técnico propuesto
 
 **Estado: Aprobada — Implementación en curso.** Plan aprobado documentalmente junto con
-[spec.md](spec.md) y el contrato DP01, el 16 de noviembre de 2026 por autorización del responsable. La implementación comenzó con T02.1 el 17 de noviembre y el núcleo T04–T07 se verificó el 18 de noviembre; T08 HTTP y los flujos de usuario permanecen pendientes. Este plan no modifica los ADR aprobados. [Tareas](tasks.md).
+[spec.md](spec.md) y el contrato DP01, el 16 de noviembre de 2026 por autorización del responsable. La implementación comenzó con T02.1 el 17 de noviembre; T04–T07 y el endpoint HTTP T08 se verificaron el 18 de noviembre. T09 y los flujos de usuario permanecen pendientes. Este plan no modifica los ADR aprobados. [Tareas](tasks.md).
 
 ## 1. Arquitectura y límites
 
@@ -220,7 +220,7 @@ sesión/rotación, endpoints backend AU02–AU04 y cliente React automatizado. F
 validar coordinación multipestaña en navegador real. AU05 ya usa los modelos
 funcionales de ganadería/membresía para crear al propietario inicial; listado y
 contexto online ya revalidan membresía activa. T07 reutiliza autorización bloqueante
-para el alta interna; faltan T08/T09, React y continuidad offline. La base nunca
+y T08 expone el alta; faltan T09, React y continuidad offline. La base nunca
 almacena contraseñas en claro ni tokens de renovación. No se agregaron datos
 semilla ni membresías reales de editor/lector.
 
@@ -300,7 +300,7 @@ del cliente. La misma versión de canonicalización se conserva para recibos v1.
 El éxito previo devuelve recibo solo si coinciden ámbito y huella; en otro caso
 se devuelve conflicto genérico, sin exponer datos del recibo ajeno.
 
-## 4. API REST propuesta
+## 4. API REST (POST implementado; consultas propuestas)
 
 Prefijo `/api/v1`. JSON sobre HTTPS; autenticación conforme al contrato de acceso.
 No se introduce una segunda ruta de alta «offline»: el mismo POST procesa el
@@ -308,7 +308,7 @@ sobre guardado en la cola, conectado o al sincronizar posteriormente.
 
 | Método y ruta | Entrada | Éxito |
 |---|---|---|
-| POST /ganaderias/{ganaderiaId}/animales | Sobre de sección 9 de SPEC con operationId, animalId, tipo, schemaVersion, baseVersion y datos descriptivos. | 201 APLICADO en primera confirmación; 200 REPROCESADO al repetir la misma operación, con recibo original. |
+| POST /ganaderias/{ganaderiaId}/animales | **IMPLEMENTADO EN T08.** Sobre de sección 9 de SPEC con operationId, animalId, tipo, schemaVersion, baseVersion y datos descriptivos. | 201 APLICADO en primera confirmación; 200 REPROCESADO al repetir la misma operación, con recibo original. |
 | GET /ganaderias/{ganaderiaId}/animales | limit=20 por defecto, 1–100; cursor opcional. Sin filtros nuevos en este incremento. | 200 items básicos, siguienteCursor nullable y consultadoEn. |
 | GET /ganaderias/{ganaderiaId}/animales/{animalId} | Identificadores de ruta. | 200 ficha básica con version y fechas remotas vigentes. |
 
@@ -355,8 +355,7 @@ Flyway V4 implementa las migraciones de animales en backend:
 - Autorización de consultas siempre por ganadería, no por creadoPor: familiares
   autorizados consultan los mismos animales confirmados.
 
-Secuencia transaccional implementada por T07 (el paso de forma HTTP sigue
-pendiente en T08):
+Secuencia transaccional implementada por T07 y expuesta por T08:
 
 1. Validar autenticación y forma de sobre; iniciar unidad de trabajo PostgreSQL.
 2. Leer/bloquear estado de sesión, cuenta, ganadería y membresía en orden estable.
@@ -524,8 +523,8 @@ capacidad demostrada. No ejecutar carga mientras no exista el flujo funcional.
 DP01–DP08 y SPEC-01 aprobadas documentalmente. Ejecutar sus tareas y verificar especialmente contrato de acceso,
 sexo obligatorio confirmado, límites/zonas horarias, UUID/recibos, recuperación y retención local.
 El despliegue y las versiones de herramientas se concretarán antes del código
-que las requiera. Membresías y revocación transaccional ya protegen el núcleo T07,
-pero la ausencia de T08, cliente de animales y offline impide habilitar el flujo real.
+que las requiera. Membresías y revocación transaccional protegen T07/T08,
+pero la ausencia de T09, cliente de animales y offline impide habilitar el flujo real.
 La UI de registro no amplía permisos para administrar ganaderías.
 
 Los instantes de servidor y sesión se almacenan como instantes UTC (PostgreSQL timestamptz, serialización ISO 8601 con Z); conexiones configuradas UTC. FechaNacimiento permanece tipo date; la validación de fecha futura usa America/Lima. No confundir conversión de presentación con cambio de la fecha de negocio.
