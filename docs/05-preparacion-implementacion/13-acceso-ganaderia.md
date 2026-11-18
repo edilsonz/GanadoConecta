@@ -46,6 +46,7 @@ modificó React. No se ejecutó prueba manual del nuevo endpoint en navegador.
 | T02.4 | Creación, listado y `GET /acceso` implementados; futuras APIs aún deben reutilizar autorización por recurso. |
 | CA03 / CA06 | Parciales: acceso ajeno/revocado rechazado; faltan recursos de animales y carrera con revocación. |
 
-Permanecen pendientes AU07, revocación de editor/lector, integración React del
-contexto, preparación offline, animales e invitaciones. No se declara completo
-RF21 ni el gate T02.
+**Actualización posterior:** AU07 y la revocación de editor/lector se implementaron
+en el [incremento siguiente](14-revocacion-membresias.md). Permanecen pendientes
+la integración React del contexto, preparación offline, animales e invitaciones.
+No se declara completo RF21 ni el gate T02.

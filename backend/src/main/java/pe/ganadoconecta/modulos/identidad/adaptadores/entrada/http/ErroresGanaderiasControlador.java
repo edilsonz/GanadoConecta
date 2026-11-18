@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import pe.ganadoconecta.modulos.identidad.aplicacion.AccesoGanaderiaDenegadoException;
 import pe.ganadoconecta.modulos.identidad.aplicacion.GanaderiaNoDisponibleException;
+import pe.ganadoconecta.modulos.identidad.aplicacion.MembresiaNoEncontradaException;
 import pe.ganadoconecta.modulos.identidad.aplicacion.PersistenciaGanaderiaException;
+import pe.ganadoconecta.modulos.identidad.aplicacion.PropietarioNoRevocableException;
 import pe.ganadoconecta.modulos.identidad.dominio.DatoGanaderiaInvalidoException;
 
 @RestControllerAdvice(assignableTypes = GanaderiasControlador.class)
@@ -40,6 +42,18 @@ public class ErroresGanaderiasControlador {
     ResponseEntity<RespuestaError> accesoDenegado() {
         return respuesta(HttpStatus.FORBIDDEN, "ACCESO_GANADERIA_DENEGADO",
                 "No tiene acceso a la ganadería solicitada.", Map.of());
+    }
+
+    @ExceptionHandler(MembresiaNoEncontradaException.class)
+    ResponseEntity<RespuestaError> membresiaNoEncontrada() {
+        return respuesta(HttpStatus.NOT_FOUND, "MEMBRESIA_NO_ENCONTRADA",
+                "No se encontró la membresía solicitada.", Map.of());
+    }
+
+    @ExceptionHandler(PropietarioNoRevocableException.class)
+    ResponseEntity<RespuestaError> propietarioNoRevocable() {
+        return respuesta(HttpStatus.CONFLICT, "PROPIETARIO_NO_REVOCABLE",
+                "El propietario no puede revocarse mediante esta operación.", Map.of());
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)

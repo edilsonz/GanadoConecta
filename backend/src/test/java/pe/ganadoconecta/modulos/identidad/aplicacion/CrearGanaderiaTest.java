@@ -3,6 +3,7 @@ package pe.ganadoconecta.modulos.identidad.aplicacion;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -99,6 +100,13 @@ class CrearGanaderiaTest {
             public Optional<pe.ganadoconecta.modulos.identidad.dominio.GanaderiaAccesible>
                     buscarActiva(UUID usuarioId, UUID ganaderiaId) {
                 return Optional.empty();
+            }
+
+            @Override
+            public ResultadoRevocacion revocarMembresia(UUID actorUsuarioId,
+                    UUID actorSesionId, UUID ganaderiaId,
+                    UUID objetivoUsuarioId, Instant revocadoEn) {
+                throw new AssertionError("No debe revocar");
             }
         };
     }

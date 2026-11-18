@@ -417,4 +417,5 @@ además de la [evidencia del cliente React](docs/05-preparacion-implementacion/1
 y la [evidencia de creación de ganadería AU05](docs/05-preparacion-implementacion/11-creacion-ganaderia.md)
 y de su [listado/cliente React](docs/05-preparacion-implementacion/12-ganaderias-react-listado.md),
 y la [evidencia de contexto AU06](docs/05-preparacion-implementacion/13-acceso-ganaderia.md),
+y la [evidencia de revocación AU07](docs/05-preparacion-implementacion/14-revocacion-membresias.md),
 para resultados realmente ejecutados y limitaciones.

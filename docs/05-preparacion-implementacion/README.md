@@ -15,7 +15,9 @@
 > [evidencia de creación/listado React](12-ganaderias-react-listado.md) registra
 > el incremento de consulta aislada y selección en memoria, y la
 > [evidencia de AU06](13-acceso-ganaderia.md) cubre la revalidación online del
-> contexto por membresía. Los estados de propuesta siguientes describen la
+> contexto por membresía, y la
+> [evidencia de AU07](14-revocacion-membresias.md) documenta la revocación
+> transaccional y el autorizador reutilizable. Los estados de propuesta siguientes describen la
 > preparación arquitectónica original, no acreditan implementación de SPEC-01.
 
 > **Estado de consolidación:** las 16 decisiones aprobadas por el responsable

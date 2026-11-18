@@ -3,6 +3,7 @@ package pe.ganadoconecta;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -340,6 +341,104 @@ class CrearGanaderiaPostgresIntegrationTest extends SoporteJwtPostgres {
                 .andExpect(jsonPath("$.codigo").value("SOLICITUD_INVALIDA"));
     }
 
+    @Test
+    void propietarioRevocaEditorIdempotentementeYElJwtPrevioPierdeAcceso()
+            throws Exception {
+        Cuenta propietario = crearCuentaAutenticada("revoca-propietario");
+        Cuenta editor = crearCuentaAutenticada("revoca-editor");
+        UUID ganaderiaId = UUID.randomUUID();
+        crear(propietario.jwt(), json(ganaderiaId, "La Arboleda"))
+                .andExpect(status().isCreated());
+        agregarMembresia(ganaderiaId, editor.usuarioId(), "EDITOR");
+        acceso(editor.jwt(), ganaderiaId.toString()).andExpect(status().isOk());
+
+        revocar(propietario.jwt(), ganaderiaId, editor.usuarioId(), true, ORIGEN)
+                .andExpect(status().isNoContent())
+                .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"));
+
+        assertThat(jdbc.queryForObject("""
+                SELECT count(*)
+                FROM identidad.membresia
+                WHERE ganaderia_id = ? AND usuario_id = ?
+                  AND rol = 'EDITOR' AND estado = 'REVOCADA'
+                  AND revocado_en IS NOT NULL
+                """, Integer.class, ganaderiaId, editor.usuarioId())).isEqualTo(1);
+        acceso(editor.jwt(), ganaderiaId.toString())
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.codigo").value("ACCESO_GANADERIA_DENEGADO"));
+
+        revocar(propietario.jwt(), ganaderiaId, editor.usuarioId(), true, ORIGEN)
+                .andExpect(status().isNoContent());
+        assertThat(cantidad("identidad.membresia", "ganaderia_id", ganaderiaId))
+                .isEqualTo(2);
+    }
+
+    @Test
+    void editorNoPuedeRevocarAOtroMiembro() throws Exception {
+        Cuenta propietario = crearCuentaAutenticada("revoca-dueno");
+        Cuenta editor = crearCuentaAutenticada("revoca-actor-editor");
+        Cuenta lector = crearCuentaAutenticada("revoca-lector");
+        UUID ganaderiaId = UUID.randomUUID();
+        crear(propietario.jwt(), json(ganaderiaId, "El Encanto"))
+                .andExpect(status().isCreated());
+        agregarMembresia(ganaderiaId, editor.usuarioId(), "EDITOR");
+        agregarMembresia(ganaderiaId, lector.usuarioId(), "LECTOR");
+
+        revocar(editor.jwt(), ganaderiaId, lector.usuarioId(), true, ORIGEN)
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.codigo").value("ACCESO_GANADERIA_DENEGADO"));
+
+        assertThat(estadoMembresia(ganaderiaId, lector.usuarioId())).isEqualTo("ACTIVA");
+    }
+
+    @Test
+    void protegePropietarioYNoRevelaObjetivosAjenosOInexistentes() throws Exception {
+        Cuenta propietario = crearCuentaAutenticada("revoca-protegido");
+        Cuenta otroPropietario = crearCuentaAutenticada("revoca-ajeno");
+        Cuenta miembroAjeno = crearCuentaAutenticada("revoca-miembro-ajeno");
+        UUID ganaderiaId = UUID.randomUUID();
+        UUID ajenaId = UUID.randomUUID();
+        crear(propietario.jwt(), json(ganaderiaId, "El Roble"))
+                .andExpect(status().isCreated());
+        crear(otroPropietario.jwt(), json(ajenaId, "La Rivera"))
+                .andExpect(status().isCreated());
+        agregarMembresia(ajenaId, miembroAjeno.usuarioId(), "LECTOR");
+
+        revocar(propietario.jwt(), ganaderiaId, propietario.usuarioId(), true, ORIGEN)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.codigo").value("PROPIETARIO_NO_REVOCABLE"));
+        for (UUID objetivo : java.util.List.of(miembroAjeno.usuarioId(), UUID.randomUUID())) {
+            revocar(propietario.jwt(), ganaderiaId, objetivo, true, ORIGEN)
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.codigo").value("MEMBRESIA_NO_ENCONTRADA"))
+                    .andExpect(jsonPath("$.usuarioId").doesNotExist());
+        }
+        assertThat(estadoMembresia(ganaderiaId, propietario.usuarioId()))
+                .isEqualTo("ACTIVA");
+    }
+
+    @Test
+    void exigeAutenticacionCsrfYOrigenValidoParaRevocar() throws Exception {
+        Cuenta propietario = crearCuentaAutenticada("revoca-seguridad");
+        Cuenta lector = crearCuentaAutenticada("revoca-seguridad-lector");
+        UUID ganaderiaId = UUID.randomUUID();
+        crear(propietario.jwt(), json(ganaderiaId, "Santa Clara"))
+                .andExpect(status().isCreated());
+        agregarMembresia(ganaderiaId, lector.usuarioId(), "LECTOR");
+
+        revocar(null, ganaderiaId, lector.usuarioId(), true, ORIGEN)
+                .andExpect(status().isUnauthorized());
+        revocar(propietario.jwt(), ganaderiaId, lector.usuarioId(), false, ORIGEN)
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.codigo").value("CSRF_INVALIDO"));
+        revocar(propietario.jwt(), ganaderiaId, lector.usuarioId(), true,
+                "https://origen-ajeno.invalid")
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.codigo").value("ORIGEN_NO_PERMITIDO"));
+
+        assertThat(estadoMembresia(ganaderiaId, lector.usuarioId())).isEqualTo("ACTIVA");
+    }
+
     private Cuenta crearCuentaAutenticada(String sufijo) throws Exception {
         RegistrarUsuario.Resultado cuenta = registrar.ejecutar(new RegistrarUsuario.Comando(
                 correo(sufijo), CONTRASENA));
@@ -379,6 +478,20 @@ class CrearGanaderiaPostgresIntegrationTest extends SoporteJwtPostgres {
                 .accept(MediaType.APPLICATION_JSON));
     }
 
+    private org.springframework.test.web.servlet.ResultActions revocar(String jwt,
+            UUID ganaderiaId, UUID usuarioId, boolean conCsrf, String origen)
+            throws Exception {
+        var solicitud = delete("/api/v1/ganaderias/{ganaderiaId}/membresias/{usuarioId}",
+                ganaderiaId, usuarioId).header(HttpHeaders.ORIGIN, origen);
+        if (jwt != null) {
+            solicitud.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt);
+        }
+        if (conCsrf) {
+            solicitud.with(csrf().asHeader());
+        }
+        return mvc.perform(solicitud);
+    }
+
     private void agregarMembresia(UUID ganaderiaId, UUID usuarioId, String rol) {
         jdbc.update("""
                 INSERT INTO identidad.membresia
@@ -393,6 +506,14 @@ class CrearGanaderiaPostgresIntegrationTest extends SoporteJwtPostgres {
 
     private String correo(String sufijo) {
         return PREFIJO + sufijo + "-" + UUID.randomUUID() + "@ganadoconecta.invalid";
+    }
+
+    private String estadoMembresia(UUID ganaderiaId, UUID usuarioId) {
+        return jdbc.queryForObject("""
+                SELECT estado
+                FROM identidad.membresia
+                WHERE ganaderia_id = ? AND usuario_id = ?
+                """, String.class, ganaderiaId, usuarioId);
     }
 
     private int cantidad(String tabla, String columna, UUID id) {

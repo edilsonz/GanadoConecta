@@ -25,7 +25,8 @@ class ConsultarAccesoGanaderiaTest {
         GanaderiaAccesible acceso = new GanaderiaAccesible(
                 GANADERIA, "Los Pinos", "ACTIVA", "EDITOR");
         ConsultarAccesoGanaderia caso = new ConsultarAccesoGanaderia(
-                repositorio(Optional.of(acceso)), Clock.fixed(AHORA, ZoneOffset.UTC));
+                new AutorizarAccesoGanaderia(repositorio(Optional.of(acceso))),
+                Clock.fixed(AHORA, ZoneOffset.UTC));
 
         var resultado = caso.ejecutar(ACTOR, GANADERIA);
 
@@ -38,7 +39,8 @@ class ConsultarAccesoGanaderiaTest {
     @Test
     void respondeIgualCuandoNoExisteAccesoActivo() {
         ConsultarAccesoGanaderia caso = new ConsultarAccesoGanaderia(
-                repositorio(Optional.empty()), Clock.fixed(AHORA, ZoneOffset.UTC));
+                new AutorizarAccesoGanaderia(repositorio(Optional.empty())),
+                Clock.fixed(AHORA, ZoneOffset.UTC));
 
         assertThatThrownBy(() -> caso.ejecutar(ACTOR, GANADERIA))
                 .isInstanceOf(AccesoGanaderiaDenegadoException.class)
@@ -63,6 +65,13 @@ class ConsultarAccesoGanaderiaTest {
                 assertThat(usuarioId).isEqualTo(ACTOR);
                 assertThat(ganaderiaId).isEqualTo(GANADERIA);
                 return acceso;
+            }
+
+            @Override
+            public ResultadoRevocacion revocarMembresia(UUID actorUsuarioId,
+                    UUID actorSesionId, UUID ganaderiaId,
+                    UUID objetivoUsuarioId, Instant revocadoEn) {
+                throw new AssertionError("No debe revocar");
             }
         };
     }

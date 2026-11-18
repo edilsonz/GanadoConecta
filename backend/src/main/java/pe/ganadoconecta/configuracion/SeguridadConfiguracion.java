@@ -66,6 +66,8 @@ public class SeguridadConfiguracion {
                         .requestMatchers(HttpMethod.GET, "/api/v1/ganaderias").authenticated()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/ganaderias/*/acceso").authenticated()
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/v1/ganaderias/*/membresias/*").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/ganaderias").authenticated()
                         .anyRequest().denyAll())
                 .csrf(csrf -> csrf

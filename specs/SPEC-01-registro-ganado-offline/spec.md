@@ -85,8 +85,9 @@ de anuncios en PostgreSQL, sin pagos ni transacciones comerciales; no se ejecuta
 ### 5.1. Contrato mínimo DP01 aprobado documentalmente (prerrequisito)
 
 Este contrato guía la implementación incremental: AU01 y AU02–AU04 cuentan con
-backend y cliente React automatizado; AU05 y el contexto online AU06 están
-implementados. Las comprobaciones integrales y AU07–AU08 permanecen pendientes.
+backend y cliente React automatizado; AU05, el contexto online AU06 y la
+revocación backend AU07 están implementados. Las comprobaciones integrales y la
+continuidad offline de AU08 permanecen pendientes.
 La ampliación se justifica
 por RF01/RF21 y ADR-07/ADR-13: reemplaza la dependencia indefinida de acceso
 por operaciones mínimas verificables, sin alterar arquitectura ni crear servicios.
@@ -383,18 +384,19 @@ obligatorias para el producto; no aplica caché vacía/poblada a consultas priva
 No añaden criterios CA: precisan CA03, CA06, CA12 y CA14; AU01–AU08 son reglas
 de contrato, no resultados. PA01 tiene evidencia parcial del contrato global;
 PA02/PA03 tienen ejecución backend y cliente automatizado; PA04 y PA07 tienen ejecución parcial online;
-PA05 tiene ejecución backend; PA06/PA08 permanecen no ejecutadas integralmente salvo restricciones ya documentadas.
+PA05 tiene ejecución backend/cliente; PA06/PA08 tienen ejecución parcial y
+permanecen no ejecutadas integralmente.
 
 | Prueba | Escenario y resultado requerido | Criterios |
 |---|---|---|
 | PA01 | **EJECUTADA para AU01:** React obtiene CSRF y registra sin persistir credenciales; registro válido crea cuenta sin permisos; correo normalizado duplicado no crea segunda cuenta; inválidos y campos rol/ganadería/estado son rechazados; hash nunca se devuelve. | CA03; [evidencia](../../docs/05-preparacion-implementacion/08-registro-usuarios.md) |
 | PA02 | **EJECUTADA EN BACKEND Y CLIENTE AUTOMATIZADO:** contraseña válida/inválida, cuenta inexistente/inactiva y límite persistente; HTTP 401/429, JWT alterado/expirado/emisor-audiencia incorrectos y sesión revocada se rechazan mediante filtro. React cubre éxito, error genérico, límite/red y evita doble envío, sin E2E HTTPS real. | CA03, CA12; [backend](../../docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md), [React](../../docs/05-preparacion-implementacion/10-login-react.md) |
 | PA03 | **EJECUTADA EN BACKEND Y CLIENTE AUTOMATIZADO:** 10 min/24 h; cookie, rotación, dos refresh concurrentes, reutilización y respuesta perdida segura verificados. React restaura, renueva en memoria y serializa en pestaña/Web Locks; falta validar varias pestañas en navegador HTTPS real. | CA12; [backend](../../docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md), [React](../../docs/05-preparacion-implementacion/10-login-react.md) |
-| PA04 | **EJECUCIÓN PARCIAL ONLINE:** logout idempotente revoca sesión/verificadores y rechaza el JWT anterior. React bloquea localmente y conserva solo una marca no secreta cuando falla el cierre remoto. Faltan revocación de membresía, cola offline y validación real entre pestañas/navegador. | CA06, CA12, CA14; [backend](../../docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md), [React](../../docs/05-preparacion-implementacion/10-login-react.md) |
+| PA04 | **EJECUCIÓN PARCIAL ONLINE:** logout idempotente revoca sesión/verificadores y rechaza el JWT anterior. AU07 revoca membresía y el JWT del miembro pierde acceso en la siguiente operación. React bloquea localmente y conserva solo una marca no secreta cuando falla el cierre remoto. Faltan cola offline y validación real entre pestañas/navegador. | CA06, CA12, CA14; [backend](../../docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md), [React](../../docs/05-preparacion-implementacion/10-login-react.md), [AU07](../../docs/05-preparacion-implementacion/14-revocacion-membresias.md) |
 | PA05 | **EJECUTADA EN BACKEND Y CLIENTE AUTOMATIZADO:** crear ganadería confirma propietario y membresía juntos; fallo de membresía revierte la ganadería; repetición mismo ID/actor/nombre no duplica y campos de propietario/rol se rechazan. React genera UUIDv4, usa JWT/CSRF y no persiste la selección. | CA03; [backend](../../docs/05-preparacion-implementacion/11-creacion-ganaderia.md), [React/listado](../../docs/05-preparacion-implementacion/12-ganaderias-react-listado.md) |
-| PA06 | **EJECUCIÓN PARCIAL:** listado y `/acceso` consultan PostgreSQL y aceptan solo ganadería/membresía activas del actor; propietario/editor/lector vigentes obtienen su rol. Inexistente, ajena, inactiva o revocada reciben el mismo 403. Faltan matriz sobre recursos, revocación y carrera con alta. | CA03, CA06; [evidencia](../../docs/05-preparacion-implementacion/13-acceso-ganaderia.md) |
-| PA07 | **EJECUCIÓN BACKEND Y CLIENTE AUTOMATIZADO:** cookie HttpOnly/Secure/SameSite, `no-store`, CSRF inválido y origen ajeno probados en backend; React obtiene/envía CSRF sin leer refresh ni persistir JWT y permite configurar HTTPS con certificados externos. Falta navegador HTTPS real y operaciones de membresía. | CA03, CA12, CA14; [backend](../../docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md), [React](../../docs/05-preparacion-implementacion/10-login-react.md) |
-| PA08 | Pruebas unitarias del núcleo de Identidad para contraseñas, expiración, permisos, creación/ revocación; E2E del propietario real y de roles de test; ninguna vía de alta familiar de test habilitada en producción. | CA03, CA06, CA12, CA14 |
+| PA06 | **EJECUCIÓN PARCIAL:** listado, `/acceso` y el autorizador consultan PostgreSQL; propietario/editor pueden escribir, lector solo leer. AU07 permite al propietario revocar editor/lector, protege al propietario y rechaza inmediatamente el JWT previo del miembro. Faltan aplicar la matriz y probar la carrera sobre recursos de animales. | CA03, CA06; [AU06](../../docs/05-preparacion-implementacion/13-acceso-ganaderia.md), [AU07](../../docs/05-preparacion-implementacion/14-revocacion-membresias.md) |
+| PA07 | **EJECUCIÓN BACKEND Y CLIENTE AUTOMATIZADO:** cookie HttpOnly/Secure/SameSite, `no-store`, CSRF inválido y origen ajeno probados en backend; AU07 exige CSRF/origen; React obtiene/envía CSRF sin leer refresh ni persistir JWT y permite configurar HTTPS con certificados externos. Falta navegador HTTPS real para AU07. | CA03, CA12, CA14; [backend](../../docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md), [React](../../docs/05-preparacion-implementacion/10-login-react.md), [AU07](../../docs/05-preparacion-implementacion/14-revocacion-membresias.md) |
+| PA08 | **EJECUCIÓN PARCIAL:** núcleo de Identidad cubre contraseñas, expiración, permisos, creación y revocación; integración usa propietario real y roles editor/lector solo como fixtures, sin vía productiva de alta familiar. Faltan E2E y recursos de animales/offline. | CA03, CA06, CA12, CA14; [AU07](../../docs/05-preparacion-implementacion/14-revocacion-membresias.md) |
 
 ### Relación con los 16 criterios de evaluación
 
@@ -428,7 +430,7 @@ Referencia: [matriz global](../../docs/06-evaluacion-sdd/matriz-trazabilidad.md)
 | DP07 | Adoptada: unitarias, integración, E2E, offline y carga con herramientas del plan. | Fijar versiones/compatibilidad cuando se prepare el proyecto ejecutable (T03), no cambiar herramientas silenciosamente. |
 | DP08 | Adoptada: zona de negocio America/Lima, instantes UTC y fecha/paginación documentadas. | Validar límites de fecha y cursor en pruebas, sin convertir fechaNacimiento en instante. |
 
-DP01–DP08 quedan adoptadas y SPEC-01 aprobada documentalmente por autorización expresa del responsable el 16 de noviembre de 2026. Las precisiones de rotación sustituyen la propuesta anterior de refresh estable; no se reabren las demás decisiones. Plan y tareas forman parte de esta aprobación. Desde el 17 de noviembre existen AU01, AU02–AU04 con cliente React, creación/listado/selección de ganaderías y `/acceso`; revocación, autorización integral y los criterios conjuntos continúan pendientes.
+DP01–DP08 quedan adoptadas y SPEC-01 aprobada documentalmente por autorización expresa del responsable el 16 de noviembre de 2026. Las precisiones de rotación sustituyen la propuesta anterior de refresh estable; no se reabren las demás decisiones. Plan y tareas forman parte de esta aprobación. Desde el 17 de noviembre existen AU01, AU02–AU04 con cliente React, creación/listado/selección de ganaderías, `/acceso` y revocación AU07; la autorización sobre animales, offline y los criterios conjuntos continúan pendientes.
 
 ## 14. Evidencia de validación
 
@@ -439,7 +441,8 @@ DP01–DP08 quedan adoptadas y SPEC-01 aprobada documentalmente por autorizació
 | PA02–PA03 / AU02–AU03 | Backend y cliente automatizado ejecutados el 17 de noviembre de 2026 | Backend: credenciales, límite, sesiones, JWT RS256, cookie, filtro, rotación, concurrencia y respuesta perdida. React: login, JWT en memoria, restauración, renovación controlada y errores; falta navegador HTTPS real. [Backend](../../docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md), [React](../../docs/05-preparacion-implementacion/10-login-react.md). |
 | PA04/PA07 / AU04/AU08 | Parcial backend/cliente el 17 de noviembre de 2026 | Logout/JWT previo, atributos de cookie, CSRF, origen y no-store probados; cliente bloquea localmente ante cierre remoto fallido. Faltan cola offline, membresías y navegador HTTPS real. |
 | PA05 / AU05 y PA06 / AU06 parcial | Backend/cliente automatizado el 17 de noviembre de 2026 | Creación/listado/selección verificados; `/acceso` revalida ganadería y membresía activas en PostgreSQL, devuelve rol vigente y rechaza sin distinguir ajena, revocada, inactiva o inexistente. Regresión backend: 73 pruebas. [Listado/React](../../docs/05-preparacion-implementacion/12-ganaderias-react-listado.md), [contexto](../../docs/05-preparacion-implementacion/13-acceso-ganaderia.md). |
-| PU01–PU04, PI01–PI05, EE01–EE04, PC01, PA06 y PA08 | No ejecutadas integralmente | Sin flujos completos de autorización por ganadería, animales u offline. |
+| AU07 / PA06–PA08 parcial | Backend/PostgreSQL el 17 de noviembre de 2026 | Propietario revoca editor/lector sin borrar la fila; propietario protegido, idempotencia, aislamiento, CSRF/origen y pérdida inmediata de acceso verificados. Regresión backend: 82 pruebas. [Evidencia](../../docs/05-preparacion-implementacion/14-revocacion-membresias.md). |
+| PU01–PU04, PI01–PI05, EE01–EE04, PC01, PA06 y PA08 | No ejecutadas integralmente | Sin flujos completos de animales u offline; carrera revocación/alta pendiente de T07. |
 | Aprobación de SPEC/plan/tareas | Aprobada documentalmente el 16 de noviembre de 2026 | Autorización expresa del responsable con precisiones obligatorias de sesión y rotación; sin implementación. |
 
 ## 15. Condición de finalización

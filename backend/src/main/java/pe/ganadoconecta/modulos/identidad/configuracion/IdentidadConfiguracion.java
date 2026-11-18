@@ -16,6 +16,7 @@ import pe.ganadoconecta.modulos.identidad.adaptadores.salida.RepositorioSesiones
 import pe.ganadoconecta.modulos.identidad.adaptadores.salida.RepositorioUsuariosPostgres;
 import pe.ganadoconecta.modulos.identidad.aplicacion.CodificadorContrasena;
 import pe.ganadoconecta.modulos.identidad.aplicacion.CerrarSesion;
+import pe.ganadoconecta.modulos.identidad.aplicacion.AutorizarAccesoGanaderia;
 import pe.ganadoconecta.modulos.identidad.aplicacion.CrearGanaderia;
 import pe.ganadoconecta.modulos.identidad.aplicacion.ConsultarAccesoGanaderia;
 import pe.ganadoconecta.modulos.identidad.aplicacion.GeneradorCredencialesRenovacion;
@@ -26,6 +27,7 @@ import pe.ganadoconecta.modulos.identidad.aplicacion.ListarGanaderias;
 import pe.ganadoconecta.modulos.identidad.aplicacion.IniciarSesion;
 import pe.ganadoconecta.modulos.identidad.aplicacion.RenovarSesion;
 import pe.ganadoconecta.modulos.identidad.aplicacion.RegistrarUsuario;
+import pe.ganadoconecta.modulos.identidad.aplicacion.RevocarMembresia;
 import pe.ganadoconecta.modulos.identidad.aplicacion.RepositorioCredenciales;
 import pe.ganadoconecta.modulos.identidad.aplicacion.RepositorioGanaderias;
 import pe.ganadoconecta.modulos.identidad.aplicacion.RepositorioSesiones;
@@ -104,8 +106,19 @@ public class IdentidadConfiguracion {
 
     @Bean
     ConsultarAccesoGanaderia consultarAccesoGanaderia(
-            RepositorioGanaderias repositorio, Clock reloj) {
-        return new ConsultarAccesoGanaderia(repositorio, reloj);
+            AutorizarAccesoGanaderia autorizador, Clock reloj) {
+        return new ConsultarAccesoGanaderia(autorizador, reloj);
+    }
+
+    @Bean
+    AutorizarAccesoGanaderia autorizarAccesoGanaderia(
+            RepositorioGanaderias repositorio) {
+        return new AutorizarAccesoGanaderia(repositorio);
+    }
+
+    @Bean
+    RevocarMembresia revocarMembresia(RepositorioGanaderias repositorio, Clock reloj) {
+        return new RevocarMembresia(repositorio, reloj);
     }
 
     @Bean
