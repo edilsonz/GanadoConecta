@@ -418,4 +418,5 @@ y la [evidencia de creación de ganadería AU05](docs/05-preparacion-implementac
 y de su [listado/cliente React](docs/05-preparacion-implementacion/12-ganaderias-react-listado.md),
 y la [evidencia de contexto AU06](docs/05-preparacion-implementacion/13-acceso-ganaderia.md),
 y la [evidencia de revocación AU07](docs/05-preparacion-implementacion/14-revocacion-membresias.md),
+y la [evidencia del núcleo T04–T07](docs/05-preparacion-implementacion/15-nucleo-registro-animales.md),
 para resultados realmente ejecutados y limitaciones.

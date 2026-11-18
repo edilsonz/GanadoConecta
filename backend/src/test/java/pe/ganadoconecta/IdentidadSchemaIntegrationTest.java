@@ -38,7 +38,7 @@ class IdentidadSchemaIntegrationTest extends SoporteJwtPostgres {
     private DataSource dataSource;
 
     @Test
-    void creaYValidaLaPrimeraVersionDelEsquemaIdentidad() {
+    void creaYValidaLasMigracionesVersionadas() {
         assertThat(flyway.validateWithResult().validationSuccessful).isTrue();
 
         assertThat(jdbc.queryForObject("""
@@ -47,7 +47,7 @@ class IdentidadSchemaIntegrationTest extends SoporteJwtPostgres {
                 WHERE success
                 ORDER BY installed_rank DESC
                 LIMIT 1
-                """, String.class)).isEqualTo("3");
+                """, String.class)).isEqualTo("4");
         assertThat(jdbc.queryForList("""
                 SELECT table_name
                 FROM information_schema.tables
@@ -84,6 +84,19 @@ class IdentidadSchemaIntegrationTest extends SoporteJwtPostgres {
                 """, String.class))
                 .contains("clave_sha256", "fallos", "bloqueado_hasta")
                 .doesNotContain("correo", "origen");
+        assertThat(jdbc.queryForList("""
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'ganado'
+                ORDER BY table_name
+                """, String.class)).containsExactly(
+                        "animal", "operacion_confirmada");
+        assertThat(jdbc.queryForList("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_schema = 'ganado' AND table_name = 'animal'
+                """, String.class)).contains(
+                        "id", "ganaderia_id", "sexo", "version", "creado_por");
     }
 
     @Test

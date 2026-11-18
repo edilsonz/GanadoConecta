@@ -11,8 +11,12 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.TransactionTemplate;
+import pe.ganadoconecta.modulos.identidad.aplicacion.AccesoGanaderiaDenegadoException;
+import pe.ganadoconecta.modulos.identidad.aplicacion.AutorizarAccesoGanaderiaTransaccional;
 import pe.ganadoconecta.modulos.identidad.aplicacion.GanaderiaNoDisponibleException;
+import pe.ganadoconecta.modulos.identidad.aplicacion.PermisoGanaderia;
 import pe.ganadoconecta.modulos.identidad.aplicacion.PersistenciaGanaderiaException;
+import pe.ganadoconecta.modulos.identidad.aplicacion.PersistenciaIdentidadException;
 import pe.ganadoconecta.modulos.identidad.aplicacion.RepositorioGanaderias;
 import pe.ganadoconecta.modulos.identidad.dominio.GanaderiaAccesible;
 import pe.ganadoconecta.modulos.identidad.dominio.GanaderiaNueva;
@@ -21,11 +25,19 @@ import pe.ganadoconecta.modulos.identidad.dominio.GanaderiaNueva;
 public final class RepositorioGanaderiasPostgres implements RepositorioGanaderias {
     private final JdbcTemplate jdbc;
     private final TransactionTemplate transacciones;
+    private final AutorizarAccesoGanaderiaTransaccional autorizador;
 
     public RepositorioGanaderiasPostgres(JdbcTemplate jdbc,
             TransactionTemplate transacciones) {
+        this(jdbc, transacciones, new AutorizarAccesoGanaderiaPostgres(jdbc));
+    }
+
+    public RepositorioGanaderiasPostgres(JdbcTemplate jdbc,
+            TransactionTemplate transacciones,
+            AutorizarAccesoGanaderiaTransaccional autorizador) {
         this.jdbc = Objects.requireNonNull(jdbc);
         this.transacciones = Objects.requireNonNull(transacciones);
+        this.autorizador = Objects.requireNonNull(autorizador);
     }
 
     @Override
@@ -121,36 +133,10 @@ public final class RepositorioGanaderiasPostgres implements RepositorioGanaderia
         Objects.requireNonNull(revocadoEn);
         try {
             return Objects.requireNonNull(transacciones.execute(estado -> {
-                List<SesionBloqueada> sesiones = jdbc.query("""
-                        SELECT s.revocado_en, s.vence_en, u.estado AS usuario_estado
-                        FROM identidad.sesion_dispositivo s
-                        JOIN identidad.usuario u ON u.id = s.usuario_id
-                        WHERE s.id = ? AND s.usuario_id = ?
-                        FOR UPDATE OF s, u
-                        """, (resultado, fila) -> new SesionBloqueada(
-                                resultado.getObject("revocado_en", OffsetDateTime.class),
-                                resultado.getObject("vence_en", OffsetDateTime.class),
-                                resultado.getString("usuario_estado")),
-                        actorSesionId, actorUsuarioId);
-                if (sesiones.isEmpty() || !sesiones.getFirst().estaVigente(revocadoEn)) {
-                    return ResultadoRevocacion.ACTOR_NO_AUTORIZADO;
-                }
-
-                List<String> ganaderias = jdbc.queryForList("""
-                        SELECT estado
-                        FROM identidad.ganaderia
-                        WHERE id = ?
-                        FOR UPDATE
-                        """, String.class, ganaderiaId);
-                if (ganaderias.isEmpty() || !"ACTIVA".equals(ganaderias.getFirst())) {
-                    return ResultadoRevocacion.ACTOR_NO_AUTORIZADO;
-                }
-
-                Optional<MembresiaBloqueada> actor = buscarMembresiaBloqueada(
-                        ganaderiaId, actorUsuarioId);
-                if (actor.isEmpty()
-                        || !"PROPIETARIO".equals(actor.get().rol())
-                        || !"ACTIVA".equals(actor.get().estado())) {
+                try {
+                    autorizador.autorizar(actorUsuarioId, actorSesionId, ganaderiaId,
+                            PermisoGanaderia.ADMINISTRAR, revocadoEn);
+                } catch (AccesoGanaderiaDenegadoException exception) {
                     return ResultadoRevocacion.ACTOR_NO_AUTORIZADO;
                 }
 
@@ -174,7 +160,8 @@ public final class RepositorioGanaderiasPostgres implements RepositorioGanaderia
                         ganaderiaId, objetivoUsuarioId);
                 return ResultadoRevocacion.REVOCADA;
             }));
-        } catch (DataAccessException | TransactionException exception) {
+        } catch (DataAccessException | TransactionException
+                | PersistenciaIdentidadException exception) {
             throw new PersistenciaGanaderiaException(exception);
         }
     }
@@ -217,12 +204,4 @@ public final class RepositorioGanaderiasPostgres implements RepositorioGanaderia
     private record MembresiaBloqueada(String rol, String estado) {
     }
 
-    private record SesionBloqueada(OffsetDateTime revocadoEn,
-            OffsetDateTime venceEn, String usuarioEstado) {
-        private boolean estaVigente(Instant ahora) {
-            return revocadoEn == null
-                    && venceEn.toInstant().isAfter(ahora)
-                    && "ACTIVO".equals(usuarioEstado);
-        }
-    }
 }

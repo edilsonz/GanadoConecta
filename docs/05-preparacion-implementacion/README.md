@@ -17,7 +17,9 @@
 > [evidencia de AU06](13-acceso-ganaderia.md) cubre la revalidación online del
 > contexto por membresía, y la
 > [evidencia de AU07](14-revocacion-membresias.md) documenta la revocación
-> transaccional y el autorizador reutilizable. Los estados de propuesta siguientes describen la
+> transaccional y el autorizador reutilizable; la
+> [evidencia T04–T07](15-nucleo-registro-animales.md) cubre migración V4, dominio,
+> idempotencia y persistencia autorizada, todavía sin endpoint. Los estados de propuesta siguientes describen la
 > preparación arquitectónica original, no acreditan implementación de SPEC-01.
 
 > **Estado de consolidación:** las 16 decisiones aprobadas por el responsable

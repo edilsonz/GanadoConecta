@@ -1,5 +1,5 @@
 /**
- * Casos de uso y contratos futuros de Ganado; dependen del dominio.
- * Los controladores y adaptadores implementarán/invocarán estos contratos hacia el núcleo.
+ * Casos de uso y contratos de Ganado; dependen del dominio.
+ * T04–T07 incluyen el alta individual interna; el controlador HTTP sigue pendiente.
  */
 package pe.ganadoconecta.modulos.ganado.aplicacion;

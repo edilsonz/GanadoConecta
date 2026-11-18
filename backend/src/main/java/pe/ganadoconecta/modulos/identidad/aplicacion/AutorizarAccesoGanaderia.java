@@ -19,18 +19,9 @@ public final class AutorizarAccesoGanaderia {
         Objects.requireNonNull(permiso);
         GanaderiaAccesible acceso = repositorio.buscarActiva(actorUsuarioId, ganaderiaId)
                 .orElseThrow(AccesoGanaderiaDenegadoException::new);
-        if (!permite(acceso.rol(), permiso)) {
+        if (!permiso.permite(acceso.rol())) {
             throw new AccesoGanaderiaDenegadoException();
         }
         return acceso;
-    }
-
-    private boolean permite(String rol, PermisoGanaderia permiso) {
-        return switch (permiso) {
-            case LEER -> "PROPIETARIO".equals(rol)
-                    || "EDITOR".equals(rol)
-                    || "LECTOR".equals(rol);
-            case ESCRIBIR -> "PROPIETARIO".equals(rol) || "EDITOR".equals(rol);
-        };
     }
 }

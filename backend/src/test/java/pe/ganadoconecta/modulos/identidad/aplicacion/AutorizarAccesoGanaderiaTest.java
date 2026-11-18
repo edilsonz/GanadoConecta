@@ -36,6 +36,18 @@ class AutorizarAccesoGanaderiaTest {
     }
 
     @Test
+    void soloPropietarioPuedeAdministrar() {
+        assertThat(new AutorizarAccesoGanaderia(repositorio("PROPIETARIO"))
+                .autorizar(ACTOR, GANADERIA, PermisoGanaderia.ADMINISTRAR).rol())
+                .isEqualTo("PROPIETARIO");
+        for (String rol : List.of("EDITOR", "LECTOR")) {
+            assertThatThrownBy(() -> new AutorizarAccesoGanaderia(repositorio(rol))
+                    .autorizar(ACTOR, GANADERIA, PermisoGanaderia.ADMINISTRAR))
+                    .isInstanceOf(AccesoGanaderiaDenegadoException.class);
+        }
+    }
+
+    @Test
     void rechazaMembresiaAusenteORolNoReconocido() {
         assertThatThrownBy(() -> new AutorizarAccesoGanaderia(repositorio(null))
                 .autorizar(ACTOR, GANADERIA, PermisoGanaderia.LEER))

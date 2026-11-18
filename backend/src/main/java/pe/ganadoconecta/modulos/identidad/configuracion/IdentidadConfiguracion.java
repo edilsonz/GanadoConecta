@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.support.TransactionTemplate;
 import pe.ganadoconecta.modulos.identidad.adaptadores.salida.CodificadorContrasenaArgon2;
+import pe.ganadoconecta.modulos.identidad.adaptadores.salida.AutorizarAccesoGanaderiaPostgres;
 import pe.ganadoconecta.modulos.identidad.adaptadores.salida.GeneradorCredencialesRenovacionSeguras;
 import pe.ganadoconecta.modulos.identidad.adaptadores.salida.LimiteIntentosLoginPostgres;
 import pe.ganadoconecta.modulos.identidad.adaptadores.salida.RepositorioCredencialesPostgres;
@@ -17,6 +18,7 @@ import pe.ganadoconecta.modulos.identidad.adaptadores.salida.RepositorioUsuarios
 import pe.ganadoconecta.modulos.identidad.aplicacion.CodificadorContrasena;
 import pe.ganadoconecta.modulos.identidad.aplicacion.CerrarSesion;
 import pe.ganadoconecta.modulos.identidad.aplicacion.AutorizarAccesoGanaderia;
+import pe.ganadoconecta.modulos.identidad.aplicacion.AutorizarAccesoGanaderiaTransaccional;
 import pe.ganadoconecta.modulos.identidad.aplicacion.CrearGanaderia;
 import pe.ganadoconecta.modulos.identidad.aplicacion.ConsultarAccesoGanaderia;
 import pe.ganadoconecta.modulos.identidad.aplicacion.GeneradorCredencialesRenovacion;
@@ -50,8 +52,15 @@ public class IdentidadConfiguracion {
 
     @Bean
     RepositorioGanaderias repositorioGanaderias(
-            JdbcTemplate jdbc, TransactionTemplate transacciones) {
-        return new RepositorioGanaderiasPostgres(jdbc, transacciones);
+            JdbcTemplate jdbc, TransactionTemplate transacciones,
+            AutorizarAccesoGanaderiaTransaccional autorizador) {
+        return new RepositorioGanaderiasPostgres(jdbc, transacciones, autorizador);
+    }
+
+    @Bean
+    AutorizarAccesoGanaderiaTransaccional autorizarAccesoGanaderiaTransaccional(
+            JdbcTemplate jdbc) {
+        return new AutorizarAccesoGanaderiaPostgres(jdbc);
     }
 
     @Bean

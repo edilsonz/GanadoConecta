@@ -1,7 +1,7 @@
 # SPEC-01 — Plan técnico propuesto
 
 **Estado: Aprobada — Implementación en curso.** Plan aprobado documentalmente junto con
-[spec.md](spec.md) y el contrato DP01, el 16 de noviembre de 2026 por autorización del responsable. La implementación comenzó con la persistencia parcial de T02.1 el 17 de noviembre; este plan no modifica los ADR aprobados ni declara completos los flujos funcionales. [Tareas](tasks.md).
+[spec.md](spec.md) y el contrato DP01, el 16 de noviembre de 2026 por autorización del responsable. La implementación comenzó con T02.1 el 17 de noviembre y el núcleo T04–T07 se verificó el 18 de noviembre; T08 HTTP y los flujos de usuario permanecen pendientes. Este plan no modifica los ADR aprobados. [Tareas](tasks.md).
 
 ## 1. Arquitectura y límites
 
@@ -17,7 +17,7 @@ núcleo Java respecto a Spring, JPA, Redis o APIs del navegador.
 | backend/modulos/ganado/dominio | Animal, AnimalId, GanaderiaId, Sexo, Categoria; invariantes y validaciones puras. |
 | backend/modulos/ganado/aplicacion | RegistrarAnimal, ConsultarAnimales, ConsultarFichaAnimal; contratos RepositorioAnimales, RegistroOperaciones y UnidadDeTrabajo. |
 | backend/modulos/ganado/adaptadores/entrada | Controladores REST, DTO y validación de contrato/errores. |
-| backend/modulos/ganado/adaptadores/salida | Persistencia PostgreSQL/JPA, restricciones, orden transaccional y consultas autorizadas. |
+| backend/modulos/ganado/adaptadores/salida | Persistencia PostgreSQL/JDBC, restricciones, orden transaccional y consultas autorizadas. |
 | backend/modulos/ganado/configuracion | Cableado Spring y límites de transacción; sin anotaciones de infraestructura en dominio. |
 | frontend/funcionalidades/ganado | Formulario, «Mi ganado», ficha, permisos de UI y avisos de conexión/sincronización. |
 | frontend/aplicacion/sincronizacion | Construcción de sobres, estados/reintentos y reconciliación por animalId. |
@@ -52,7 +52,7 @@ renovación, logout y consulta de sesión con cookie/JWT; React integra esos con
 con JWT solo en memoria, restauración y cierre. Su E2E en navegador HTTPS,
 la continuidad offline de AU08 y las demás pantallas de acceso continúan
 pendientes. AU07 ya revoca editor/lector de forma transaccional y aporta un
-autorizador reutilizable; la carrera con el alta se probará al implementar T07.
+autorizador reutilizable; T07 verificó ambos órdenes de su carrera con el alta.
 AU05 ya crea atómicamente ganadería y propietario inicial; el backend
 lista solo membresías activas y React permite crear, listar y seleccionar en
 memoria. AU06 expone el contexto online `/acceso`; su integración en React y la
@@ -208,7 +208,10 @@ token de renovación. Un trigger de restricción diferible permite crear ganader
 y membresía propietaria en una misma transacción, pero impide confirmarla huérfana.
 La V2 fija en la base el máximo de 24 horas de AU03 para la sesión online. V3
 agrega `intento_login`, que conserva solo huellas SHA-256 por correo/origen,
-ventana, contador y bloqueo temporal; no guarda esos identificadores en claro. Flyway
+ventana, contador y bloqueo temporal; no guarda esos identificadores en claro.
+V4 crea `ganado.animal` y `ganado.operacion_confirmada`, con FKs a Identidad,
+sexo obligatorio, categorías coherentes, versión inicial, recibo idempotente y
+FK diferible para confirmar recibo y animal juntos. Flyway
 valida las migraciones al iniciar el perfil `postgres`; `clean` está deshabilitado.
 
 Esta persistencia es una parte de T02.1, no su cierre: ya existen el modelo,
@@ -216,8 +219,8 @@ puerto, caso de uso, adaptador JDBC y endpoint de AU01 con Argon2id, además de
 sesión/rotación, endpoints backend AU02–AU04 y cliente React automatizado. Falta
 validar coordinación multipestaña en navegador real. AU05 ya usa los modelos
 funcionales de ganadería/membresía para crear al propietario inicial; listado y
-contexto online ya revalidan membresía activa. Faltan autorización de futuros
-recursos y revocación de AU07–AU08. La base nunca
+contexto online ya revalidan membresía activa. T07 reutiliza autorización bloqueante
+para el alta interna; faltan T08/T09, React y continuidad offline. La base nunca
 almacena contraseñas en claro ni tokens de renovación. No se agregaron datos
 semilla ni membresías reales de editor/lector.
 
@@ -269,8 +272,9 @@ con Clean Architecture y ADR-07; no se cambia tecnología ni requisito aprobado.
 | OperacionLocal | cuentaId, ganaderiaId, operationId, sobre inmutable, estado, intentos, proximoIntento, errorSeguro, lease local de envío. |
 | ContextoOffline | cuentaId y ganaderiaId, permisos vistos, preparadoEn y ultimaValidacionOnline; metadatos, nunca credenciales. |
 
-No se crean tablas genealógicas, sanitarias, de venta o fotografías. Este es
-un refinamiento propuesto del modelo conceptual, no un esquema ya desplegado.
+No se crean tablas genealógicas, sanitarias, de venta o fotografías. Animal y
+OperacionConfirmada ya se traducen a PostgreSQL mediante V4; los modelos locales
+y los flujos de consulta/offline continúan como diseño pendiente.
 
 ## 3. Identidad y huella de operación
 
@@ -337,7 +341,7 @@ coincidencias conocidas, aclarando que la copia puede ser parcial o antigua.
 
 ## 5. Persistencia PostgreSQL y transacciones
 
-Migraciones de animales propuestas en backend, sin generarlas todavía:
+Flyway V4 implementa las migraciones de animales en backend:
 
 - animal: PK id UUID; FK ganaderiaId; FK creadoPor; version positiva; estado ACTIVO
   para altas; constraints de sexo NOT NULL y enum MACHO/HEMBRA, compatibilidad sexo/categoría; nulls solo en campos opcionales
@@ -351,7 +355,8 @@ Migraciones de animales propuestas en backend, sin generarlas todavía:
 - Autorización de consultas siempre por ganadería, no por creadoPor: familiares
   autorizados consultan los mismos animales confirmados.
 
-Secuencia transaccional propuesta:
+Secuencia transaccional implementada por T07 (el paso de forma HTTP sigue
+pendiente en T08):
 
 1. Validar autenticación y forma de sobre; iniciar unidad de trabajo PostgreSQL.
 2. Leer/bloquear estado de sesión, cuenta, ganadería y membresía en orden estable.
@@ -519,8 +524,8 @@ capacidad demostrada. No ejecutar carga mientras no exista el flujo funcional.
 DP01–DP08 y SPEC-01 aprobadas documentalmente. Ejecutar sus tareas y verificar especialmente contrato de acceso,
 sexo obligatorio confirmado, límites/zonas horarias, UUID/recibos, recuperación y retención local.
 El despliegue y las versiones de herramientas se concretarán antes del código
-que las requiera. Sin implementación de membresías y su revocación transaccional,
-solo podrán ejecutarse pruebas con datos controlados, nunca habilitar acceso real.
+que las requiera. Membresías y revocación transaccional ya protegen el núcleo T07,
+pero la ausencia de T08, cliente de animales y offline impide habilitar el flujo real.
 La UI de registro no amplía permisos para administrar ganaderías.
 
 Los instantes de servidor y sesión se almacenan como instantes UTC (PostgreSQL timestamptz, serialización ISO 8601 con Z); conexiones configuradas UTC. FechaNacimiento permanece tipo date; la validación de fecha futura usa America/Lima. No confundir conversión de presentación con cambio de la fecha de negocio.
