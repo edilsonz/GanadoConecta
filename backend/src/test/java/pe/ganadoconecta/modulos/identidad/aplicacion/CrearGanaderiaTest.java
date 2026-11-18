@@ -3,8 +3,10 @@ package pe.ganadoconecta.modulos.identidad.aplicacion;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import org.junit.jupiter.api.Test;
 import pe.ganadoconecta.modulos.identidad.dominio.DatoGanaderiaInvalidoException;
 import pe.ganadoconecta.modulos.identidad.dominio.GanaderiaNueva;
@@ -20,11 +22,11 @@ class CrearGanaderiaTest {
     @Test
     void normalizaNombreYUsaAlActorComoPropietario() {
         AtomicReference<GanaderiaNueva> guardada = new AtomicReference<>();
-        RepositorioGanaderias repositorio = (ganaderia, membresiaId) -> {
+        RepositorioGanaderias repositorio = repositorio((ganaderia, membresiaId) -> {
             guardada.set(ganaderia);
             assertThat(membresiaId).isEqualTo(MEMBRESIA_ID);
             return RepositorioGanaderias.ResultadoCreacion.CREADA;
-        };
+        });
         CrearGanaderia caso = new CrearGanaderia(repositorio, () -> MEMBRESIA_ID);
 
         CrearGanaderia.Resultado resultado = caso.ejecutar(new CrearGanaderia.Comando(
@@ -39,8 +41,8 @@ class CrearGanaderiaTest {
 
     @Test
     void informaReplaySinCrearOtraAsociacion() {
-        CrearGanaderia caso = new CrearGanaderia(
-                (ganaderia, membresiaId) -> RepositorioGanaderias.ResultadoCreacion.YA_EXISTIA,
+        CrearGanaderia caso = new CrearGanaderia(repositorio(
+                (ganaderia, membresiaId) -> RepositorioGanaderias.ResultadoCreacion.YA_EXISTIA),
                 () -> MEMBRESIA_ID);
 
         CrearGanaderia.Resultado resultado = caso.ejecutar(new CrearGanaderia.Comando(
@@ -52,9 +54,9 @@ class CrearGanaderiaTest {
 
     @Test
     void rechazaNombreVacioOLargoAntesDePersistir() {
-        RepositorioGanaderias repositorio = (ganaderia, membresiaId) -> {
+        RepositorioGanaderias repositorio = repositorio((ganaderia, membresiaId) -> {
             throw new AssertionError("No debe invocar persistencia");
-        };
+        });
         CrearGanaderia caso = new CrearGanaderia(repositorio, () -> MEMBRESIA_ID);
 
         assertThatThrownBy(() -> caso.ejecutar(new CrearGanaderia.Comando(
@@ -69,12 +71,28 @@ class CrearGanaderiaTest {
 
     @Test
     void rechazaIdentificadorQueNoEsUuidV4() {
-        CrearGanaderia caso = new CrearGanaderia((ganaderia, membresiaId) ->
-                RepositorioGanaderias.ResultadoCreacion.CREADA, () -> MEMBRESIA_ID);
+        CrearGanaderia caso = new CrearGanaderia(repositorio((ganaderia, membresiaId) ->
+                RepositorioGanaderias.ResultadoCreacion.CREADA), () -> MEMBRESIA_ID);
 
         assertThatThrownBy(() -> caso.ejecutar(new CrearGanaderia.Comando(
                 "123e4567-e89b-12d3-a456-426614174000", "El Prado", USUARIO_ID)))
                 .isInstanceOf(DatoGanaderiaInvalidoException.class)
                 .extracting("campo").isEqualTo("id");
+    }
+
+    private RepositorioGanaderias repositorio(
+            BiFunction<GanaderiaNueva, UUID, RepositorioGanaderias.ResultadoCreacion> crear) {
+        return new RepositorioGanaderias() {
+            @Override
+            public ResultadoCreacion crear(GanaderiaNueva ganaderia, UUID membresiaId) {
+                return crear.apply(ganaderia, membresiaId);
+            }
+
+            @Override
+            public List<pe.ganadoconecta.modulos.identidad.dominio.GanaderiaAccesible>
+                    listarActivas(UUID usuarioId) {
+                return List.of();
+            }
+        };
     }
 }

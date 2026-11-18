@@ -370,17 +370,18 @@ el JWT de acceso se devuelve para memoria del cliente. Cada petición protegida
 revalida sesión y cuenta en PostgreSQL. Las claves RSA se cargan desde rutas
 externas obligatorias y las pruebas generan pares efímeros bajo `target/`.
 
-React implementa login, restauración mediante renovación, consulta de identidad y
-logout. El JWT de acceso se conserva solo en memoria y JavaScript no intenta leer
-la cookie HttpOnly. Solo una marca no secreta de cierre remoto pendiente puede
-guardarse en `localStorage`. No están disponibles creación de ganaderías,
-invitaciones, membresías familiares ni animales desde React.
+React implementa login, restauración mediante renovación, consulta de identidad,
+logout y creación/listado/selección de ganaderías. El JWT de acceso y la selección
+se conservan solo en memoria y JavaScript no intenta leer la cookie HttpOnly. Solo
+una marca no secreta de cierre remoto pendiente puede guardarse en `localStorage`.
+No están disponibles invitaciones, altas familiares, animales ni acceso offline.
 
-`POST /api/v1/ganaderias` implementa el primer incremento backend AU05. Exige
+`POST /api/v1/ganaderias` implementa AU05. Exige
 Bearer JWT y CSRF, acepta solo UUIDv4 y nombre, y crea en una transacción la
 ganadería ACTIVA y la membresía PROPIETARIO del actor autenticado. No acepta un
-propietario o rol enviado por el cliente. Listado, contexto `/acceso` e interfaz
-React de ganaderías continúan pendientes.
+propietario o rol enviado por el cliente. `GET /api/v1/ganaderias` devuelve solo
+ganaderías activas donde el actor tiene membresía activa. El contexto `/acceso`,
+la revocación y la autorización de futuros recursos continúan pendientes.
 
 ### Problemas de entorno observados
 
@@ -411,5 +412,6 @@ para la base de datos, y la
 [evidencia del registro AU01](docs/05-preparacion-implementacion/08-registro-usuarios.md)
 y la [evidencia backend AU02–AU04](docs/05-preparacion-implementacion/09-nucleo-autenticacion-sesiones.md),
 además de la [evidencia del cliente React](docs/05-preparacion-implementacion/10-login-react.md),
-y la [evidencia de creación de ganadería AU05](docs/05-preparacion-implementacion/11-creacion-ganaderia.md),
+y la [evidencia de creación de ganadería AU05](docs/05-preparacion-implementacion/11-creacion-ganaderia.md)
+y de su [listado/cliente React](docs/05-preparacion-implementacion/12-ganaderias-react-listado.md),
 para resultados realmente ejecutados y limitaciones.

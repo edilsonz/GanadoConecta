@@ -11,7 +11,9 @@
 > [evidencia del cliente React](10-login-react.md) cubre login, restauración y
 > logout automatizados, y la
 > [evidencia de AU05](11-creacion-ganaderia.md) documenta la creación backend de
-> ganadería y propietario inicial. Los estados de propuesta siguientes describen la
+> ganadería y propietario inicial; la
+> [evidencia de creación/listado React](12-ganaderias-react-listado.md) registra
+> el incremento de consulta aislada y selección en memoria. Los estados de propuesta siguientes describen la
 > preparación arquitectónica original, no acreditan implementación de SPEC-01.
 
 > **Estado de consolidación:** las 16 decisiones aprobadas por el responsable

@@ -50,9 +50,10 @@ de roles ni pantalla de invitaciones. AU01 ya tiene implementación y pruebas
 desde el formulario React hasta PostgreSQL. AU02–AU04 exponen en backend login,
 renovación, logout y consulta de sesión con cookie/JWT; React integra esos contratos
 con JWT solo en memoria, restauración y cierre. Su E2E en navegador HTTPS,
-las operaciones restantes de AU05–AU08 y las demás pantallas de acceso continúan
-pendientes. El primer incremento backend de AU05 ya crea atómicamente ganadería
-y propietario inicial; aún no lista ni expone el contexto `/acceso`.
+las operaciones restantes de AU06–AU08 y las demás pantallas de acceso continúan
+pendientes. AU05 ya crea atómicamente ganadería y propietario inicial; el backend
+lista solo membresías activas y React permite crear, listar y seleccionar en
+memoria. Aún no se expone el contexto `/acceso`.
 
 ### API de acceso y creación inicial
 

@@ -21,6 +21,7 @@ import pe.ganadoconecta.modulos.identidad.aplicacion.GeneradorCredencialesRenova
 import pe.ganadoconecta.modulos.identidad.aplicacion.GeneradorIdUsuario;
 import pe.ganadoconecta.modulos.identidad.aplicacion.GeneradorIdMembresia;
 import pe.ganadoconecta.modulos.identidad.aplicacion.LimiteIntentosLogin;
+import pe.ganadoconecta.modulos.identidad.aplicacion.ListarGanaderias;
 import pe.ganadoconecta.modulos.identidad.aplicacion.IniciarSesion;
 import pe.ganadoconecta.modulos.identidad.aplicacion.RenovarSesion;
 import pe.ganadoconecta.modulos.identidad.aplicacion.RegistrarUsuario;
@@ -93,6 +94,11 @@ public class IdentidadConfiguracion {
     CrearGanaderia crearGanaderia(RepositorioGanaderias repositorio,
             GeneradorIdMembresia generadorId) {
         return new CrearGanaderia(repositorio, generadorId);
+    }
+
+    @Bean
+    ListarGanaderias listarGanaderias(RepositorioGanaderias repositorio) {
+        return new ListarGanaderias(repositorio);
     }
 
     @Bean

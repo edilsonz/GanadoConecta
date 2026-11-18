@@ -3,6 +3,7 @@ package pe.ganadoconecta;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -197,6 +198,64 @@ class CrearGanaderiaPostgresIntegrationTest extends SoporteJwtPostgres {
         assertThat(cantidad("identidad.ganaderia", "id", fallidaId)).isZero();
     }
 
+    @Test
+    void listaSoloGanaderiasConMembresiaActivaDelUsuario() throws Exception {
+        Cuenta actor = crearCuentaAutenticada("lista-actor");
+        Cuenta otro = crearCuentaAutenticada("lista-otro");
+        UUID propiaId = UUID.randomUUID();
+        UUID compartidaId = UUID.randomUUID();
+        UUID ajenaId = UUID.randomUUID();
+
+        crear(actor.jwt(), json(propiaId, "Amanecer")).andExpect(status().isCreated());
+        crear(otro.jwt(), json(compartidaId, "Bosque compartido")).andExpect(status().isCreated());
+        crear(otro.jwt(), json(ajenaId, "Campo privado")).andExpect(status().isCreated());
+        jdbc.update("""
+                INSERT INTO identidad.membresia
+                    (id, ganaderia_id, usuario_id, rol, estado)
+                VALUES (?, ?, ?, 'LECTOR', 'ACTIVA')
+                """, UUID.randomUUID(), compartidaId, actor.usuarioId());
+
+        listar(actor.jwt())
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"))
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(propiaId.toString()))
+                .andExpect(jsonPath("$[0].rol").value("PROPIETARIO"))
+                .andExpect(jsonPath("$[1].id").value(compartidaId.toString()))
+                .andExpect(jsonPath("$[1].rol").value("LECTOR"))
+                .andExpect(jsonPath("$[*].id").value(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.hasItem(ajenaId.toString()))))
+                .andExpect(jsonPath("$[0].propietarioUsuarioId").doesNotExist())
+                .andExpect(jsonPath("$[0].usuarioId").doesNotExist());
+
+        jdbc.update("""
+                UPDATE identidad.membresia
+                SET estado = 'REVOCADA', revocado_en = CURRENT_TIMESTAMP,
+                    actualizado_en = CURRENT_TIMESTAMP
+                WHERE ganaderia_id = ? AND usuario_id = ?
+                """, compartidaId, actor.usuarioId());
+
+        listar(actor.jwt())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(propiaId.toString()));
+    }
+
+    @Test
+    void listaVaciaParaUsuarioAutenticadoSinGanaderias() throws Exception {
+        Cuenta cuenta = crearCuentaAutenticada("lista-vacia");
+
+        listar(cuenta.jwt())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void rechazaListadoSinAutenticacion() throws Exception {
+        mvc.perform(get("/api/v1/ganaderias"))
+                .andExpect(status().isUnauthorized());
+    }
+
     private Cuenta crearCuentaAutenticada(String sufijo) throws Exception {
         RegistrarUsuario.Resultado cuenta = registrar.ejecutar(new RegistrarUsuario.Comando(
                 correo(sufijo), CONTRASENA));
@@ -221,6 +280,12 @@ class CrearGanaderiaPostgresIntegrationTest extends SoporteJwtPostgres {
                 .header(HttpHeaders.ORIGIN, ORIGEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(cuerpo));
+    }
+
+    private org.springframework.test.web.servlet.ResultActions listar(String jwt) throws Exception {
+        return mvc.perform(get("/api/v1/ganaderias")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
+                .accept(MediaType.APPLICATION_JSON));
     }
 
     private String json(UUID id, String nombre) throws Exception {

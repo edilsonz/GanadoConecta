@@ -1,6 +1,9 @@
+import { useCallback, useState } from 'react'
 import { ApiStatus } from './ApiStatus'
 import { AccesoCuenta } from './AccesoCuenta'
+import { GanaderiasPanel } from './GanaderiasPanel'
 import { RegistroCuenta } from './RegistroCuenta'
+import type { SesionActiva } from './sesionApi'
 
 const futureSections = [
   { number: '01', title: 'Mi ganado', text: 'La información de cada animal, organizada en un solo lugar.' },
@@ -9,6 +12,9 @@ const futureSections = [
 ]
 
 export default function App() {
+  const [sesion, setSesion] = useState<SesionActiva | null>(null)
+  const invalidarSesion = useCallback(() => setSesion(null), [])
+
   return (
     <>
       <a className="skip-link" href="#contenido">Ir al contenido</a>
@@ -21,6 +27,7 @@ export default function App() {
           <a className="nav-active" href="#inicio" aria-current="page">Inicio</a>
           <a href="#iniciar-sesion">Iniciar sesión</a>
           <a href="#crear-cuenta">Crear cuenta</a>
+          <a href="#mis-ganaderias">Ganaderías</a>
           <button disabled>Mi ganado <span className="soon-label">Próximamente</span></button>
           <button disabled>Calendario</button>
         </nav>
@@ -58,7 +65,8 @@ export default function App() {
           </div>
         </section>
 
-        <AccesoCuenta />
+        <AccesoCuenta sesion={sesion} onSesionChange={setSesion} />
+        <GanaderiasPanel sesion={sesion} onSesionInvalida={invalidarSesion} />
         <RegistroCuenta />
 
         <section className="project-section" id="proyecto" aria-labelledby="project-title">

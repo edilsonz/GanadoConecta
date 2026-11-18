@@ -35,10 +35,14 @@ function guardarCierrePendiente(pendiente: boolean) {
   }
 }
 
-export function AccesoCuenta() {
+type AccesoCuentaProps = {
+  sesion: SesionActiva | null
+  onSesionChange: (sesion: SesionActiva | null) => void
+}
+
+export function AccesoCuenta({ sesion, onSesionChange }: AccesoCuentaProps) {
   const [correo, setCorreo] = useState('')
   const [contrasena, setContrasena] = useState('')
-  const [sesion, setSesion] = useState<SesionActiva | null>(null)
   const [restaurando, setRestaurando] = useState(true)
   const [enviando, setEnviando] = useState(false)
   const [mensajeError, setMensajeError] = useState<string | null>(null)
@@ -62,7 +66,7 @@ export function AccesoCuenta() {
 
       try {
         const restaurada = await renovarSesionControlada()
-        if (activo) setSesion(restaurada)
+        if (activo) onSesionChange(restaurada)
       } catch (error) {
         if (activo && error instanceof ErrorSesion && error.tipo !== 'sesion') {
           setMensajeError('No pudimos restaurar la sesión. Puedes iniciar sesión nuevamente.')
@@ -73,7 +77,7 @@ export function AccesoCuenta() {
     }
     void restaurar()
     return () => { activo = false }
-  }, [])
+  }, [onSesionChange])
 
   useEffect(() => {
     if (!sesion) return
@@ -84,14 +88,14 @@ export function AccesoCuenta() {
     const temporizador = window.setTimeout(async () => {
       try {
         const renovada = await renovarSesionControlada()
-        setSesion(actual => actual ? { ...renovada, correo: actual.correo } : null)
+        onSesionChange({ ...renovada, correo: sesion.correo })
       } catch {
-        setSesion(null)
+        onSesionChange(null)
         setMensajeError('No pudimos renovar la sesión de forma segura. Vuelve a iniciar sesión.')
       }
     }, demora)
     return () => window.clearTimeout(temporizador)
-  }, [sesion?.expiresAt])
+  }, [sesion?.correo, sesion?.expiresAt, onSesionChange])
 
   async function enviar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -113,7 +117,7 @@ export function AccesoCuenta() {
     try {
       const nuevaSesion = await iniciarSesion(correo, contrasena)
       guardarCierrePendiente(false)
-      setSesion(nuevaSesion)
+      onSesionChange(nuevaSesion)
       setContrasena('')
     } catch (error) {
       const fallo = error instanceof ErrorSesion ? error : new ErrorSesion('servicio')
@@ -127,7 +131,7 @@ export function AccesoCuenta() {
   async function cerrar() {
     if (envioEnCurso.current) return
     envioEnCurso.current = true
-    setSesion(null)
+    onSesionChange(null)
     setEnviando(true)
     setMensajeError(null)
     try {
@@ -147,7 +151,7 @@ export function AccesoCuenta() {
       <div className="login-intro">
         <p className="eyebrow"><span className="small-rule" /> ACCESO SEGURO</p>
         <h2 id="login-title">Vuelve a tu cuenta.</h2>
-        <p>Tu sesión permite identificarte. Todavía no crea una ganadería, membresía ni rol.</p>
+        <p>Tu sesión permite identificarte y administrar tus ganaderías autorizadas.</p>
       </div>
 
       <div className="login-card">
@@ -163,7 +167,7 @@ export function AccesoCuenta() {
             {sesion.correo
               ? <p className="session-email">{sesion.correo}</p>
               : <p className="session-email">Cuenta verificada</p>}
-            <p className="session-note">Mi ganado y las ganaderías todavía no están disponibles.</p>
+            <p className="session-note">Ya puedes crear y seleccionar una ganadería. Mi ganado sigue en preparación.</p>
             <button className="button button-outline logout-button" type="button" onClick={cerrar} disabled={enviando}>
               {enviando ? 'Cerrando sesión…' : 'Cerrar sesión'}
             </button>

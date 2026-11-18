@@ -6,6 +6,10 @@ vi.mock('./AccesoCuenta', () => ({
   AccesoCuenta: () => <section aria-label="Acceso de cuenta" />,
 }))
 
+vi.mock('./GanaderiasPanel', () => ({
+  GanaderiasPanel: () => <section aria-label="GanaderÃ­as" />,
+}))
+
 function mockHealth(status = 'UP', ok = true) {
   const fetchMock = vi.fn().mockResolvedValue({ ok, json: async () => ({ status }) })
   vi.stubGlobal('fetch', fetchMock)

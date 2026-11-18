@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AccesoCuenta } from './AccesoCuenta'
@@ -6,6 +7,7 @@ import {
   ErrorSesion,
   iniciarSesion,
   renovarSesionControlada,
+  type SesionActiva,
 } from './sesionApi'
 
 vi.mock('./sesionApi', async importOriginal => {
@@ -24,6 +26,15 @@ const sesion = {
   estado: 'ACTIVO' as const,
   accessToken: 'jwt-solo-memoria',
   expiresAt: '2099-11-17T22:00:00Z',
+}
+
+function AccesoControlado() {
+  const [sesionActual, setSesionActual] = useState<SesionActiva | null>(null)
+  return <AccesoCuenta sesion={sesionActual} onSesionChange={setSesionActual} />
+}
+
+function renderAcceso() {
+  return render(<AccesoControlado />)
 }
 
 async function esperarFormulario() {
@@ -49,7 +60,7 @@ describe('Acceso de cuenta', () => {
   })
 
   it('muestra el formulario sin error cuando no existe una sesión que restaurar', async () => {
-    render(<AccesoCuenta />)
+    renderAcceso()
 
     expect(await esperarFormulario()).toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
@@ -57,15 +68,15 @@ describe('Acceso de cuenta', () => {
 
   it('no inventa el correo cuando me restaura únicamente id y estado', async () => {
     vi.mocked(renovarSesionControlada).mockResolvedValue({ ...sesion, correo: undefined })
-    render(<AccesoCuenta />)
+    renderAcceso()
 
     expect(await screen.findByText('Cuenta verificada')).toBeInTheDocument()
     expect(screen.queryByText('productora@ejemplo.com')).not.toBeInTheDocument()
   })
 
-  it('inicia sesión, muestra el correo y no habilita ganaderías ni roles', async () => {
+  it('inicia sesión, muestra el correo y mantiene Mi ganado pendiente', async () => {
     vi.mocked(iniciarSesion).mockResolvedValue(sesion)
-    render(<AccesoCuenta />)
+    renderAcceso()
     await esperarFormulario()
     completarFormulario()
 
@@ -73,14 +84,14 @@ describe('Acceso de cuenta', () => {
 
     expect(await screen.findByText('productora@ejemplo.com')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument()
-    expect(screen.getByText(/todavía no están disponibles/)).toBeInTheDocument()
+    expect(screen.getByText(/Mi ganado sigue en preparación/)).toBeInTheDocument()
     expect(localStorage.length).toBe(0)
     expect(sessionStorage.length).toBe(0)
   })
 
   it('muestra el mismo error comprensible para credenciales inválidas', async () => {
     vi.mocked(iniciarSesion).mockRejectedValue(new ErrorSesion('credenciales'))
-    render(<AccesoCuenta />)
+    renderAcceso()
     await esperarFormulario()
     completarFormulario()
 
@@ -93,7 +104,7 @@ describe('Acceso de cuenta', () => {
 
   it('cierra la sesión local y remota', async () => {
     vi.mocked(renovarSesionControlada).mockResolvedValue(sesion)
-    render(<AccesoCuenta />)
+    renderAcceso()
     expect(await screen.findByText('productora@ejemplo.com')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
@@ -106,7 +117,7 @@ describe('Acceso de cuenta', () => {
   it('bloquea localmente y conserva solo una marca no secreta si falla el cierre remoto', async () => {
     vi.mocked(renovarSesionControlada).mockResolvedValue(sesion)
     vi.mocked(cerrarSesionRemota).mockRejectedValue(new ErrorSesion('conexion'))
-    render(<AccesoCuenta />)
+    renderAcceso()
     await screen.findByText('productora@ejemplo.com')
 
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
@@ -119,7 +130,7 @@ describe('Acceso de cuenta', () => {
   it('informa un error de conexión sin duplicar el envío', async () => {
     let rechazar: ((error: unknown) => void) | undefined
     vi.mocked(iniciarSesion).mockReturnValue(new Promise((_, reject) => { rechazar = reject }))
-    render(<AccesoCuenta />)
+    renderAcceso()
     await esperarFormulario()
     completarFormulario()
 
