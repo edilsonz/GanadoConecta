@@ -1,8 +1,10 @@
 # T11 — Primer almacenamiento de operaciones pendientes en IndexedDB
 
-Fecha: 19 de noviembre de 2026, America/Lima. Estado: **primer incremento
-implementado y verificado con doble de IndexedDB; integración y navegador real
-pendientes**.
+Fecha: 19 de noviembre de 2026, America/Lima. Estado original: **primer incremento
+implementado y verificado con doble de IndexedDB**. La integración posterior del
+formulario se documenta en
+[22-registro-provisional-offline-react.md](22-registro-provisional-offline-react.md);
+IndexedDB en navegador real sigue pendiente.
 
 ## Alcance implementado
 
@@ -45,12 +47,12 @@ el contrato IndexedDB usado por el adaptador. No se ejecutó IndexedDB real en
 Chrome, Playwright ni una prueba manual offline; por ello PI04 y CA04/CA11/CA16
 solo quedan parciales. No se repitió backend porque ningún archivo backend cambió.
 
-## Pendientes para registrar realmente sin internet
+## Pendientes después de la integración limitada
 
-- Integrar en una sola transacción local el provisional visible y la operación,
-  y conectar el formulario sin afirmar éxito antes del `complete` de IndexedDB.
-- Conectar el contexto T12/T15 ya implementado al opt-in, logout, selección y
-  formulario; la evaluación de 168 horas aún no habilita ninguna vista offline.
+- Validar en navegador real que la operación provisional única solo se presenta
+  después del `complete` de IndexedDB.
+- Validar con desconexión física el contexto T12/T15 conectado al opt-in,
+  logout, selección y formulario.
 - Añadir PWA/recursos estáticos, orquestador de sincronización, leases entre
   pestañas, reintentos, confirmaciones y conflictos T12–T15.
 - Revalidar sesión, membresía y rol online antes de cualquier envío.

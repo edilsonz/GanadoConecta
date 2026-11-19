@@ -1,8 +1,9 @@
 # T12/T15 — Autorización local inicial por cuenta y ganadería
 
-Fecha: 19 de noviembre de 2026, America/Lima. Estado: **infraestructura
-implementada y verificada con dobles; integración React y navegador real
-pendientes**.
+Fecha: 19 de noviembre de 2026, America/Lima. Estado original: **infraestructura
+implementada y verificada con dobles**. La integración React posterior se
+documenta en [22-registro-provisional-offline-react.md](22-registro-provisional-offline-react.md);
+el navegador real sigue pendiente.
 
 ## Alcance implementado
 
@@ -50,11 +51,12 @@ Se usó el doble IndexedDB inyectado existente; no se ejecutaron Chrome,
 Playwright, varias pestañas reales ni desconexión física. Tampoco se ejecutó
 backend porque no se modificó y `/acceso` conserva su contrato probado.
 
-## Pendientes antes de habilitar registro offline
+## Pendientes después de la integración limitada
 
-- Conectar preparación/bloqueo a login, logout, cambio de cuenta y selección de
-  ganadería, mostrando los fallos de almacenamiento sin afirmar preparación.
-- Integrar el formulario con provisional+operación en una transacción local.
+- Validar en navegador real la preparación/bloqueo conectada a logout, pérdida
+  de sesión y selección de ganadería.
+- Validar la operación provisional integrada con IndexedDB real y desconexión
+  física; la prueba automatizada usa el doble inyectable.
 - Implementar PWA/opt-in, orquestador, lease multipestaña, reintentos y recibos.
 - Revalidar backend antes de cada envío y resolver 401/403/409/422/5xx sin
   eliminar pendientes ni marcar sincronizado sin confirmación PostgreSQL.

@@ -9,6 +9,7 @@ import {
   renovarSesionControlada,
   type SesionActiva,
 } from './sesionApi'
+import { bloquearContextosOfflineUsuario } from './registroAnimalesOffline'
 
 vi.mock('./sesionApi', async importOriginal => {
   const original = await importOriginal<typeof import('./sesionApi')>()
@@ -19,6 +20,10 @@ vi.mock('./sesionApi', async importOriginal => {
     cerrarSesionRemota: vi.fn(),
   }
 })
+
+vi.mock('./registroAnimalesOffline', () => ({
+  bloquearContextosOfflineUsuario: vi.fn(),
+}))
 
 const sesion = {
   usuarioId: 'usuario-1',
@@ -57,6 +62,7 @@ describe('Acceso de cuenta', () => {
     vi.mocked(renovarSesionControlada).mockRejectedValue(new ErrorSesion('sesion'))
     vi.mocked(cerrarSesionRemota).mockResolvedValue()
     vi.mocked(iniciarSesion).mockReset()
+    vi.mocked(bloquearContextosOfflineUsuario).mockReset().mockResolvedValue(1)
   })
 
   it('muestra el formulario sin error cuando no existe una sesión que restaurar', async () => {
@@ -110,6 +116,7 @@ describe('Acceso de cuenta', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
 
     await waitFor(() => expect(cerrarSesionRemota).toHaveBeenCalledOnce())
+    expect(bloquearContextosOfflineUsuario).toHaveBeenCalledWith(sesion.usuarioId)
     expect(await esperarFormulario()).toBeInTheDocument()
     expect(localStorage.length).toBe(0)
   })

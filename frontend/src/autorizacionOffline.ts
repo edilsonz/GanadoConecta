@@ -58,16 +58,7 @@ export class ServicioAutorizacionOffline {
       if (acceso.ganaderiaId !== ganaderiaId) {
         throw new ErrorGanaderia('seguridad')
       }
-      const contexto = await this.almacen.guardarValidacion({
-        usuarioId: sesion.usuarioId,
-        ganaderiaId: acceso.ganaderiaId,
-        rol: acceso.rol,
-        estado: acceso.estado,
-        validadoEn: acceso.validadoEn,
-      })
-      return contexto.rol === 'LECTOR'
-        ? { estado: 'SOLO_LECTURA', contexto }
-        : { estado: 'AUTORIZADA_ESCRITURA', contexto }
+      return this.registrarAccesoConfirmado(sesion.usuarioId, acceso)
     } catch (error) {
       if (error instanceof ErrorContextoOffline) {
         throw new ErrorAutorizacionOffline('ALMACENAMIENTO_LOCAL')
@@ -107,6 +98,47 @@ export class ServicioAutorizacionOffline {
         'SERVICIO_NO_DISPONIBLE',
       )
     }
+  }
+
+  async registrarAccesoConfirmado(
+    usuarioId: string,
+    acceso: AccesoGanaderia,
+  ): Promise<ResultadoAutorizacionOffline> {
+    try {
+      const contexto = await this.almacen.guardarValidacion({
+        usuarioId,
+        ganaderiaId: acceso.ganaderiaId,
+        rol: acceso.rol,
+        estado: acceso.estado,
+        validadoEn: acceso.validadoEn,
+      })
+      return contexto.rol === 'LECTOR'
+        ? { estado: 'SOLO_LECTURA', contexto }
+        : { estado: 'AUTORIZADA_ESCRITURA', contexto }
+    } catch (error) {
+      if (error instanceof ErrorContextoOffline) {
+        throw new ErrorAutorizacionOffline('ALMACENAMIENTO_LOCAL')
+      }
+      throw error
+    }
+  }
+
+  async requerirRevalidacionLocal(
+    usuarioId: string,
+    ganaderiaId: string,
+  ): Promise<void> {
+    await this.cambiarContextoSinOcultarError(
+      () => this.almacen.requerirSesion(usuarioId, ganaderiaId),
+    )
+  }
+
+  async bloquearAccesoLocal(
+    usuarioId: string,
+    ganaderiaId: string,
+  ): Promise<void> {
+    await this.cambiarContextoSinOcultarError(
+      () => this.almacen.bloquearAcceso(usuarioId, ganaderiaId),
+    )
   }
 
   async evaluarEscrituraLocal(

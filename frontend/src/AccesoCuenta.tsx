@@ -6,6 +6,7 @@ import {
   renovarSesionControlada,
   type SesionActiva,
 } from './sesionApi'
+import { bloquearContextosOfflineUsuario } from './registroAnimalesOffline'
 
 const MARCA_CIERRE_PENDIENTE = 'ganadoconecta:salida-remota-pendiente'
 
@@ -91,7 +92,12 @@ export function AccesoCuenta({ sesion, onSesionChange }: AccesoCuentaProps) {
         onSesionChange({ ...renovada, correo: sesion.correo })
       } catch {
         onSesionChange(null)
-        setMensajeError('No pudimos renovar la sesión de forma segura. Vuelve a iniciar sesión.')
+        try {
+          await bloquearContextosOfflineUsuario(sesion.usuarioId)
+          setMensajeError('No pudimos renovar la sesión de forma segura. Vuelve a iniciar sesión.')
+        } catch {
+          setMensajeError('La sesión terminó y no pudimos actualizar el almacenamiento offline. Recupera la conexión e inicia sesión antes de continuar.')
+        }
       }
     }, demora)
     return () => window.clearTimeout(temporizador)
@@ -131,15 +137,29 @@ export function AccesoCuenta({ sesion, onSesionChange }: AccesoCuentaProps) {
   async function cerrar() {
     if (envioEnCurso.current) return
     envioEnCurso.current = true
+    const usuarioId = sesion?.usuarioId
     onSesionChange(null)
     setEnviando(true)
     setMensajeError(null)
+    let falloBloqueoLocal = false
+    if (usuarioId) {
+      try {
+        await bloquearContextosOfflineUsuario(usuarioId)
+      } catch {
+        falloBloqueoLocal = true
+      }
+    }
     try {
       await cerrarSesionRemota()
       guardarCierrePendiente(false)
+      if (falloBloqueoLocal) {
+        setMensajeError('La sesión se cerró, pero no pudimos actualizar el almacenamiento offline. No uses este dispositivo sin conexión hasta volver a iniciar sesión.')
+      }
     } catch {
       guardarCierrePendiente(true)
-      setMensajeError('Cierre remoto pendiente. La sesión está bloqueada en este dispositivo y se reintentará al volver.')
+      setMensajeError(falloBloqueoLocal
+        ? 'El cierre remoto y el bloqueo del almacenamiento offline siguen pendientes. No uses este dispositivo sin conexión hasta volver a iniciar sesión.'
+        : 'Cierre remoto pendiente. La sesión está bloqueada en este dispositivo y se reintentará al volver.')
     } finally {
       envioEnCurso.current = false
       setEnviando(false)

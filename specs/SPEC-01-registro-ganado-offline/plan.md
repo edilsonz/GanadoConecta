@@ -1,7 +1,7 @@
 # SPEC-01 — Plan técnico propuesto
 
 **Estado: Aprobada — Implementación en curso.** Plan aprobado documentalmente junto con
-[spec.md](spec.md) y el contrato DP01, el 16 de noviembre de 2026 por autorización del responsable. La implementación comenzó con T02.1 el 17 de noviembre; T04–T10 se verificaron el 18 de noviembre y el primer almacenamiento T11 el 19. El cliente React online de animales y el adaptador de operaciones pendientes existen; su integración, PWA, autorización offline y sincronización permanecen pendientes. Este plan no modifica los ADR aprobados. [Tareas](tasks.md).
+[spec.md](spec.md) y el contrato DP01, el 16 de noviembre de 2026 por autorización del responsable. La implementación comenzó con T02.1 el 17 de noviembre; T04–T10 se verificaron el 18 de noviembre y T11/T12/T15 se integraron parcialmente con React el 19. El registro provisional en una aplicación ya abierta existe; PWA, apertura desde cero sin red y sincronización permanecen pendientes. Este plan no modifica los ADR aprobados. [Tareas](tasks.md).
 
 ## 1. Arquitectura y límites
 
@@ -55,8 +55,9 @@ pendientes. AU07 ya revoca editor/lector de forma transaccional y aporta un
 autorizador reutilizable; T07 verificó ambos órdenes de su carrera con el alta.
 AU05 ya crea atómicamente ganadería y propietario inicial; el backend
 lista solo membresías activas y React permite crear, listar y seleccionar en
-memoria. AU06 expone el contexto online `/acceso`; su integración en React y la
-preparación offline siguen pendientes.
+memoria. AU06 expone el contexto online `/acceso`; React lo usa para preparar
+voluntariamente el contexto local de una cuenta y ganadería en un dispositivo
+de confianza. La sincronización y el E2E offline en navegador real siguen pendientes.
 
 ### API de acceso y creación inicial
 
@@ -402,8 +403,10 @@ de ejecución adicional, el object store `operacionesPendientes`. Guarda el sobr
 inmutable, cuenta, ganadería, estado, error seguro y fechas; usa índices únicos
 para operationId y animal pendiente por contexto. Sus consultas exigen cuenta y
 ganadería. No aplica TTL ni limpieza por edad. Rechaza propiedades no admitidas
-para impedir que tokens o contraseñas entren en el sobre. La integración con UI,
-el contexto de autorización y el provisional atómico siguen pendientes.
+para impedir que tokens o contraseñas entren en el sobre. React ya guarda esa
+operación como representación provisional única después de una caída real de red,
+solo con contexto de escritura vigente, y espera la transacción antes de confirmar.
+Sincronización, lease multipestaña y navegador real siguen pendientes.
 
 El diseño completo mantiene previstos los object stores `animalesConfirmados`, `animalesPendientes`,
 `operaciones` y `contextos`. Claves incluyen cuentaId/ganaderiaId; operación
@@ -550,8 +553,8 @@ DP01–DP08 y SPEC-01 aprobadas documentalmente. Ejecutar sus tareas y verificar
 sexo obligatorio confirmado, límites/zonas horarias, UUID/recibos, recuperación y retención local.
 El despliegue y las versiones de herramientas se concretarán antes del código
 que las requiera. Membresías y autorización protegen T07–T09.
-El cliente online T10 ya consume T08/T09 con revalidación de `/acceso`; la
-falta de integración de T11, PWA, autorización local, sincronización y E2E real impide declarar completo
+El cliente T10 consume T08/T09 y conecta T11/T12/T15 de forma limitada; la
+falta de PWA, sincronización, conflictos, lease multipestaña y E2E real impide declarar completo
 el alcance Offline-First de SPEC-01.
 La UI de registro no amplía permisos para administrar ganaderías.
 

@@ -17,6 +17,14 @@ import {
   type Ganaderia,
 } from './ganaderiasApi'
 import type { SesionActiva } from './sesionApi'
+import {
+  bloquearAccesoOffline,
+  guardarRegistroPendienteAutorizado,
+  listarPendientesAutorizados,
+  prepararAccesoOfflineConfirmado,
+  requerirRevalidacionOffline,
+} from './registroAnimalesOffline'
+import type { OperacionPendienteLocal } from './operacionesPendientesDb'
 
 type AnimalesPanelProps = {
   ganaderia: Ganaderia
@@ -76,6 +84,18 @@ const mensajesError = {
   noEncontrado: 'No se encontró el animal solicitado en esta ganadería.',
   conexion: 'No se recibió una confirmación. Puedes reintentar exactamente el mismo registro.',
   servicio: 'El servicio no confirmó la operación. Puedes reintentar exactamente el mismo registro.',
+} as const
+
+const mensajesAutorizacionOffline = {
+  AUSENTE: 'Este dispositivo no tiene una autorización offline vigente para esta ganadería.',
+  VENCIDA: 'La autorización offline venció. Recupera la conexión para verificar tu acceso.',
+  RELOJ_INCONSISTENTE: 'Debemos verificar la fecha del dispositivo y tu acceso antes de guardar sin conexión.',
+  REQUIERE_SESION: 'Inicia sesión y recupera la conexión para volver a habilitar el registro offline.',
+  BLOQUEADA: 'El acceso local está bloqueado hasta que el servidor vuelva a verificar tus permisos.',
+  SOLO_LECTURA: 'Tu permiso verificado es de lectura y no permite preparar registros offline.',
+  RED_NO_DISPONIBLE: 'No hay conexión para verificar el acceso de esta ganadería.',
+  SERVICIO_NO_DISPONIBLE: 'El servicio no pudo verificar el acceso offline.',
+  AUTORIZADA_ESCRITURA: '',
 } as const
 
 const controlesNoAdmitidos = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]|\p{Cf}/u
@@ -182,7 +202,12 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
   const [animalIdActual, setAnimalIdActual] = useState<string | null>(null)
   const [ficha, setFicha] = useState<Animal | null>(null)
   const [cargandoFicha, setCargandoFicha] = useState(false)
+  const [pendientesLocales, setPendientesLocales] = useState<OperacionPendienteLocal[]>([])
+  const [modoSinConexion, setModoSinConexion] = useState(false)
+  const [offlinePreparado, setOfflinePreparado] = useState(false)
   const envioEnCurso = useRef(false)
+
+  const ambitoLocal = { usuarioId: sesion.usuarioId, ganaderiaId: ganaderia.id }
 
   function fallo(error: unknown) {
     return error instanceof ErrorAnimal ? error : new ErrorAnimal('servicio')
@@ -191,10 +216,15 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
   function aplicarFallo(error: ErrorAnimal) {
     setMensaje(mensajesError[error.tipo])
     if (error.tipo === 'validacion') setErrores(error.erroresPorCampo)
-    if (error.tipo === 'sesion') onSesionInvalida()
+    if (error.tipo === 'sesion') {
+      void requerirRevalidacionOffline(ambitoLocal).catch(() => undefined)
+      onSesionInvalida()
+    }
     if (error.tipo === 'permiso') {
+      void bloquearAccesoOffline(ambitoLocal).catch(() => undefined)
       setAcceso(null)
       setAnimales([])
+      setPendientesLocales([])
       setCursor(null)
       setFicha(null)
     }
@@ -206,12 +236,34 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
     setCursor(pagina.siguienteCursor)
   }
 
+  async function cargarPendientesLocales() {
+    const resultado = await listarPendientesAutorizados(ambitoLocal)
+    setPendientesLocales(resultado.operaciones)
+    return resultado
+  }
+
+  async function prepararOffline() {
+    if (!acceso || acceso.rol === 'LECTOR') return
+    try {
+      await prepararAccesoOfflineConfirmado(sesion.usuarioId, acceso)
+      await cargarPendientesLocales()
+      setOfflinePreparado(true)
+      setMensaje('Este usuario y ganadería quedaron preparados en este dispositivo por un máximo de 168 horas.')
+    } catch {
+      setOfflinePreparado(false)
+      setMensaje('No pudimos preparar el almacenamiento offline de este dispositivo.')
+    }
+  }
+
   useEffect(() => {
     let activo = true
     setAcceso(null)
     setAnimales([])
     setCursor(null)
     setFicha(null)
+    setPendientesLocales([])
+    setModoSinConexion(false)
+    setOfflinePreparado(false)
     setMensaje(null)
     setErrores({})
     setFormulario(formularioInicial)
@@ -224,16 +276,56 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
         const contexto = await consultarAccesoGanaderia(ganaderia.id, sesion.accessToken)
         if (!activo) return
         setAcceso(contexto)
-        const pagina = await listarAnimales(ganaderia.id, sesion.accessToken)
-        if (!activo) return
-        setAnimales(pagina.items)
-        setCursor(pagina.siguienteCursor)
+        try {
+          const existente = await cargarPendientesLocales()
+          if (existente.contexto) {
+            await prepararAccesoOfflineConfirmado(sesion.usuarioId, contexto)
+            if (activo) await cargarPendientesLocales()
+            if (activo) setOfflinePreparado(true)
+          }
+        } catch {
+          if (activo) setMensaje('El acceso online funciona, pero el almacenamiento offline no está disponible en este dispositivo.')
+        }
+        try {
+          const pagina = await listarAnimales(ganaderia.id, sesion.accessToken)
+          if (!activo) return
+          setAnimales(pagina.items)
+          setCursor(pagina.siguienteCursor)
+        } catch (error) {
+          if (!activo) return
+          const errorAnimal = fallo(error)
+          if (errorAnimal.tipo !== 'conexion') throw errorAnimal
+          setModoSinConexion(true)
+          setMensaje('Sin conexión. Los animales confirmados no se actualizaron; puedes ver tus pendientes locales autorizados.')
+        }
       } catch (error) {
         if (!activo) return
         if (error instanceof ErrorGanaderia) {
-          const tipo = error.tipo === 'sesion' ? 'sesion'
-            : error.tipo === 'seguridad' ? 'permiso' : 'servicio'
-          aplicarFallo(new ErrorAnimal(tipo))
+          if (error.tipo === 'conexion') {
+            try {
+              const local = await cargarPendientesLocales()
+              if (!activo) return
+              if (local.autorizacion === 'AUTORIZADA_ESCRITURA' && local.contexto) {
+                setAcceso({
+                  ganaderiaId: local.contexto.ganaderiaId,
+                  rol: local.contexto.rol,
+                  estado: 'ACTIVA',
+                  validadoEn: local.contexto.validadoEnServidor,
+                })
+                setModoSinConexion(true)
+                setOfflinePreparado(true)
+                setMensaje('Sin conexión. Trabajas con la autorización local vigente; los registros quedarán pendientes de sincronización.')
+              } else {
+                setMensaje(mensajesAutorizacionOffline[local.autorizacion])
+              }
+            } catch {
+              setMensaje('No hay conexión y no pudimos consultar el almacenamiento offline de este dispositivo.')
+            }
+          } else {
+            const tipo = error.tipo === 'sesion' ? 'sesion'
+              : error.tipo === 'seguridad' ? 'permiso' : 'servicio'
+            aplicarFallo(new ErrorAnimal(tipo))
+          }
         } else {
           aplicarFallo(fallo(error))
         }
@@ -243,7 +335,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
     }
     void cargar()
     return () => { activo = false }
-  }, [ganaderia.id, sesion.accessToken, onSesionInvalida])
+  }, [ganaderia.id, sesion.accessToken, sesion.usuarioId, onSesionInvalida])
 
   function cambiar<K extends keyof FormularioAnimal>(campo: K, valor: FormularioAnimal[K]) {
     if (pendienteIncierto) return
@@ -311,14 +403,36 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
       }
     } catch (error) {
       const errorAnimal = fallo(error)
-      if (errorAnimal.tipo === 'conexion' || errorAnimal.tipo === 'servicio'
-          || errorAnimal.tipo === 'limite') {
+      if (errorAnimal.tipo === 'conexion') {
         setPendienteIncierto(solicitud)
+        try {
+          const local = await guardarRegistroPendienteAutorizado(ambitoLocal, solicitud)
+          if (local.operacion) {
+            setPendientesLocales(actuales => {
+              const sinDuplicado = actuales.filter(item => item.operationId !== local.operacion?.operationId)
+              return [...sinDuplicado, local.operacion!]
+            })
+            setPendienteIncierto(null)
+            setAnimalIdActual(null)
+            setFormulario(formularioInicial)
+            setErrores({})
+            setModoSinConexion(true)
+            setOfflinePreparado(true)
+            setMensaje('Guardado en este dispositivo. Pendiente de sincronización.')
+          } else {
+            setMensaje(mensajesAutorizacionOffline[local.autorizacion])
+          }
+        } catch {
+          setMensaje('No se pudo guardar en este dispositivo. Conservamos el formulario para que puedas reintentar.')
+        }
+      } else if (errorAnimal.tipo === 'servicio' || errorAnimal.tipo === 'limite') {
+        setPendienteIncierto(solicitud)
+        aplicarFallo(errorAnimal)
       } else {
         setPendienteIncierto(null)
         if (errorAnimal.tipo === 'conflicto') setAnimalIdActual(null)
+        aplicarFallo(errorAnimal)
       }
-      aplicarFallo(errorAnimal)
     } finally {
       envioEnCurso.current = false
       setEnviando(false)
@@ -331,6 +445,17 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
     try {
       const contexto = await consultarAccesoGanaderia(ganaderia.id, sesion.accessToken)
       setAcceso(contexto)
+      setModoSinConexion(false)
+      try {
+        const existente = await cargarPendientesLocales()
+        if (existente.contexto) {
+          await prepararAccesoOfflineConfirmado(sesion.usuarioId, contexto)
+          await cargarPendientesLocales()
+          setOfflinePreparado(true)
+        }
+      } catch {
+        setMensaje('El listado online se actualizó, pero el almacenamiento offline no está disponible.')
+      }
       await cargarPrimeraPagina()
     } catch (error) {
       if (error instanceof ErrorGanaderia) {
@@ -387,7 +512,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
           <h3 id="animals-title">Mis animales</h3>
           <p>{ganaderia.nombre}</p>
         </div>
-        {acceso && <span className="access-badge">Acceso: {acceso.rol.toLowerCase()}</span>}
+        {acceso && <span className="access-badge">Acceso: {acceso.rol.toLowerCase()}{modoSinConexion ? ' · offline' : ''}</span>}
       </div>
 
       {mensaje && <div className="form-notice animals-notice" role="status">{mensaje}</div>}
@@ -423,6 +548,28 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                 {cargandoMas ? 'Cargando…' : 'Cargar más'}
               </button>
             )}
+            {pendientesLocales.length > 0 && (
+              <section className="local-pending" aria-labelledby="local-pending-title">
+                <div className="local-pending-heading">
+                  <h4 id="local-pending-title">Pendientes en este dispositivo</h4>
+                  <span>{pendientesLocales.length}</span>
+                </div>
+                <p>No están guardados en PostgreSQL y no se enviarán automáticamente.</p>
+                <div className="local-pending-list">
+                  {pendientesLocales.map(operacion => (
+                    <article className="local-pending-item" key={operacion.operationId}>
+                      <span>
+                        <strong>{operacion.payload.nombre
+                          || operacion.payload.areteFrente
+                          || (operacion.payload.sexo === 'HEMBRA' ? 'Hembra sin nombre' : 'Macho sin nombre')}</strong>
+                        <small>{operacion.payload.sexo === 'HEMBRA' ? 'Hembra' : 'Macho'}</small>
+                      </span>
+                      <b>Pendiente de sincronización</b>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
 
           {puedeRegistrar ? (
@@ -431,6 +578,15 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                 <h4>Registrar un animal</h4>
                 <p>Solo el sexo es obligatorio. Los identificadores técnicos se generan de forma segura.</p>
               </div>
+              {!offlinePreparado && !modoSinConexion && (
+                <div className="offline-preparation">
+                  <p>Opcional: habilita registros locales solo si este es un dispositivo de confianza.</p>
+                  <button className="button button-outline" type="button"
+                    onClick={() => void prepararOffline()} disabled={enviando}>
+                    Preparar trabajo sin conexión
+                  </button>
+                </div>
+              )}
               <div className="form-field">
                 <label htmlFor="animal-sexo">Sexo *</label>
                 <select id="animal-sexo" value={formulario.sexo}

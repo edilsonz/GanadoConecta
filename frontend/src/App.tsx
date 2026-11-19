@@ -4,6 +4,7 @@ import { AccesoCuenta } from './AccesoCuenta'
 import { GanaderiasPanel } from './GanaderiasPanel'
 import { RegistroCuenta } from './RegistroCuenta'
 import type { SesionActiva } from './sesionApi'
+import { bloquearContextosOfflineUsuario } from './registroAnimalesOffline'
 
 const futureSections = [
   { number: '01', title: 'Funcionamiento sin internet', text: 'La continuidad offline se incorporará en un incremento posterior.' },
@@ -13,7 +14,10 @@ const futureSections = [
 
 export default function App() {
   const [sesion, setSesion] = useState<SesionActiva | null>(null)
-  const invalidarSesion = useCallback(() => setSesion(null), [])
+  const invalidarSesion = useCallback(() => setSesion(actual => {
+    if (actual) void bloquearContextosOfflineUsuario(actual.usuarioId).catch(() => undefined)
+    return null
+  }), [])
 
   return (
     <>

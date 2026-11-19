@@ -9,6 +9,13 @@ import {
   type Animal,
 } from './animalesApi'
 import { consultarAccesoGanaderia, ErrorGanaderia } from './ganaderiasApi'
+import {
+  bloquearAccesoOffline,
+  guardarRegistroPendienteAutorizado,
+  listarPendientesAutorizados,
+  prepararAccesoOfflineConfirmado,
+  requerirRevalidacionOffline,
+} from './registroAnimalesOffline'
 
 vi.mock('./animalesApi', async importOriginal => {
   const original = await importOriginal<typeof import('./animalesApi')>()
@@ -24,6 +31,14 @@ vi.mock('./ganaderiasApi', async importOriginal => {
   const original = await importOriginal<typeof import('./ganaderiasApi')>()
   return { ...original, consultarAccesoGanaderia: vi.fn() }
 })
+
+vi.mock('./registroAnimalesOffline', () => ({
+  bloquearAccesoOffline: vi.fn(),
+  guardarRegistroPendienteAutorizado: vi.fn(),
+  listarPendientesAutorizados: vi.fn(),
+  prepararAccesoOfflineConfirmado: vi.fn(),
+  requerirRevalidacionOffline: vi.fn(),
+}))
 
 const ganaderia = {
   id: '123e4567-e89b-42d3-a456-426614174000',
@@ -69,12 +84,35 @@ function pagina(items: Animal[] = [animal], siguienteCursor: string | null = nul
   return { items, siguienteCursor, consultadoEn: '2026-11-18T18:02:00Z' }
 }
 
+function operacionLocal(payload: Parameters<typeof guardarRegistroPendienteAutorizado>[1]) {
+  return {
+    usuarioId: sesion.usuarioId,
+    ganaderiaId: ganaderia.id,
+    operationId: payload.operationId,
+    animalId: payload.animalId,
+    payload,
+    estado: 'PENDIENTE' as const,
+    ultimoError: null,
+    creadoEnLocal: '2026-11-19T15:00:00Z',
+    actualizadoEnLocal: '2026-11-19T15:00:00Z',
+  }
+}
+
 describe('Panel de animales', () => {
   beforeEach(() => {
     vi.mocked(consultarAccesoGanaderia).mockReset()
     vi.mocked(listarAnimales).mockReset()
     vi.mocked(consultarAnimal).mockReset()
     vi.mocked(registrarAnimal).mockReset()
+    vi.mocked(bloquearAccesoOffline).mockReset().mockResolvedValue()
+    vi.mocked(requerirRevalidacionOffline).mockReset().mockResolvedValue()
+    vi.mocked(prepararAccesoOfflineConfirmado).mockReset().mockResolvedValue({
+      estado: 'AUTORIZADA_ESCRITURA', contexto: null,
+    })
+    vi.mocked(listarPendientesAutorizados).mockReset().mockResolvedValue({
+      autorizacion: 'AUTORIZADA_ESCRITURA', contexto: null, operaciones: [],
+    })
+    vi.mocked(guardarRegistroPendienteAutorizado).mockReset()
     vi.mocked(consultarAccesoGanaderia).mockResolvedValue(accesoPropietario)
     vi.mocked(listarAnimales).mockResolvedValue(pagina())
   })
@@ -100,6 +138,20 @@ describe('Panel de animales', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Registrar animal' }))
     expect(await screen.findByText('Selecciona MACHO o HEMBRA.')).toBeInTheDocument()
     expect(registrarAnimal).not.toHaveBeenCalled()
+  })
+
+  it('prepara offline solo tras una decisión explícita en un dispositivo de confianza', async () => {
+    vi.mocked(listarAnimales).mockResolvedValue(pagina([]))
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+    const boton = await screen.findByRole('button', { name: 'Preparar trabajo sin conexión' })
+    expect(prepararAccesoOfflineConfirmado).not.toHaveBeenCalled()
+
+    fireEvent.click(boton)
+
+    await waitFor(() => expect(prepararAccesoOfflineConfirmado)
+      .toHaveBeenCalledWith(sesion.usuarioId, accesoPropietario))
+    expect(await screen.findByText(/máximo de 168 horas/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Preparar trabajo sin conexión' })).not.toBeInTheDocument()
   })
 
   it('aplica los límites por caracteres Unicode y no por unidades UTF-16', async () => {
@@ -150,6 +202,7 @@ describe('Panel de animales', () => {
       schemaVersion: 2,
     }))
     expect(solicitud).not.toHaveProperty('usuarioId')
+    expect(guardarRegistroPendienteAutorizado).not.toHaveBeenCalled()
   })
 
   it('registra solo identificación de lana o cinta con sus dos datos', async () => {
@@ -199,14 +252,12 @@ describe('Panel de animales', () => {
     expect(registrarAnimal).not.toHaveBeenCalled()
   })
 
-  it('reintenta una respuesta incierta con los mismos identificadores', async () => {
+  it('guarda una caída real de red con los mismos identificadores y la muestra separada', async () => {
     vi.mocked(listarAnimales).mockResolvedValue(pagina([]))
-    vi.mocked(registrarAnimal)
-      .mockRejectedValueOnce(new ErrorAnimal('conexion'))
-      .mockResolvedValueOnce({
-        operationId: operacionUuid, animalId: animalUuid, resultado: 'REPROCESADO',
-        versionCreada: 1, confirmadoEn: '2026-11-18T18:02:00Z', advertencias: [],
-      })
+    vi.mocked(registrarAnimal).mockRejectedValueOnce(new ErrorAnimal('conexion'))
+    vi.mocked(guardarRegistroPendienteAutorizado).mockImplementation(async (_ambito, payload) => ({
+      autorizacion: 'AUTORIZADA_ESCRITURA', operacion: operacionLocal(payload),
+    }))
     vi.spyOn(crypto, 'randomUUID')
       .mockReturnValueOnce(animalUuid)
       .mockReturnValueOnce(operacionUuid)
@@ -215,13 +266,149 @@ describe('Panel de animales', () => {
 
     fireEvent.change(screen.getByLabelText('Sexo *'), { target: { value: 'MACHO' } })
     fireEvent.click(screen.getByRole('button', { name: 'Registrar animal' }))
-    const reintentar = await screen.findByRole('button', { name: 'Reintentar mismo registro' })
-    expect(screen.getByLabelText('Sexo *')).toBeDisabled()
-    fireEvent.click(reintentar)
 
-    await waitFor(() => expect(registrarAnimal).toHaveBeenCalledTimes(2))
-    expect(vi.mocked(registrarAnimal).mock.calls[1][1])
-      .toEqual(vi.mocked(registrarAnimal).mock.calls[0][1])
+    expect(await screen.findByText('Guardado en este dispositivo. Pendiente de sincronización.'))
+      .toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Pendientes en este dispositivo' })).toBeInTheDocument()
+    expect(screen.getByText('Pendiente de sincronización')).toBeInTheDocument()
+    expect(guardarRegistroPendienteAutorizado).toHaveBeenCalledWith(
+      { usuarioId: sesion.usuarioId, ganaderiaId: ganaderia.id },
+      vi.mocked(registrarAnimal).mock.calls[0][1],
+    )
+    expect(screen.getByLabelText('Sexo *')).toHaveValue('')
+  })
+
+  it.each([
+    ['servicio', 'servicio'],
+    ['limite', 'límite'],
+    ['validacion', 'campos'],
+    ['seguridad', 'seguridad'],
+  ] as const)('no convierte el error HTTP %s en un registro offline', async (tipo, texto) => {
+    vi.mocked(listarAnimales).mockResolvedValue(pagina([]))
+    vi.mocked(registrarAnimal).mockRejectedValueOnce(new ErrorAnimal(tipo))
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+    await screen.findByText(/Aún no hay animales/)
+
+    fireEvent.change(screen.getByLabelText('Sexo *'), { target: { value: 'HEMBRA' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar animal' }))
+
+    expect(await screen.findByText(new RegExp(texto, 'i'))).toBeInTheDocument()
+    expect(guardarRegistroPendienteAutorizado).not.toHaveBeenCalled()
+  })
+
+  it('conserva el formulario si IndexedDB falla', async () => {
+    vi.mocked(listarAnimales).mockResolvedValue(pagina([]))
+    vi.mocked(registrarAnimal).mockRejectedValueOnce(new ErrorAnimal('conexion'))
+    vi.mocked(guardarRegistroPendienteAutorizado).mockRejectedValueOnce(new Error('cuota'))
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+    await screen.findByText(/Aún no hay animales/)
+
+    fireEvent.change(screen.getByLabelText('Sexo *'), { target: { value: 'HEMBRA' } })
+    fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Luna local' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar animal' }))
+
+    expect(await screen.findByText(/No se pudo guardar en este dispositivo/)).toBeInTheDocument()
+    expect(screen.getByLabelText('Nombre')).toHaveValue('Luna local')
+    expect(screen.getByRole('button', { name: 'Reintentar mismo registro' })).toBeInTheDocument()
+  })
+
+  it.each([
+    ['AUSENTE', /no tiene una autorización offline vigente/i],
+    ['VENCIDA', /autorización offline venció/i],
+    ['SOLO_LECTURA', /permiso verificado es de lectura/i],
+  ] as const)('no guarda localmente cuando la autorización queda %s', async (estado, mensaje) => {
+    vi.mocked(listarAnimales).mockResolvedValue(pagina([]))
+    vi.mocked(registrarAnimal).mockRejectedValueOnce(new ErrorAnimal('conexion'))
+    vi.mocked(guardarRegistroPendienteAutorizado).mockResolvedValueOnce({
+      autorizacion: estado, operacion: null,
+    })
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+    await screen.findByText(/Aún no hay animales/)
+
+    fireEvent.change(screen.getByLabelText('Sexo *'), { target: { value: 'HEMBRA' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar animal' }))
+
+    expect(await screen.findByText(mensaje)).toBeInTheDocument()
+    expect(screen.queryByText('Pendiente de sincronización')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Sexo *')).toHaveValue('HEMBRA')
+  })
+
+  it('recupera pendientes del mismo usuario y ganadería con contexto vigente', async () => {
+    const payload = {
+      operationId: operacionUuid,
+      animalId: animalUuid,
+      tipo: 'CREAR_ANIMAL' as const,
+      schemaVersion: 2 as const,
+      baseVersion: 0 as const,
+      sexo: 'HEMBRA' as const,
+      areteFrente: 'LOCAL-7',
+    }
+    vi.mocked(consultarAccesoGanaderia).mockRejectedValueOnce(new ErrorGanaderia('conexion'))
+    vi.mocked(listarPendientesAutorizados).mockResolvedValue({
+      autorizacion: 'AUTORIZADA_ESCRITURA',
+      contexto: {
+        usuarioId: sesion.usuarioId,
+        ganaderiaId: ganaderia.id,
+        rol: 'PROPIETARIO',
+        estado: 'VIGENTE',
+        motivo: null,
+        validadoEnServidor: accesoPropietario.validadoEn,
+        autorizadoHastaServidor: '2026-11-26T18:00:00Z',
+        observadoEnCliente: accesoPropietario.validadoEn,
+        autorizadoHastaCliente: '2026-11-26T18:00:00Z',
+        ultimoComprobadoEnCliente: accesoPropietario.validadoEn,
+      },
+      operaciones: [operacionLocal(payload)],
+    })
+
+    const vista = render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+    expect(await screen.findByText('LOCAL-7')).toBeInTheDocument()
+    expect(screen.getByText(/Trabajas con la autorización local vigente/)).toBeInTheDocument()
+    expect(listarAnimales).not.toHaveBeenCalled()
+
+    vista.unmount()
+    vi.mocked(consultarAccesoGanaderia).mockRejectedValueOnce(new ErrorGanaderia('conexion'))
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+    expect(await screen.findByText('LOCAL-7')).toBeInTheDocument()
+  })
+
+  it('evita doble envío y un único fallo de red produce una sola operación local', async () => {
+    vi.mocked(listarAnimales).mockResolvedValue(pagina([]))
+    let rechazar: ((error: unknown) => void) | undefined
+    vi.mocked(registrarAnimal).mockReturnValueOnce(new Promise((_, reject) => { rechazar = reject }))
+    vi.mocked(guardarRegistroPendienteAutorizado).mockImplementation(async (_ambito, payload) => ({
+      autorizacion: 'AUTORIZADA_ESCRITURA', operacion: operacionLocal(payload),
+    }))
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+    await screen.findByText(/Aún no hay animales/)
+    fireEvent.change(screen.getByLabelText('Sexo *'), { target: { value: 'MACHO' } })
+
+    const boton = screen.getByRole('button', { name: 'Registrar animal' })
+    fireEvent.click(boton)
+    fireEvent.submit(boton.closest('form')!)
+    expect(registrarAnimal).toHaveBeenCalledOnce()
+    rechazar?.(new ErrorAnimal('conexion'))
+
+    await waitFor(() => expect(guardarRegistroPendienteAutorizado).toHaveBeenCalledOnce())
+    expect(await screen.findByText('Pendiente de sincronización')).toBeInTheDocument()
+  })
+
+  it('conserva en el pendiente un animal identificado solo por arete', async () => {
+    vi.mocked(listarAnimales).mockResolvedValue(pagina([]))
+    vi.mocked(registrarAnimal).mockRejectedValueOnce(new ErrorAnimal('conexion'))
+    vi.mocked(guardarRegistroPendienteAutorizado).mockImplementation(async (_ambito, payload) => ({
+      autorizacion: 'AUTORIZADA_ESCRITURA', operacion: operacionLocal(payload),
+    }))
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+    await screen.findByText(/Aún no hay animales/)
+    fireEvent.change(screen.getByLabelText('Sexo *'), { target: { value: 'HEMBRA' } })
+    fireEvent.change(screen.getByLabelText('Arete frontal'), { target: { value: 'A-LOCAL' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar animal' }))
+
+    await waitFor(() => expect(guardarRegistroPendienteAutorizado).toHaveBeenCalledOnce())
+    const payload = vi.mocked(guardarRegistroPendienteAutorizado).mock.calls[0][1]
+    expect(payload).toEqual(expect.objectContaining({ sexo: 'HEMBRA', areteFrente: 'A-LOCAL' }))
+    expect(payload).not.toHaveProperty('coloresIdentificacionTextil')
   })
 
   it('pagina por cursor y deduplica por animalId', async () => {

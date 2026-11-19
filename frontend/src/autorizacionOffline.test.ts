@@ -66,6 +66,17 @@ describe('servicio de autorización offline', () => {
       .resolves.toMatchObject({ estado: 'SOLO_LECTURA' })
   })
 
+  it('registra un acceso ya confirmado sin repetir la petición HTTP', async () => {
+    const consultar = vi.fn<ConsultarAcceso>()
+    const { servicio } = preparar(consultar)
+
+    await expect(servicio.registrarAccesoConfirmado(usuario, acceso('EDITOR')))
+      .resolves.toMatchObject({ estado: 'AUTORIZADA_ESCRITURA' })
+    expect(consultar).not.toHaveBeenCalled()
+    await expect(servicio.evaluarEscrituraLocal(usuario, ganaderia))
+      .resolves.toMatchObject({ estado: 'AUTORIZADA_ESCRITURA' })
+  })
+
   it('exige sesión tras un 401 y bloquea tras un 403 seguro', async () => {
     const consultar = vi.fn<ConsultarAcceso>()
       .mockResolvedValueOnce(acceso())
