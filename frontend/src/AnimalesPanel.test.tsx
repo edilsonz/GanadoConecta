@@ -151,7 +151,51 @@ describe('Panel de animales', () => {
     await waitFor(() => expect(prepararAccesoOfflineConfirmado)
       .toHaveBeenCalledWith(sesion.usuarioId, accesoPropietario))
     expect(await screen.findByText(/máximo de 168 horas/)).toBeInTheDocument()
+    expect(screen.getByText('Trabajo sin conexión preparado')).toBeInTheDocument()
+    expect(screen.getByText('El navegador informa: con conexión')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Preparar trabajo sin conexión' })).not.toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Sexo *'), { target: { value: 'HEMBRA' } })
+    expect(screen.queryByText(/máximo de 168 horas/)).not.toBeInTheDocument()
+    expect(screen.getByText('Trabajo sin conexión preparado')).toBeInTheDocument()
+  })
+
+  it('muestra el estado de red del navegador sin convertirlo por sí solo en guardado local', async () => {
+    vi.mocked(listarPendientesAutorizados).mockResolvedValue({
+      autorizacion: 'AUTORIZADA_ESCRITURA',
+      contexto: {
+        usuarioId: sesion.usuarioId,
+        ganaderiaId: ganaderia.id,
+        rol: 'PROPIETARIO',
+        estado: 'VIGENTE',
+        motivo: null,
+        validadoEnServidor: accesoPropietario.validadoEn,
+        autorizadoHastaServidor: '2026-11-26T18:00:00Z',
+        observadoEnCliente: accesoPropietario.validadoEn,
+        autorizadoHastaCliente: '2026-11-26T18:00:00Z',
+        ultimoComprobadoEnCliente: accesoPropietario.validadoEn,
+      },
+      operaciones: [],
+    })
+    vi.mocked(registrarAnimal).mockResolvedValue({
+      operationId: operacionUuid,
+      animalId: animalUuid,
+      resultado: 'APLICADO',
+      versionCreada: 1,
+      confirmadoEn: '2026-11-19T15:00:00Z',
+      advertencias: [],
+    })
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+    expect(await screen.findByText('Trabajo sin conexión preparado')).toBeInTheDocument()
+
+    window.dispatchEvent(new Event('offline'))
+    expect(await screen.findByText('El navegador informa: sin conexión')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Sexo *'), { target: { value: 'HEMBRA' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar animal' }))
+
+    expect(await screen.findByText(/Animal registrado correctamente/)).toBeInTheDocument()
+    expect(guardarRegistroPendienteAutorizado).not.toHaveBeenCalled()
+    window.dispatchEvent(new Event('online'))
   })
 
   it('aplica los límites por caracteres Unicode y no por unidades UTF-16', async () => {

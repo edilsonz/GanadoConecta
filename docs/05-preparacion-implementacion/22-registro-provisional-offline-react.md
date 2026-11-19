@@ -48,6 +48,48 @@ solo arete, solo lana/cinta, solo sexo y representación visual del pendiente.
 Las pruebas de IndexedDB usaron el doble inyectable existente; no se realizó una
 prueba manual en Chrome en este incremento.
 
+## Corrección posterior de visibilidad
+
+Una prueba manual informó que, después de intentar preparar el dispositivo, el
+control ya no se encontraba y un alta supuestamente offline apareció como
+confirmada. La revisión comprobó dos comportamientos distintos:
+
+- al preparar correctamente, el botón desaparecía y solo quedaba un aviso
+  temporal que se borraba al editar el formulario; se corrigió mostrando de
+  forma persistente «Trabajo sin conexión preparado» y el estado de red que
+  informa el navegador;
+- «Animal registrado correctamente» solo se emite tras recibir un recibo HTTP
+  válido. La permanencia tras F5 confirma que aquella operación llegó a
+  PostgreSQL, no a la cola local. El indicador del navegador no fuerza el modo
+  offline: IndexedDB solo se usa cuando la petición falla realmente como red.
+
+La corrección añadió regresiones para la confirmación persistente, los eventos
+`online`/`offline` como señal informativa y la clasificación de un rechazo real
+de `fetch`. Resultado posterior: 37/37 pruebas dirigidas y 89/89 en la regresión
+frontend; TypeScript y build Vite correctos. No se ejecutó backend ni se alteró
+PostgreSQL, Flyway o IndexedDB.
+
+## Corrección posterior de visibilidad
+
+Una prueba manual informó que, después de intentar preparar el dispositivo, el
+control ya no se encontraba y un alta supuestamente offline apareció como
+confirmada. La revisión comprobó dos comportamientos distintos:
+
+- al preparar correctamente, el botón desaparecía y solo quedaba un aviso
+  temporal que se borraba al editar el formulario; se corrigió mostrando de
+  forma persistente «Trabajo sin conexión preparado» y el estado de red que
+  informa el navegador;
+- «Animal registrado correctamente» solo se emite tras recibir un recibo HTTP
+  válido. La permanencia tras F5 confirma que aquella operación llegó a
+  PostgreSQL, no a la cola local. El indicador del navegador no fuerza el modo
+  offline: IndexedDB solo se usa cuando la petición falla realmente como red.
+
+La corrección añadió regresiones para la confirmación persistente, los eventos
+`online`/`offline` como señal informativa y la clasificación de un rechazo real
+de `fetch`. Resultado posterior: 37/37 pruebas dirigidas y 89/89 en la regresión
+frontend; TypeScript y build Vite correctos. No se ejecutó backend ni se alteró
+PostgreSQL, Flyway o IndexedDB.
+
 ## Límites pendientes
 
 - No hay Service Worker: la aplicación no puede prometer apertura o recarga

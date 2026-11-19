@@ -130,4 +130,11 @@ describe('API de animales', () => {
     await expect(consultarAnimal(ganaderiaId, animalId, 'jwt')).rejects.toEqual(expect.objectContaining({ tipo: 'sesion' }))
     await expect(consultarAnimal(ganaderiaId, animalId, 'jwt')).rejects.toEqual(expect.objectContaining({ tipo: 'permiso' }))
   })
+
+  it('clasifica como conexión una caída real de fetch durante el registro', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')))
+
+    await expect(registrarAnimal(ganaderiaId, solicitud, 'jwt'))
+      .rejects.toEqual(expect.objectContaining({ tipo: 'conexion' }))
+  })
 })

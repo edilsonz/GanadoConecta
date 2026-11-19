@@ -205,9 +205,23 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
   const [pendientesLocales, setPendientesLocales] = useState<OperacionPendienteLocal[]>([])
   const [modoSinConexion, setModoSinConexion] = useState(false)
   const [offlinePreparado, setOfflinePreparado] = useState(false)
+  const [navegadorSinConexion, setNavegadorSinConexion] = useState(
+    () => typeof navigator !== 'undefined' && navigator.onLine === false,
+  )
   const envioEnCurso = useRef(false)
 
   const ambitoLocal = { usuarioId: sesion.usuarioId, ganaderiaId: ganaderia.id }
+
+  useEffect(() => {
+    const marcarOnline = () => setNavegadorSinConexion(false)
+    const marcarOffline = () => setNavegadorSinConexion(true)
+    window.addEventListener('online', marcarOnline)
+    window.addEventListener('offline', marcarOffline)
+    return () => {
+      window.removeEventListener('online', marcarOnline)
+      window.removeEventListener('offline', marcarOffline)
+    }
+  }, [])
 
   function fallo(error: unknown) {
     return error instanceof ErrorAnimal ? error : new ErrorAnimal('servicio')
@@ -578,7 +592,17 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                 <h4>Registrar un animal</h4>
                 <p>Solo el sexo es obligatorio. Los identificadores técnicos se generan de forma segura.</p>
               </div>
-              {!offlinePreparado && !modoSinConexion && (
+              {offlinePreparado ? (
+                <div className="offline-preparation offline-preparation-ready" role="status">
+                  <strong>Trabajo sin conexión preparado</strong>
+                  <p>Este usuario y ganadería pueden crear pendientes locales durante la vigencia autorizada.</p>
+                  <span className={navegadorSinConexion ? 'network-state offline' : 'network-state online'}>
+                    {navegadorSinConexion
+                      ? 'El navegador informa: sin conexión'
+                      : 'El navegador informa: con conexión'}
+                  </span>
+                </div>
+              ) : (
                 <div className="offline-preparation">
                   <p>Opcional: habilita registros locales solo si este es un dispositivo de confianza.</p>
                   <button className="button button-outline" type="button"

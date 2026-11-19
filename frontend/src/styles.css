@@ -1087,6 +1087,38 @@ h1 span {
   min-height:42px
 }
 
+.offline-preparation-ready {
+  border-color:#a9c3a5;
+  background:#e7f0e2
+}
+
+.offline-preparation-ready strong {
+  display:block;
+  margin-bottom:4px;
+  color:#244f3b;
+  font-size:13px
+}
+
+.network-state {
+  display:inline-flex;
+  align-items:center;
+  min-height:28px;
+  padding:5px 9px;
+  border-radius:20px;
+  font-size:10px;
+  font-weight:650
+}
+
+.network-state.online {
+  background:#d9e8d3;
+  color:#315d47
+}
+
+.network-state.offline {
+  background:#f1e5bc;
+  color:#6b5319
+}
+
 .animal-fields-grid {
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
