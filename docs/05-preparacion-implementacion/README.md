@@ -21,7 +21,8 @@
 > [evidencia T04–T07](15-nucleo-registro-animales.md) cubre migración V4, dominio,
 > idempotencia y persistencia autorizada, y la
 > [evidencia T08](16-endpoint-registro-animales.md) registra el endpoint seguro de
-> alta individual, todavía sin listado/ficha ni cliente React. Los estados de propuesta siguientes describen la
+> alta individual, y la [evidencia T09](17-consulta-animales.md) cubre listado,
+> ficha y paginación autorizados, todavía sin cliente React. Los estados de propuesta siguientes describen la
 > preparación arquitectónica original, no acreditan implementación de SPEC-01.
 
 > **Estado de consolidación:** las 16 decisiones aprobadas por el responsable

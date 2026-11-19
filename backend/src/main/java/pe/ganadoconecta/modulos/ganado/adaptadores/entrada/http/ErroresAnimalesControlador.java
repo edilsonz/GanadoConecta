@@ -15,14 +15,18 @@ import org.springframework.transaction.TransactionException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import pe.ganadoconecta.modulos.ganado.aplicacion.AnimalNoEncontradoException;
 import pe.ganadoconecta.modulos.ganado.aplicacion.ConflictoRegistroAnimalException;
+import pe.ganadoconecta.modulos.ganado.aplicacion.ConsultaAnimalesInvalidaException;
 import pe.ganadoconecta.modulos.ganado.aplicacion.ContratoOperacionInvalidoException;
 import pe.ganadoconecta.modulos.ganado.aplicacion.PersistenciaAnimalException;
 import pe.ganadoconecta.modulos.ganado.dominio.DatoAnimalInvalidoException;
 import pe.ganadoconecta.modulos.identidad.aplicacion.AccesoGanaderiaDenegadoException;
+import pe.ganadoconecta.modulos.identidad.aplicacion.PersistenciaGanaderiaException;
 import pe.ganadoconecta.modulos.identidad.aplicacion.PersistenciaIdentidadException;
 
-@RestControllerAdvice(assignableTypes = AnimalesControlador.class)
+@RestControllerAdvice(assignableTypes = {
+        AnimalesControlador.class, ConsultasAnimalesControlador.class})
 @Profile("postgres")
 public class ErroresAnimalesControlador {
     private static final Logger LOGGER = LoggerFactory.getLogger(
@@ -68,13 +72,25 @@ public class ErroresAnimalesControlador {
             case ACCESO_DENEGADO -> "ACCESO_GANADERIA_DENEGADO";
         };
         return respuesta(HttpStatus.FORBIDDEN, codigo,
-                "No tiene permiso para registrar animales en esta ganadería.", Map.of());
+                "No tiene acceso a los animales de esta ganadería.", Map.of());
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     ResponseEntity<RespuestaErrorAnimal> identificadorRutaInvalido() {
         return respuesta(HttpStatus.BAD_REQUEST, "SOLICITUD_INVALIDA",
                 "La solicitud no tiene un identificador válido.", Map.of());
+    }
+
+    @ExceptionHandler(ConsultaAnimalesInvalidaException.class)
+    ResponseEntity<RespuestaErrorAnimal> consultaInvalida() {
+        return respuesta(HttpStatus.BAD_REQUEST, "SOLICITUD_INVALIDA",
+                "Los parámetros de consulta no son válidos.", Map.of());
+    }
+
+    @ExceptionHandler(AnimalNoEncontradoException.class)
+    ResponseEntity<RespuestaErrorAnimal> animalNoEncontrado() {
+        return respuesta(HttpStatus.NOT_FOUND, "ANIMAL_NO_ENCONTRADO",
+                "No se encontró el animal solicitado.", Map.of());
     }
 
     @ExceptionHandler(SolicitudAnimalHttpInvalidaException.class)
@@ -98,15 +114,16 @@ public class ErroresAnimalesControlador {
     }
 
     @ExceptionHandler({PersistenciaAnimalException.class,
-            PersistenciaIdentidadException.class, TransactionException.class})
+            PersistenciaGanaderiaException.class, PersistenciaIdentidadException.class,
+            TransactionException.class})
     ResponseEntity<RespuestaErrorAnimal> persistenciaNoDisponible() {
         String correlacionId = UUID.randomUUID().toString();
-        LOGGER.error("Fallo de persistencia al registrar animal; correlacionId={}",
+        LOGGER.error("Fallo de persistencia de animales; correlacionId={}",
                 correlacionId);
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .cacheControl(CacheControl.noStore())
                 .body(new RespuestaErrorAnimal("REGISTRO_ANIMAL_NO_DISPONIBLE",
-                        "No fue posible completar el registro del animal.",
+                        "No fue posible procesar la solicitud de animales.",
                         Map.of(), correlacionId));
     }
 

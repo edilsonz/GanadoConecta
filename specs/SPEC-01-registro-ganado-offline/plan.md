@@ -1,7 +1,7 @@
 # SPEC-01 — Plan técnico propuesto
 
 **Estado: Aprobada — Implementación en curso.** Plan aprobado documentalmente junto con
-[spec.md](spec.md) y el contrato DP01, el 16 de noviembre de 2026 por autorización del responsable. La implementación comenzó con T02.1 el 17 de noviembre; T04–T07 y el endpoint HTTP T08 se verificaron el 18 de noviembre. T09 y los flujos de usuario permanecen pendientes. Este plan no modifica los ADR aprobados. [Tareas](tasks.md).
+[spec.md](spec.md) y el contrato DP01, el 16 de noviembre de 2026 por autorización del responsable. La implementación comenzó con T02.1 el 17 de noviembre; T04–T09 se verificaron el 18 de noviembre. React de animales y offline permanecen pendientes. Este plan no modifica los ADR aprobados. [Tareas](tasks.md).
 
 ## 1. Arquitectura y límites
 
@@ -219,8 +219,8 @@ puerto, caso de uso, adaptador JDBC y endpoint de AU01 con Argon2id, además de
 sesión/rotación, endpoints backend AU02–AU04 y cliente React automatizado. Falta
 validar coordinación multipestaña en navegador real. AU05 ya usa los modelos
 funcionales de ganadería/membresía para crear al propietario inicial; listado y
-contexto online ya revalidan membresía activa. T07 reutiliza autorización bloqueante
-y T08 expone el alta; faltan T09, React y continuidad offline. La base nunca
+contexto online ya revalidan membresía activa. T07 reutiliza autorización bloqueante,
+T08 expone el alta y T09 las consultas; faltan React y continuidad offline. La base nunca
 almacena contraseñas en claro ni tokens de renovación. No se agregaron datos
 semilla ni membresías reales de editor/lector.
 
@@ -309,8 +309,8 @@ sobre guardado en la cola, conectado o al sincronizar posteriormente.
 | Método y ruta | Entrada | Éxito |
 |---|---|---|
 | POST /ganaderias/{ganaderiaId}/animales | **IMPLEMENTADO EN T08.** Sobre de sección 9 de SPEC con operationId, animalId, tipo, schemaVersion, baseVersion y datos descriptivos. | 201 APLICADO en primera confirmación; 200 REPROCESADO al repetir la misma operación, con recibo original. |
-| GET /ganaderias/{ganaderiaId}/animales | limit=20 por defecto, 1–100; cursor opcional. Sin filtros nuevos en este incremento. | 200 items básicos, siguienteCursor nullable y consultadoEn. |
-| GET /ganaderias/{ganaderiaId}/animales/{animalId} | Identificadores de ruta. | 200 ficha básica con version y fechas remotas vigentes. |
+| GET /ganaderias/{ganaderiaId}/animales | **IMPLEMENTADO EN T09.** limit=20 por defecto, 1–100; cursor opcional. Sin filtros nuevos en este incremento. | 200 items básicos, siguienteCursor nullable y consultadoEn. |
+| GET /ganaderias/{ganaderiaId}/animales/{animalId} | **IMPLEMENTADO EN T09.** Identificadores de ruta. | 200 ficha básica con version y fechas remotas vigentes. |
 
 El POST no acepta ganaderiaId en cuerpo ni actorId, estado o versión resultante.
 Body máximo propuesto: 16 KiB; sobre mayor -> 413, sin escritura. JSON inválido,
@@ -523,8 +523,8 @@ capacidad demostrada. No ejecutar carga mientras no exista el flujo funcional.
 DP01–DP08 y SPEC-01 aprobadas documentalmente. Ejecutar sus tareas y verificar especialmente contrato de acceso,
 sexo obligatorio confirmado, límites/zonas horarias, UUID/recibos, recuperación y retención local.
 El despliegue y las versiones de herramientas se concretarán antes del código
-que las requiera. Membresías y revocación transaccional protegen T07/T08,
-pero la ausencia de T09, cliente de animales y offline impide habilitar el flujo real.
+que las requiera. Membresías y autorización protegen T07–T09,
+pero la ausencia del cliente de animales y offline impide habilitar el flujo real.
 La UI de registro no amplía permisos para administrar ganaderías.
 
 Los instantes de servidor y sesión se almacenan como instantes UTC (PostgreSQL timestamptz, serialización ISO 8601 con Z); conexiones configuradas UTC. FechaNacimiento permanece tipo date; la validación de fecha futura usa America/Lima. No confundir conversión de presentación con cambio de la fecha de negocio.
