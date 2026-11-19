@@ -26,7 +26,8 @@
 > documenta el cliente React online, la [evidencia T19-ID](19-identificacion-externa-animales.md)
 > cubre la ampliación compatible de aretes y lana/cinta, y la
 > [evidencia T11](20-indexeddb-operaciones-pendientes.md) inicia la persistencia
-> local de la cola. El funcionamiento offline completo continúa pendiente. Los estados de propuesta siguientes describen la
+> local de la cola, y la [evidencia T12/T15](21-autorizacion-offline-local.md)
+> registra la barrera local inicial. El funcionamiento offline completo continúa pendiente. Los estados de propuesta siguientes describen la
 > preparación arquitectónica original, no acreditan implementación de SPEC-01.
 
 > **Estado de consolidación:** las 16 decisiones aprobadas por el responsable

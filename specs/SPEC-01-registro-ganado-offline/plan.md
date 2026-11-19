@@ -444,6 +444,18 @@ Al alcanzar autorizadoHasta se bloquean consultas privadas, altas y envíos;
 operaciones, sobres e IDs no se borran ni modifican por ese motivo. No se
 configuran expiración, job de limpieza o migración que eliminen pendientes por edad.
 
+El primer incremento T12/T15 implementa `contextosOffline` en la versión 2 de
+la misma base IndexedDB y un servicio separado del adaptador. Persiste solamente
+usuario, ganadería, rol, estado, motivo y anclas temporales no secretas obtenidas
+de un `GET /acceso` exitoso. PROPIETARIO/EDITOR permiten preparar escritura;
+LECTOR queda en solo lectura. La evaluación usa el vencimiento más temprano
+calculado desde `validadoEn` del servidor y desde la observación cliente. Un
+retroceso del reloj o fechas inconsistentes exige revalidación. El cierre/cambio
+de cuenta dispone una operación para bloquear todos sus contextos; un 401 exige
+sesión, un 403 bloquea y los fallos de red/servidor no renuevan ni borran datos.
+IndexedDB sigue siendo manipulable por quien controla el perfil: este contexto
+es una barrera de aplicación, nunca un permiso firmado ni sustituto del backend.
+
 JWT de acceso solo en memoria; credencial de renovación solo en cookie segura HttpOnly según DP01, nunca en almacenamiento offline.
 Token caducado sin red y contexto vigente permite trabajo local, nunca envío.
 Contexto perdido o cierre explícito exige login online de la misma cuenta para

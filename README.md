@@ -424,4 +424,5 @@ y las evidencias del [endpoint T08](docs/05-preparacion-implementacion/16-endpoi
 [cliente React T10](docs/05-preparacion-implementacion/18-animales-react.md),
 [identificación externa T19-ID](docs/05-preparacion-implementacion/19-identificacion-externa-animales.md) y
 [almacenamiento IndexedDB T11](docs/05-preparacion-implementacion/20-indexeddb-operaciones-pendientes.md),
+además de la [autorización local T12/T15](docs/05-preparacion-implementacion/21-autorizacion-offline-local.md),
 para resultados realmente ejecutados y limitaciones.

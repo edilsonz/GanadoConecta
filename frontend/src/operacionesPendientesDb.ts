@@ -1,11 +1,12 @@
 import type { SolicitudRegistroAnimal } from './animalesApi'
-
-const NOMBRE_BASE = 'ganadoconecta-offline'
-const VERSION_BASE = 1
-const ALMACEN_OPERACIONES = 'operacionesPendientes'
-const INDICE_CONTEXTO = 'porContexto'
-const INDICE_OPERACION = 'porOperacion'
-const INDICE_ANIMAL = 'porAnimalPendiente'
+import {
+  abrirBaseOffline,
+  ALMACEN_OPERACIONES,
+  INDICE_ANIMAL_PENDIENTE,
+  INDICE_OPERACION,
+  INDICE_OPERACIONES_CONTEXTO,
+  NOMBRE_BASE_OFFLINE,
+} from './indexedDbOffline'
 
 const CLAVES_PAYLOAD = new Set([
   'operationId', 'animalId', 'tipo', 'schemaVersion', 'baseVersion', 'sexo',
@@ -108,7 +109,7 @@ export class AlmacenOperacionesPendientesIndexedDb {
 
   constructor(opciones: OpcionesAlmacen = {}) {
     this.factory = opciones.indexedDB ?? globalThis.indexedDB
-    this.nombreBase = opciones.nombreBase ?? NOMBRE_BASE
+    this.nombreBase = opciones.nombreBase ?? NOMBRE_BASE_OFFLINE
     this.ahora = opciones.ahora ?? (() => new Date())
   }
 
@@ -140,7 +141,7 @@ export class AlmacenOperacionesPendientesIndexedDb {
     try {
       const registros = await esperarSolicitud<RegistroOperacion[]>(
         transaccion.objectStore(ALMACEN_OPERACIONES)
-          .index(INDICE_CONTEXTO).getAll(claveContexto(ambitoValidado)),
+          .index(INDICE_OPERACIONES_CONTEXTO).getAll(claveContexto(ambitoValidado)),
       )
       await completada
       return registros
@@ -221,7 +222,7 @@ export class AlmacenOperacionesPendientesIndexedDb {
       )
     }
     if (!this.apertura) {
-      this.apertura = abrirBase(this.factory, this.nombreBase)
+      this.apertura = abrirBaseOffline(this.factory, this.nombreBase)
         .catch(error => {
           this.apertura = undefined
           throw traducirError(error, 'APERTURA_FALLIDA')
@@ -277,7 +278,7 @@ function guardarEnTransaccion(
         }
         return
       }
-      const porAnimal = almacen.index(INDICE_ANIMAL)
+      const porAnimal = almacen.index(INDICE_ANIMAL_PENDIENTE)
         .get(claveAnimal(ambito, payload.animalId))
       porAnimal.onsuccess = () => {
         if (porAnimal.result) {
@@ -361,30 +362,6 @@ function actualizarEnTransaccion(
       guardado.onsuccess = () => {
         resultado = actualizado
       }
-    }
-  })
-}
-
-function abrirBase(factory: IDBFactory, nombre: string): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const solicitud = factory.open(nombre, VERSION_BASE)
-    solicitud.onupgradeneeded = () => {
-      const db = solicitud.result
-      if (!db.objectStoreNames.contains(ALMACEN_OPERACIONES)) {
-        const almacen = db.createObjectStore(ALMACEN_OPERACIONES, { keyPath: 'clave' })
-        almacen.createIndex(INDICE_CONTEXTO, 'contextoClave')
-        almacen.createIndex(INDICE_OPERACION, 'operationId', { unique: true })
-        almacen.createIndex(INDICE_ANIMAL, 'animalClave', { unique: true })
-      }
-    }
-    solicitud.onerror = () => reject(solicitud.error)
-    solicitud.onblocked = () => reject(
-      new ErrorAlmacenamientoLocal('APERTURA_FALLIDA'),
-    )
-    solicitud.onsuccess = () => {
-      const db = solicitud.result
-      db.onversionchange = () => db.close()
-      resolve(db)
     }
   })
 }

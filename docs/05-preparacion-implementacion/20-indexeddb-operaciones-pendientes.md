@@ -49,8 +49,8 @@ solo quedan parciales. No se repitió backend porque ningún archivo backend cam
 
 - Integrar en una sola transacción local el provisional visible y la operación,
   y conectar el formulario sin afirmar éxito antes del `complete` de IndexedDB.
-- Implementar contexto preparado, opt-in y autorización máxima de 168 horas;
-  bloquear visibilidad/envío al vencer sin borrar la cola.
+- Conectar el contexto T12/T15 ya implementado al opt-in, logout, selección y
+  formulario; la evaluación de 168 horas aún no habilita ninguna vista offline.
 - Añadir PWA/recursos estáticos, orquestador de sincronización, leases entre
   pestañas, reintentos, confirmaciones y conflictos T12–T15.
 - Revalidar sesión, membresía y rol online antes de cualquier envío.
