@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
+import { useEstadoConexion } from './PwaEstado'
 
 vi.mock('./AccesoCuenta', () => ({
   AccesoCuenta: () => <section aria-label="Acceso de cuenta" />,
@@ -10,6 +11,12 @@ vi.mock('./GanaderiasPanel', () => ({
   GanaderiasPanel: () => <section aria-label="GanaderÃ­as" />,
 }))
 
+vi.mock('./PwaEstado', () => ({
+  useEstadoConexion: vi.fn(() => true),
+  PwaEstado: () => <aside aria-label="Estado PWA" />,
+  AccesoOfflineSeguro: () => <section aria-label="Acceso offline seguro" />,
+}))
+
 function mockHealth(status = 'UP', ok = true) {
   const fetchMock = vi.fn().mockResolvedValue({ ok, json: async () => ({ status }) })
   vi.stubGlobal('fetch', fetchMock)
@@ -17,6 +24,10 @@ function mockHealth(status = 'UP', ok = true) {
 }
 
 describe('Inicio de GanadoConecta', () => {
+  beforeEach(() => {
+    vi.mocked(useEstadoConexion).mockReturnValue(true)
+  })
+
   it('muestra el inicio y mantiene deshabilitadas las funciones futuras', async () => {
     mockHealth()
     render(<App />)
@@ -24,7 +35,7 @@ describe('Inicio de GanadoConecta', () => {
     expect(screen.getByRole('link', { name: 'Mi ganado' })).toHaveAttribute('href', '#mis-animales')
     expect(screen.getByRole('heading', { name: 'Crea tu cuenta.' })).toBeInTheDocument()
     expect(screen.getByRole('textbox', { name: 'Correo electrónico' })).toBeInTheDocument()
-    expect(screen.getByText(/Registro individual disponible con conexión/)).toBeInTheDocument()
+    expect(screen.getByText(/PWA instalable/)).toBeInTheDocument()
     expect(await screen.findByText('Conexión con el servicio disponible')).toBeInTheDocument()
   })
 
@@ -55,5 +66,16 @@ describe('Inicio de GanadoConecta', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ detalle: 'sin estado' }) }))
     render(<App />)
     expect(await screen.findByText('No se pudo comprobar la conexión')).toBeInTheDocument()
+  })
+
+  it('sin conexión y sin sesión muestra la barrera segura y oculta flujos privados', () => {
+    vi.mocked(useEstadoConexion).mockReturnValue(false)
+    mockHealth()
+
+    render(<App />)
+
+    expect(screen.getByRole('region', { name: 'Acceso offline seguro' })).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Acceso de cuenta' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Crea tu cuenta.' })).not.toBeInTheDocument()
   })
 })

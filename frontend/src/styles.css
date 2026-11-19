@@ -447,6 +447,90 @@ html {
   margin-right:5px
 }
 
+.pwa-status {
+  margin:14px 48px 0;
+  padding:13px 16px;
+  border:1px solid #b9ccb2;
+  border-radius:8px;
+  background:#edf3e8;
+  color:#244f3b
+}
+
+.pwa-status.offline {
+  border-color:#d8c78e;
+  background:#fff8e5;
+  color:#684f19
+}
+
+.pwa-status-message {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-size:12px;
+  line-height:1.5
+}
+
+.pwa-status-message strong {
+  white-space:nowrap
+}
+
+.pwa-status-message span {
+  flex:1
+}
+
+.pwa-status-message button {
+  min-height:40px;
+  padding:8px 13px;
+  border:1px solid #8fad82;
+  border-radius:5px;
+  background:#fffdf7;
+  color:#244f3b;
+  font:inherit;
+  font-weight:650;
+  cursor:pointer;
+  white-space:nowrap
+}
+
+.pwa-status-message button:disabled {
+  cursor:wait;
+  opacity:.6
+}
+
+.pwa-status-error {
+  color:#724b25
+}
+
+.offline-safe {
+  margin:0 48px 50px;
+  padding:38px;
+  border:1px solid #d5dfd0;
+  border-radius:12px;
+  background:#edf3e8;
+  color:#183c30
+}
+
+.offline-safe h2 {
+  margin:0 0 14px;
+  font-size:clamp(28px,4vw,42px);
+  font-weight:550;
+  letter-spacing:-1px
+}
+
+.offline-safe>p:not(.eyebrow) {
+  max-width:720px;
+  margin:0;
+  color:#536b5a;
+  font-size:14px;
+  line-height:1.75
+}
+
+.offline-safe .offline-safe-note {
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1px solid #cddac7;
+  font-size:12px
+}
+
 .hero {
   padding:64px 48px 54px;
   display:grid;
@@ -1273,6 +1357,12 @@ footer p {
   .edition {
     display:none
   }
+  .pwa-status {
+    margin:14px 28px 0
+  }
+  .offline-safe {
+    margin:0 28px 48px
+  }
   .hero {
     padding:44px 28px;
     gap:30px
@@ -1351,6 +1441,26 @@ footer p {
     grid-template-columns:repeat(2,minmax(0,1fr));
     gap:4px 8px;
     font-size:12px;
+  }
+  .pwa-status {
+    margin:10px 10px 0;
+    padding:14px
+  }
+  .pwa-status-message {
+    align-items:stretch;
+    flex-direction:column;
+    gap:8px
+  }
+  .pwa-status-message strong {
+    white-space:normal
+  }
+  .pwa-status-message button {
+    width:100%;
+    min-height:46px
+  }
+  .offline-safe {
+    margin:0 10px 32px;
+    padding:25px 18px
   }
   .site-header nav>a,.site-header nav>button {
     min-width:0;

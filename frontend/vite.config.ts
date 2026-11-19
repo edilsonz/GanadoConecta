@@ -3,6 +3,11 @@ import { readFileSync } from 'node:fs'
 import react from '@vitejs/plugin-react'
 import { loadEnv } from 'vite'
 import { defineConfig } from 'vitest/config'
+import { VitePWA } from 'vite-plugin-pwa'
+import {
+  CONFIGURACION_PRECACHE,
+  MANIFEST_PWA,
+} from './src/pwaContrato.ts'
 
 export default defineConfig(({ mode }) => {
   const environment = loadEnv(mode, fileURLToPath(new URL('..', import.meta.url)), '')
@@ -14,16 +19,30 @@ export default defineConfig(({ mode }) => {
   const https = certificado && clave
     ? { cert: readFileSync(certificado), key: readFileSync(clave) }
     : undefined
+  const proxy = {
+    '/api': {
+      target: environment.API_PROXY_TARGET || 'http://127.0.0.1:8080',
+      changeOrigin: false,
+    },
+  }
   return {
-    plugins: [react()],
+    plugins: [
+      react(),
+      VitePWA({
+        registerType: 'prompt',
+        injectRegister: null,
+        manifest: MANIFEST_PWA,
+        workbox: CONFIGURACION_PRECACHE,
+        devOptions: { enabled: false },
+      }),
+    ],
     server: {
       https,
-      proxy: {
-        '/api': {
-          target: environment.API_PROXY_TARGET || 'http://127.0.0.1:8080',
-          changeOrigin: false,
-        },
-      },
+      proxy,
+    },
+    preview: {
+      https,
+      proxy,
     },
     test: {
       environment: 'happy-dom',

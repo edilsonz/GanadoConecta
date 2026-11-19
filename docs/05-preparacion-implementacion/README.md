@@ -28,8 +28,11 @@
 > [evidencia T11](20-indexeddb-operaciones-pendientes.md) inicia la persistencia
 > local de la cola, y la [evidencia T12/T15](21-autorizacion-offline-local.md)
 > registra la barrera local inicial, la [evidencia de integración React](22-registro-provisional-offline-react.md)
-> cubre el alta provisional en una aplicación ya abierta, y la [sincronización manual](23-sincronizacion-manual-offline.md)
-> documenta el primer envío seguro de la cola. PWA y sincronización automática continúan pendientes. Los estados de propuesta siguientes describen la
+> cubre el alta provisional en una aplicación ya abierta, la [sincronización manual](23-sincronizacion-manual-offline.md)
+> documenta el primer envío seguro de la cola y la [PWA](24-pwa-carga-basica-offline.md)
+> añade instalación y carga básica del app shell sin cachear datos privados.
+> Sincronización automática, caché privada autorizada y E2E offline integral
+> continúan pendientes. Los estados de propuesta siguientes describen la
 > preparación arquitectónica original, no acreditan implementación de SPEC-01.
 
 > **Estado de consolidación:** las 16 decisiones aprobadas por el responsable

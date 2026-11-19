@@ -1,7 +1,7 @@
 # SPEC-01 — Plan técnico propuesto
 
 **Estado: Aprobada — Implementación en curso.** Plan aprobado documentalmente junto con
-[spec.md](spec.md) y el contrato DP01, el 16 de noviembre de 2026 por autorización del responsable. La implementación comenzó con T02.1 el 17 de noviembre; T04–T10 se verificaron el 18 de noviembre y T11/T12/T15 se integraron parcialmente con React el 19. El registro provisional en una aplicación ya abierta existe; PWA, apertura desde cero sin red y sincronización permanecen pendientes. Este plan no modifica los ADR aprobados. [Tareas](tasks.md).
+[spec.md](spec.md) y el contrato DP01, el 16 de noviembre de 2026 por autorización del responsable. La implementación comenzó con T02.1 el 17 de noviembre; T04–T10 se verificaron el 18 de noviembre y T11/T12/T15 se integraron parcialmente con React el 19. Existen registro provisional, envío manual y app shell PWA; la apertura real desde cero sin red, la caché privada autorizada y la automatización permanecen pendientes. Este plan no modifica los ADR aprobados. [Tareas](tasks.md).
 
 ## 1. Arquitectura y límites
 
@@ -407,13 +407,16 @@ para impedir que tokens o contraseñas entren en el sobre. React ya guarda esa
 operación como representación provisional única después de una caída real de red,
 solo con contexto de escritura vigente, y espera la transacción antes de confirmar.
 El primer incremento T13/T14 añade sincronización exclusivamente manual, lease
-persistido, recibo idempotente y estados seguros. PWA, ejecución automática,
-backoff programado y validación multipestaña en navegador real siguen pendientes.
+persistido, recibo idempotente y estados seguros. El incremento PWA genera
+manifest, iconos y Service Worker solo para el app shell estático; no registra
+rutas de caché para API o respuestas privadas. Ejecución automática, backoff
+programado y validación multipestaña en navegador real siguen pendientes.
 
 El diseño completo mantiene previstos los object stores `animalesConfirmados`, `animalesPendientes`,
 `operaciones` y `contextos`. Claves incluyen cuentaId/ganaderiaId; operación
 única por operationId y pendientes únicos por animalId dentro de su contexto.
-No guardar secretos ni respuestas privadas en Service Worker/Cache Storage.
+No guardar secretos ni respuestas privadas en Service Worker/Cache Storage. La
+ruta `/api` queda fuera del fallback de navegación y no existe `runtimeCaching`.
 
 Guardar alta = una transacción readwrite sobre pendientes y operaciones.
 La UI espera al evento de finalización de la transacción, no solo al éxito
@@ -444,6 +447,12 @@ migraciones locales probarán copia existente y permitirán pausar actualizació
 si no pueden preservar operaciones. El protocolo schemaVersion=1 seguirá
 aceptándose mientras existan operaciones soportadas pendientes, o dará rechazo
 explícito sin eliminarlas.
+
+El app shell implementado usa actualización por aviso: nunca llama a
+`skipWaiting` ni recarga sin confirmación del usuario. El Service Worker no abre
+IndexedDB, no modifica contextos ni sincroniza. Al arrancar offline sin sesión en
+memoria, React muestra una barrera segura y oculta información privada; instalar
+la PWA no equivale a preparar una ganadería ni a autorizar el dispositivo.
 
 La autorización offline tiene máximo adoptado de 168 horas, separada de la
 conservación de registros. ContextoOffline incorpora autorizadoHasta y estado
@@ -567,7 +576,8 @@ sexo obligatorio confirmado, límites/zonas horarias, UUID/recibos, recuperació
 El despliegue y las versiones de herramientas se concretarán antes del código
 que las requiera. Membresías y autorización protegen T07–T09.
 El cliente T10 consume T08/T09 y conecta T11/T12/T15; T13/T14 incorporan el
-primer envío manual con lease y recibos. La falta de PWA, sincronización automática,
+primer envío manual con lease y recibos; el app shell PWA cubre solo recursos
+estáticos. La falta de caché privada autorizada, sincronización automática,
 resolución asistida de conflictos y E2E multipestaña real impide declarar completo
 el alcance Offline-First de SPEC-01.
 La UI de registro no amplía permisos para administrar ganaderías.

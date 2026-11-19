@@ -5,15 +5,21 @@ import { GanaderiasPanel } from './GanaderiasPanel'
 import { RegistroCuenta } from './RegistroCuenta'
 import type { SesionActiva } from './sesionApi'
 import { bloquearContextosOfflineUsuario } from './registroAnimalesOffline'
+import {
+  AccesoOfflineSeguro,
+  PwaEstado,
+  useEstadoConexion,
+} from './PwaEstado'
 
 const futureSections = [
-  { number: '01', title: 'Funcionamiento sin internet', text: 'La continuidad offline se incorporará en un incremento posterior.' },
+  { number: '01', title: 'Funcionamiento sin internet', text: 'La estructura básica ya puede abrirse offline; el acceso a datos exige sesión y preparación previa.' },
   { number: '02', title: 'Cuidado y seguimiento', text: 'Una forma sencilla de consultar actividades e historiales.' },
   { number: '03', title: 'Calendario', text: 'Un espacio para planificar las próximas actividades de tu ganadería.' },
 ]
 
 export default function App() {
   const [sesion, setSesion] = useState<SesionActiva | null>(null)
+  const conectado = useEstadoConexion()
   const invalidarSesion = useCallback(() => setSesion(actual => {
     if (actual) void bloquearContextosOfflineUsuario(actual.usuarioId).catch(() => undefined)
     return null
@@ -38,6 +44,8 @@ export default function App() {
         <span className="edition"><span aria-hidden="true">◌</span> En preparación</span>
       </header>
 
+      <PwaEstado conectado={conectado} sesionActiva={Boolean(sesion)} />
+
       <main id="contenido">
         <section className="hero" id="inicio" aria-labelledby="hero-title">
           <div className="hero-copy">
@@ -45,7 +53,7 @@ export default function App() {
             <h1 id="hero-title">Tu ganado.<br />Su cuidado.<br /><span>Todo conectado.</span></h1>
             <p className="hero-description">Estamos construyendo un espacio sencillo para organizar la información y acompañar el cuidado de tu ganado vacuno.</p>
             <a className="button button-primary" href="#crear-cuenta">Crear mi cuenta <span aria-hidden="true">↗</span></a>
-            <p className="hero-note">Primera versión en desarrollo · Registro individual disponible con conexión</p>
+            <p className="hero-note">PWA instalable · La carga básica offline no sustituye sesión ni permisos</p>
           </div>
           <div className="landscape" aria-hidden="true">
             <div className="landscape-caption"><span>GANADOCONECTA</span><span>CRECER CON CUIDADO ↗</span></div>
@@ -69,9 +77,15 @@ export default function App() {
           </div>
         </section>
 
-        <AccesoCuenta sesion={sesion} onSesionChange={setSesion} />
-        <GanaderiasPanel sesion={sesion} onSesionInvalida={invalidarSesion} />
-        <RegistroCuenta />
+        {!conectado && !sesion ? (
+          <AccesoOfflineSeguro />
+        ) : (
+          <>
+            <AccesoCuenta sesion={sesion} onSesionChange={setSesion} />
+            <GanaderiasPanel sesion={sesion} onSesionInvalida={invalidarSesion} />
+            {conectado && <RegistroCuenta />}
+          </>
+        )}
 
         <section className="project-section" id="proyecto" aria-labelledby="project-title">
           <div className="section-heading">

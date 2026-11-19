@@ -1,6 +1,6 @@
 # T13/T14 — Sincronización manual segura de animales pendientes
 
-**Estado: implementada y verificada automáticamente; validación manual en Chrome pendiente.**
+**Estado: implementada y verificada automática y manualmente para un envío controlado.**
 
 ## Alcance implementado
 
@@ -58,11 +58,16 @@ módulos transformados). No se ejecutaron pruebas backend porque no cambió
 backend. Las pruebas usan IndexedDB y dependencias aisladas: no tocaron
 `PRUEBA-OFFLINE-02`, PostgreSQL ni los animales reales existentes.
 
+La validación manual posterior confirmó que `PRUEBA-OFFLINE-02` se sincronizó
+una sola vez, permaneció en PostgreSQL tras F5 y no mostró duplicados visibles.
+Esta observación acredita ese recorrido concreto; no sustituye E2E automatizado,
+inspección multipestaña ni los escenarios de conflicto pendientes.
+
 ## Pendiente
 
-- Validar manualmente en Chrome la sincronización única de
-  `PRUEBA-OFFLINE-02`; hasta esa acción debe permanecer PENDIENTE.
-- Service Worker, apertura desde cero sin red, caché de fichas, sincronización
+- Validar mediante E2E de navegador los escenarios de respuesta perdida,
+  multipestaña y conflicto.
+- Apertura PWA desde cero sin red y caché de fichas privadas; sincronización
   automática y reintentos programados con backoff/Retry-After.
 - E2E real de dos pestañas, suspensión/cierre durante HTTP y resolución asistida
   o descarte explícito de conflictos.

@@ -167,10 +167,10 @@ sin fuentes editables encontradas en el repositorio.
 
 ## Ejecutar la primera base local
 
-Esta iteración incluye una interfaz React responsiva, registro, login/logout y
-salud de la API. Los botones
-«Mi ganado» y «Calendario» están deshabilitados porque esas funciones aún no
-existen. No hay usuarios de demostración, ganaderías, animales, PWA ni sincronización.
+Esta iteración incluye React responsivo, registro, login/logout, ganaderías,
+registro/listado/ficha de animales, cola IndexedDB, sincronización manual y un
+app shell PWA instalable. No hay usuarios de demostración. «Calendario» continúa
+deshabilitado y no existen sincronización automática ni login offline.
 La salud sin perfil postgres comprueba el proceso, no conexión a una base de datos.
 
 ### Herramientas y versiones
@@ -182,6 +182,7 @@ La salud sin perfil postgres comprueba el proceso, no conexión a una base de da
 | Spring Boot | 3.5.16, compatible con JUnit 5 del plan aprobado. |
 | Node / npm | 22.19.0 / 10.9.3; frontend exige Node 22 >=22.12 y npm 10. |
 | React / TypeScript / Vite | 19.3.1 / 5.9.3 / 8.3.8, dependencias exactas y package-lock. |
+| PWA | vite-plugin-pwa 1.3.0; Service Worker de producción y manifiesto generados por Vite. |
 | Pruebas frontend | Vitest 5.1.0, Testing Library React 16.3.3, jest-dom 7.0.1 y happy-dom 21.0.4. |
 | Pruebas backend | Spring Boot Test y JUnit 5 gestionados por el parent fijado. |
 | Docker / Compose | Motor 29.9.3 y Compose 5.7.0; contenedor PostgreSQL comprobado healthy. |
@@ -236,6 +237,25 @@ npm.cmd run build
 `npm.cmd install` se usa para cambiar dependencias conscientemente; `npm.cmd ci`
 reproduce el lockfile en un checkout existente. No usar dist/ como evidencia de
 funciones de negocio. Las pruebas básicas de esta base no completan los CA de SPEC-01.
+
+### Comprobar la PWA de producción bajo HTTPS
+
+El Service Worker está deshabilitado en `npm.cmd run dev`. Para conservar el
+mismo origen HTTPS usado por sesión, CSRF e IndexedDB, detener primero ese Vite
+y servir el build en el puerto 5173:
+
+```powershell
+Set-Location D:\GanadoConecta\frontend
+npm.cmd run build
+npm.cmd run preview:pwa
+```
+
+Con `DEV_HTTPS_CERT_PATH` y `DEV_HTTPS_KEY_PATH` ya configuradas en el `.env`
+privado, abrir `https://127.0.0.1:5173/`. El backend puede seguir en HTTP detrás
+del proxy local. Cargar una vez online antes de activar Offline en DevTools. No
+usar «Clear site data»: borraría IndexedDB y ya no probaría conservación. La PWA
+precacha solo recursos estáticos; no cachea `/api` ni respuestas privadas. La
+sincronización de pendientes continúa requiriendo una acción explícita.
 
 ### Variables de entorno
 
@@ -425,4 +445,7 @@ y las evidencias del [endpoint T08](docs/05-preparacion-implementacion/16-endpoi
 [identificación externa T19-ID](docs/05-preparacion-implementacion/19-identificacion-externa-animales.md) y
 [almacenamiento IndexedDB T11](docs/05-preparacion-implementacion/20-indexeddb-operaciones-pendientes.md),
 además de la [autorización local T12/T15](docs/05-preparacion-implementacion/21-autorizacion-offline-local.md),
+la [integración provisional offline](docs/05-preparacion-implementacion/22-registro-provisional-offline-react.md),
+la [sincronización manual](docs/05-preparacion-implementacion/23-sincronizacion-manual-offline.md) y la
+[PWA con carga básica offline](docs/05-preparacion-implementacion/24-pwa-carga-basica-offline.md),
 para resultados realmente ejecutados y limitaciones.
