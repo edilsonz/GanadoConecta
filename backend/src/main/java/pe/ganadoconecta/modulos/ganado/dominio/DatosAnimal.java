@@ -9,6 +9,8 @@ public record DatosAnimal(
         String nombre,
         String areteFrente,
         String areteReverso,
+        String coloresIdentificacionTextil,
+        UbicacionIdentificacionTextil ubicacionIdentificacionTextil,
         String raza,
         LocalDate fechaNacimiento,
         Boolean nacimientoEstimado,
@@ -22,6 +24,15 @@ public record DatosAnimal(
         nombre = normalizar(nombre, 100, false, "nombre");
         areteFrente = normalizar(areteFrente, 100, false, "areteFrente");
         areteReverso = normalizar(areteReverso, 100, false, "areteReverso");
+        coloresIdentificacionTextil = normalizar(coloresIdentificacionTextil, 100,
+                false, "coloresIdentificacionTextil");
+        if ((coloresIdentificacionTextil == null)
+                != (ubicacionIdentificacionTextil == null)) {
+            throw new DatoAnimalInvalidoException(
+                    coloresIdentificacionTextil == null
+                            ? "coloresIdentificacionTextil"
+                            : "ubicacionIdentificacionTextil");
+        }
         raza = normalizar(raza, 100, false, "raza");
         observaciones = normalizar(observaciones, 2000, true, "observaciones");
         if ((fechaNacimiento == null) != (nacimientoEstimado == null)) {

@@ -266,7 +266,7 @@ con Clean Architecture y ADR-07; no se cambia tecnología ni requisito aprobado.
 |---|---|
 | Ganaderia (creada por AU05) | id, estado y propietario; la asociación del animal no cambia en este flujo. |
 | Membresia (prerrequisito de Identidad) | usuarioId + ganaderiaId, rol PROPIETARIO/EDITOR/LECTOR, estado; autorización vigente. |
-| Animal | id UUIDv4, ganaderiaId, sexo obligatorio MACHO/HEMBRA (NOT NULL), nombre, areteFrente, areteReverso, raza, fechaNacimiento, nacimientoEstimado, categoria, observaciones; ACTIVO, version=1, creadoPor, creadoEn. |
+| Animal | id UUIDv4, ganaderiaId, sexo obligatorio MACHO/HEMBRA (NOT NULL), nombre, areteFrente, areteReverso, coloresIdentificacionTextil+ubicacionIdentificacionTextil opcionales como par, raza, fechaNacimiento, nacimientoEstimado, categoria, observaciones; ACTIVO, version=1, creadoPor, creadoEn. |
 | OperacionConfirmada | operationId UUIDv4, ganaderiaId, actorId autenticado, animalId, tipo, schemaVersion, baseVersion, huella del cuerpo canónico, versionCreada, confirmadoEn. Solo éxitos confirmados. |
 | AnimalLocal | cuentaId, ganaderiaId, animalId, datos, versionRemota nullable, fechaCopia y estado de sincronización; separado de la copia remota. |
 | OperacionLocal | cuentaId, ganaderiaId, operationId, sobre inmutable, estado, intentos, proximoIntento, errorSeguro, lease local de envío. |
@@ -295,7 +295,9 @@ tipo, schemaVersion, baseVersion, animalId y datos; añade ganaderiaId de ruta
 y actorId autenticado como ámbito. NFC/trim, vacíos/ausencias a null para datos
 opcionales; enum/UUID normalizados; orden de campos fijo y UTF-8. Los campos
 técnicos obligatorios no se rellenan por defecto. No se incluye orden de JSON,
-headers, número de intento ni reloj local. Calcula SHA-256; no acepta la huella
+headers, número de intento ni reloj local. Schema v1 conserva exactamente la
+canonicalización histórica; schema v2 añade colores y ubicación textil. Así un
+replay v1 previo a V6 conserva su huella. Calcula SHA-256; no acepta la huella
 del cliente. La misma versión de canonicalización se conserva para recibos v1.
 El éxito previo devuelve recibo solo si coinciden ámbito y huella; en otro caso
 se devuelve conflicto genérico, sin exponer datos del recibo ajeno.
@@ -308,7 +310,7 @@ sobre guardado en la cola, conectado o al sincronizar posteriormente.
 
 | Método y ruta | Entrada | Éxito |
 |---|---|---|
-| POST /ganaderias/{ganaderiaId}/animales | **IMPLEMENTADO EN T08.** Sobre de sección 9 de SPEC con operationId, animalId, tipo, schemaVersion, baseVersion y datos descriptivos. | 201 APLICADO en primera confirmación; 200 REPROCESADO al repetir la misma operación, con recibo original. |
+| POST /ganaderias/{ganaderiaId}/animales | **IMPLEMENTADO EN T08; ampliación T19 implementada y verificada.** Sobre de sección 9 de SPEC con operationId, animalId, tipo, schemaVersion, baseVersion y datos descriptivos. V1 histórico sin textil; V2 actual con par textil opcional. | 201 APLICADO en primera confirmación; 200 REPROCESADO al repetir la misma operación, con recibo original. |
 | GET /ganaderias/{ganaderiaId}/animales | **IMPLEMENTADO EN T09.** limit=20 por defecto, 1–100; cursor opcional. Sin filtros nuevos en este incremento. | 200 items básicos, siguienteCursor nullable y consultadoEn. |
 | GET /ganaderias/{ganaderiaId}/animales/{animalId} | **IMPLEMENTADO EN T09.** Identificadores de ruta. | 200 ficha básica con version y fechas remotas vigentes. |
 
@@ -341,7 +343,8 @@ coincidencias conocidas, aclarando que la copia puede ser parcial o antigua.
 
 ## 5. Persistencia PostgreSQL y transacciones
 
-Flyway V4 implementa las migraciones de animales en backend:
+Flyway V4 implementa la base de animales, V5 corrige el índice de listado y el
+  cambio controlado T19 implementó V6 de forma aditiva:
 
 - animal: PK id UUID; FK ganaderiaId; FK creadoPor; version positiva; estado ACTIVO
   para altas; constraints de sexo NOT NULL y enum MACHO/HEMBRA, compatibilidad sexo/categoría; nulls solo en campos opcionales
@@ -354,6 +357,10 @@ Flyway V4 implementa las migraciones de animales en backend:
   depende del diseño de Identidad; no duplicar su fuente de permisos.
 - Autorización de consultas siempre por ganadería, no por creadoPor: familiares
   autorizados consultan los mismos animales confirmados.
+- V6 añade `colores_identificacion_textil VARCHAR(100)` y
+  `ubicacion_identificacion_textil VARCHAR(12)`, ambas anulables, constraints de
+  longitud/enum y par completo, y amplía la versión de operación a IN (1,2).
+  No actualiza ni elimina filas: animales anteriores conservan ambos valores null.
 
 Secuencia transaccional implementada por T07 y expuesta por T08:
 

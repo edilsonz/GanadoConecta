@@ -26,6 +26,7 @@ import pe.ganadoconecta.modulos.ganado.dominio.DatosAnimal;
 import pe.ganadoconecta.modulos.ganado.dominio.GanaderiaId;
 import pe.ganadoconecta.modulos.ganado.dominio.OperacionId;
 import pe.ganadoconecta.modulos.ganado.dominio.Sexo;
+import pe.ganadoconecta.modulos.ganado.dominio.UbicacionIdentificacionTextil;
 import pe.ganadoconecta.modulos.identidad.adaptadores.entrada.http.IdentidadAutenticada;
 
 /** T08: adaptador HTTP único para el alta individual de animales. */
@@ -74,6 +75,8 @@ public class AnimalesControlador {
             String nombre,
             String areteFrente,
             String areteReverso,
+            String coloresIdentificacionTextil,
+            String ubicacionIdentificacionTextil,
             String raza,
             LocalDate fechaNacimiento,
             Boolean nacimientoEstimado,
@@ -99,6 +102,8 @@ public class AnimalesControlador {
                     new OperacionId(operationId),
                     tipo, schemaVersion, baseVersion,
                     new DatosAnimal(sexo(sexo), nombre, areteFrente, areteReverso,
+                            coloresIdentificacionTextil,
+                            ubicacionIdentificacionTextil(ubicacionIdentificacionTextil),
                             raza, fechaNacimiento, nacimientoEstimado,
                             categoria(categoria), observaciones));
         }
@@ -122,6 +127,19 @@ public class AnimalesControlador {
                 return Categoria.valueOf(valor);
             } catch (IllegalArgumentException exception) {
                 throw new DatoAnimalInvalidoException("categoria");
+            }
+        }
+
+        private static UbicacionIdentificacionTextil ubicacionIdentificacionTextil(
+                String valor) {
+            if (valor == null || valor.isBlank()) {
+                return null;
+            }
+            try {
+                return UbicacionIdentificacionTextil.valueOf(valor);
+            } catch (IllegalArgumentException exception) {
+                throw new DatoAnimalInvalidoException(
+                        "ubicacionIdentificacionTextil");
             }
         }
 

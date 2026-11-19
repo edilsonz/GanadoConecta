@@ -63,6 +63,12 @@ requisito para ejecutar pruebas de integración en entornos aislados.
 | T14 | Mostrar estados, errores y conflictos; confirmar localmente por IDs, no degradar versiones remotas y no reenviar como otra alta. | T10, T13 | EE02/EE04; CA05/CA07/CA09/CA10/CA11/CA15. |
 | T15 | Implementar bloqueo por vencimiento/revocación, limpieza solo de copias sincronizadas al salir y conservación de pendientes por cuenta; descarte separado explícito. | T02, T12, T13, T14 | EE03; probar pérdida de token/contexto, límites de 168 h, cola intacta, recuperación al reautenticar, limpieza fallida y bloqueo ante otra cuenta. CA06/CA12/CA14. |
 
+## 2.1. Cambio controlado de identificación externa
+
+| ID | Tarea | Depende de | Verificación / CA |
+|---|---|---|---|
+| T19 | **IMPLEMENTADA Y VERIFICADA:** extender dominio, API, PostgreSQL y React con colores+ubicación de lana/cinta como par opcional; conservar aretes, UUID e idempotencia v1 mediante schema v2 y V6 aditiva. | T08–T10 | Solo arete, solo textil, ambos, ninguno; ubicación/colores inválidos, permisos, replay v1/v2, consulta y compatibilidad de filas previas. CA01/CA02/CA03/CA05/CA09/CA13/CA15. Evidencia: `docs/05-preparacion-implementacion/19-identificacion-externa-animales.md`. |
+
 ## 3. Pruebas e integración del flujo
 
 Las pruebas se escriben junto al incremento correspondiente; esta fase integra

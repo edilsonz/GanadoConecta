@@ -9,7 +9,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 import pe.ganadoconecta.modulos.ganado.dominio.DatosAnimal;
 
-/** Canonización v1 estable, independiente del JSON y con campos de longitud prefijada. */
+/** Canonización estable v1/v2, independiente del JSON y con longitud prefijada. */
 public final class CanonizadorAltaAnimal implements CalculadorHuellaOperacion {
     @Override
     public byte[] calcular(SolicitudRegistroAnimal solicitud, UUID actorUsuarioId) {
@@ -25,6 +25,11 @@ public final class CanonizadorAltaAnimal implements CalculadorHuellaOperacion {
         agregar(salida, datos.nombre());
         agregar(salida, datos.areteFrente());
         agregar(salida, datos.areteReverso());
+        if (solicitud.schemaVersion() == 2) {
+            agregar(salida, datos.coloresIdentificacionTextil());
+            agregar(salida, datos.ubicacionIdentificacionTextil() == null
+                    ? null : datos.ubicacionIdentificacionTextil().name());
+        }
         agregar(salida, datos.raza());
         agregar(salida, texto(datos.fechaNacimiento()));
         agregar(salida, texto(datos.nacimientoEstimado()));

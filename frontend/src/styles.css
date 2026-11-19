@@ -999,6 +999,28 @@ h1 span {
   gap:14px
 }
 
+.textile-identification {
+  min-width:0;
+  margin:0;
+  padding:16px;
+  border:1px solid #d8e2d3;
+  border-radius:8px;
+  background:#f5f8f1
+}
+
+.textile-identification legend {
+  padding:0 6px;
+  font-size:13px;
+  font-weight:650;
+  color:#315d47
+}
+
+.textile-identification>p {
+  margin:0 0 14px;
+  color:#667869;
+  font-size:11px
+}
+
 .checkbox-field {
   min-height:44px;
   display:flex;

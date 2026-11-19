@@ -34,12 +34,12 @@ public final class RepositorioAnimalesPostgres implements RepositorioAnimales {
 
     @Override
     public ResultadoRegistroAnimal registrar(Animal animal, OperacionId operacionId,
-            UUID actorUsuarioId, byte[] huellaSha256) {
+            UUID actorUsuarioId, byte[] huellaSha256, int schemaVersion) {
         exigirTransaccion();
         try {
             boolean areteCoincidente = existeAreteCoincidente(animal);
             int reservadas = reservarOperacion(animal, operacionId, actorUsuarioId,
-                    huellaSha256, areteCoincidente);
+                    huellaSha256, areteCoincidente, schemaVersion);
             if (reservadas == 0) {
                 return reprocesarSiCoincide(animal, operacionId, actorUsuarioId,
                         huellaSha256);
@@ -59,16 +59,17 @@ public final class RepositorioAnimalesPostgres implements RepositorioAnimales {
     }
 
     private int reservarOperacion(Animal animal, OperacionId operacionId,
-            UUID actorUsuarioId, byte[] huella, boolean areteCoincidente) {
+            UUID actorUsuarioId, byte[] huella, boolean areteCoincidente,
+            int schemaVersion) {
         return jdbc.update("""
                 INSERT INTO ganado.operacion_confirmada (
                     operacion_id, ganaderia_id, actor_usuario_id, animal_id,
                     tipo, schema_version, base_version, huella_sha256,
                     version_creada, confirmado_en, arete_coincidente
-                ) VALUES (?, ?, ?, ?, 'CREAR_ANIMAL', 1, 0, ?, 1, ?, ?)
+                ) VALUES (?, ?, ?, ?, 'CREAR_ANIMAL', ?, 0, ?, 1, ?, ?)
                 ON CONFLICT (operacion_id) DO NOTHING
                 """, operacionId.valor(), animal.ganaderiaId().valor(), actorUsuarioId,
-                animal.id().valor(), huella,
+                animal.id().valor(), schemaVersion, huella,
                 OffsetDateTime.ofInstant(animal.creadoEn(), ZoneOffset.UTC),
                 areteCoincidente);
     }
@@ -106,12 +107,16 @@ public final class RepositorioAnimalesPostgres implements RepositorioAnimales {
         jdbc.update("""
                 INSERT INTO ganado.animal (
                     id, ganaderia_id, sexo, nombre, arete_frente, arete_reverso,
+                    colores_identificacion_textil, ubicacion_identificacion_textil,
                     raza, fecha_nacimiento, nacimiento_estimado, categoria,
                     observaciones, estado, version, creado_por, creado_en
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, animal.id().valor(), animal.ganaderiaId().valor(),
                 datos.sexo().name(), datos.nombre(), datos.areteFrente(),
-                datos.areteReverso(), datos.raza(), fechaSql(datos),
+                datos.areteReverso(), datos.coloresIdentificacionTextil(),
+                datos.ubicacionIdentificacionTextil() == null
+                        ? null : datos.ubicacionIdentificacionTextil().name(),
+                datos.raza(), fechaSql(datos),
                 datos.nacimientoEstimado(),
                 datos.categoria() == null ? null : datos.categoria().name(),
                 datos.observaciones(), animal.estado().name(), animal.version(),

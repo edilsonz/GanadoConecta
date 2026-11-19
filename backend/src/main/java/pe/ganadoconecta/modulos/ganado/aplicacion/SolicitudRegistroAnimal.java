@@ -18,7 +18,11 @@ public record SolicitudRegistroAnimal(
         if (!"CREAR_ANIMAL".equals(tipo)) {
             throw new ContratoOperacionInvalidoException("tipo");
         }
-        if (schemaVersion != 1) {
+        if (schemaVersion != 1 && schemaVersion != 2) {
+            throw new ContratoOperacionInvalidoException("schemaVersion");
+        }
+        if (schemaVersion == 1 && datos != null
+                && datos.coloresIdentificacionTextil() != null) {
             throw new ContratoOperacionInvalidoException("schemaVersion");
         }
         if (baseVersion != 0) {

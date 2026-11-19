@@ -419,4 +419,8 @@ y de su [listado/cliente React](docs/05-preparacion-implementacion/12-ganaderias
 y la [evidencia de contexto AU06](docs/05-preparacion-implementacion/13-acceso-ganaderia.md),
 y la [evidencia de revocación AU07](docs/05-preparacion-implementacion/14-revocacion-membresias.md),
 y la [evidencia del núcleo T04–T07](docs/05-preparacion-implementacion/15-nucleo-registro-animales.md),
+y las evidencias del [endpoint T08](docs/05-preparacion-implementacion/16-endpoint-registro-animales.md),
+[consulta T09](docs/05-preparacion-implementacion/17-consulta-animales.md),
+[cliente React T10](docs/05-preparacion-implementacion/18-animales-react.md) e
+[identificación externa T19](docs/05-preparacion-implementacion/19-identificacion-externa-animales.md),
 para resultados realmente ejecutados y limitaciones.

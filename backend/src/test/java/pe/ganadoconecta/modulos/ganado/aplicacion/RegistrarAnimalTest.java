@@ -37,7 +37,7 @@ class RegistrarAnimalTest {
             assertThat(transaccion).isTrue();
             autorizado.set(true);
             return new GanaderiaAccesible(ganaderia, "Los Pinos", "ACTIVA", "EDITOR");
-        }, (animal, operacion, actor, huella) -> {
+        }, (animal, operacion, actor, huella, schemaVersion) -> {
             assertThat(transaccion).isTrue();
             assertThat(autorizado).isTrue();
             assertThat(huella).hasSize(32);
@@ -58,7 +58,7 @@ class RegistrarAnimalTest {
         RegistrarAnimal caso = new RegistrarAnimal(unidadDeTrabajo(new AtomicBoolean()),
                 (usuario, sesion, ganaderia, permiso, ahora) -> {
                     throw new AccesoGanaderiaDenegadoException();
-                }, (animal, operacion, actor, huella) -> {
+                }, (animal, operacion, actor, huella, schemaVersion) -> {
                     throw new AssertionError("No debe persistir");
                 }, new CanonizadorAltaAnimal(), Clock.fixed(AHORA, ZoneOffset.UTC));
 
@@ -76,7 +76,7 @@ class RegistrarAnimalTest {
                 return trabajo.get();
             }
         }, (usuario, sesion, ganaderia, permiso, ahora) -> null,
-                (animal, operacion, actor, huella) -> null,
+                (animal, operacion, actor, huella, schemaVersion) -> null,
                 new CanonizadorAltaAnimal(), Clock.fixed(AHORA, ZoneOffset.UTC));
 
         assertThatThrownBy(() -> caso.ejecutar(solicitud(LocalDate.of(2026, 11, 19)),
@@ -88,8 +88,8 @@ class RegistrarAnimalTest {
     @Test
     void exigeContratoVersionadoEIdentificadoresDiferentes() {
         AnimalId animal = new AnimalId(UUID.randomUUID());
-        DatosAnimal datos = new DatosAnimal(Sexo.MACHO, null, null, null, null,
-                null, null, null, null);
+        DatosAnimal datos = new DatosAnimal(Sexo.MACHO, null, null, null,
+                null, null, null, null, null, null, null);
         assertThatThrownBy(() -> new SolicitudRegistroAnimal(
                 new GanaderiaId(GANADERIA), animal, new OperacionId(UUID.randomUUID()),
                 "OTRA", 1, 0, datos))
@@ -97,7 +97,16 @@ class RegistrarAnimalTest {
                 .hasMessageContaining("tipo");
         assertThatThrownBy(() -> new SolicitudRegistroAnimal(
                 new GanaderiaId(GANADERIA), animal, new OperacionId(UUID.randomUUID()),
-                "CREAR_ANIMAL", 2, 0, datos))
+                "CREAR_ANIMAL", 3, 0, datos))
+                .isInstanceOf(ContratoOperacionInvalidoException.class)
+                .hasMessageContaining("schemaVersion");
+        DatosAnimal textil = new DatosAnimal(Sexo.MACHO, null, null, null,
+                "azul", pe.ganadoconecta.modulos.ganado.dominio
+                        .UbicacionIdentificacionTextil.DERECHA,
+                null, null, null, null, null);
+        assertThatThrownBy(() -> new SolicitudRegistroAnimal(
+                new GanaderiaId(GANADERIA), animal, new OperacionId(UUID.randomUUID()),
+                "CREAR_ANIMAL", 1, 0, textil))
                 .isInstanceOf(ContratoOperacionInvalidoException.class)
                 .hasMessageContaining("schemaVersion");
         assertThatThrownBy(() -> new SolicitudRegistroAnimal(
@@ -112,7 +121,7 @@ class RegistrarAnimalTest {
                 new AnimalId(UUID.randomUUID()), new OperacionId(UUID.randomUUID()),
                 "CREAR_ANIMAL", 1, 0,
                 new DatosAnimal(Sexo.HEMBRA, "Luna", null, null, null,
-                        fecha, fecha == null ? null : false, null, null));
+                        null, null, fecha, fecha == null ? null : false, null, null));
     }
 
     private UnidadDeTrabajo unidadDeTrabajo(AtomicBoolean transaccion) {

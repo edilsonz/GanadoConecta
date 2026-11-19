@@ -47,7 +47,7 @@ public final class RegistrarAnimal {
             Animal animal = new Animal(solicitud.animalId(), solicitud.ganaderiaId(),
                     solicitud.datos(), EstadoAnimal.ACTIVO, 1, actorUsuarioId, ahora);
             return repositorio.registrar(animal, solicitud.operacionId(),
-                    actorUsuarioId, huella);
+                    actorUsuarioId, huella, solicitud.schemaVersion());
         });
     }
 }

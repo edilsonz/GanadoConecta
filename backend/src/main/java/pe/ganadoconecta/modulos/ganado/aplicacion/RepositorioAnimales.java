@@ -6,5 +6,5 @@ import pe.ganadoconecta.modulos.ganado.dominio.OperacionId;
 
 public interface RepositorioAnimales {
     ResultadoRegistroAnimal registrar(Animal animal, OperacionId operacionId,
-            UUID actorUsuarioId, byte[] huellaSha256);
+            UUID actorUsuarioId, byte[] huellaSha256, int schemaVersion);
 }

@@ -8,6 +8,7 @@ import {
   type CategoriaAnimal,
   type SolicitudRegistroAnimal,
   type SexoAnimal,
+  type UbicacionIdentificacionTextil,
 } from './animalesApi'
 import {
   consultarAccesoGanaderia,
@@ -28,6 +29,8 @@ type FormularioAnimal = {
   nombre: string
   areteFrente: string
   areteReverso: string
+  coloresIdentificacionTextil: string
+  ubicacionIdentificacionTextil: '' | UbicacionIdentificacionTextil
   raza: string
   fechaNacimiento: string
   nacimientoEstimado: boolean
@@ -40,6 +43,8 @@ const formularioInicial: FormularioAnimal = {
   nombre: '',
   areteFrente: '',
   areteReverso: '',
+  coloresIdentificacionTextil: '',
+  ubicacionIdentificacionTextil: '',
   raza: '',
   fechaNacimiento: '',
   nacimientoEstimado: false,
@@ -96,6 +101,7 @@ function validarFormulario(formulario: FormularioAnimal) {
     ['nombre', formulario.nombre, 100, false],
     ['areteFrente', formulario.areteFrente, 100, false],
     ['areteReverso', formulario.areteReverso, 100, false],
+    ['coloresIdentificacionTextil', formulario.coloresIdentificacionTextil, 100, false],
     ['raza', formulario.raza, 100, false],
     ['observaciones', formulario.observaciones, 2000, true],
   ] as const
@@ -103,6 +109,13 @@ function validarFormulario(formulario: FormularioAnimal) {
     const texto = normalizarOpcional(valor, permiteSaltos)
     if (texto && Array.from(texto).length > maximo) errores[campo] = `Usa como máximo ${maximo} caracteres.`
     if (texto && controlesNoAdmitidos.test(texto)) errores[campo] = 'El texto contiene caracteres no admitidos.'
+  }
+  const coloresTextiles = normalizarOpcional(formulario.coloresIdentificacionTextil)
+  if (coloresTextiles && !formulario.ubicacionIdentificacionTextil) {
+    errores.ubicacionIdentificacionTextil = 'Selecciona la oreja donde está la lana o cinta.'
+  }
+  if (!coloresTextiles && formulario.ubicacionIdentificacionTextil) {
+    errores.coloresIdentificacionTextil = 'Indica los colores de la lana o cinta.'
   }
   if (formulario.fechaNacimiento && formulario.fechaNacimiento > fechaHoyLima()) {
     errores.fechaNacimiento = 'La fecha de nacimiento no puede ser futura.'
@@ -122,12 +135,16 @@ function crearSolicitud(
     operationId: crypto.randomUUID(),
     animalId,
     tipo: 'CREAR_ANIMAL',
-    schemaVersion: 1,
+    schemaVersion: 2,
     baseVersion: 0,
     sexo: formulario.sexo as SexoAnimal,
     ...(normalizarOpcional(formulario.nombre) && { nombre: normalizarOpcional(formulario.nombre) }),
     ...(normalizarOpcional(formulario.areteFrente) && { areteFrente: normalizarOpcional(formulario.areteFrente) }),
     ...(normalizarOpcional(formulario.areteReverso) && { areteReverso: normalizarOpcional(formulario.areteReverso) }),
+    ...(normalizarOpcional(formulario.coloresIdentificacionTextil) && {
+      coloresIdentificacionTextil: normalizarOpcional(formulario.coloresIdentificacionTextil),
+      ubicacionIdentificacionTextil: formulario.ubicacionIdentificacionTextil as UbicacionIdentificacionTextil,
+    }),
     ...(normalizarOpcional(formulario.raza) && { raza: normalizarOpcional(formulario.raza) }),
     ...(formulario.fechaNacimiento && {
       fechaNacimiento: formulario.fechaNacimiento,
@@ -144,7 +161,10 @@ function tituloAnimal(animal: Animal) {
 }
 
 function descripcionAnimal(animal: Animal) {
-  return [animal.categoria ? etiquetasCategoria[animal.categoria] : null, animal.raza, animal.areteFrente]
+  const textil = animal.coloresIdentificacionTextil
+    ? `Lana/cinta: ${animal.coloresIdentificacionTextil}` : null
+  return [animal.categoria ? etiquetasCategoria[animal.categoria] : null,
+    animal.raza, animal.areteFrente, textil]
     .filter(Boolean).join(' · ') || 'Sin datos descriptivos adicionales'
 }
 
@@ -437,6 +457,37 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                   maximo={100} error={errores.areteReverso} disabled={camposBloqueados}
                   onChange={valor => cambiar('areteReverso', valor)} />
               </div>
+              <fieldset className="textile-identification">
+                <legend>Lana o cinta en las orejas</legend>
+                <p>Opcional. Si la usas, indica sus colores y ubicación.</p>
+                <div className="animal-fields-grid">
+                  <CampoTexto id="animal-colores-textil" etiqueta="Colores de la lana o cinta"
+                    valor={formulario.coloresIdentificacionTextil} maximo={100}
+                    error={errores.coloresIdentificacionTextil} disabled={camposBloqueados}
+                    onChange={valor => cambiar('coloresIdentificacionTextil', valor)} />
+                  <div className="form-field">
+                    <label htmlFor="animal-ubicacion-textil">Ubicación</label>
+                    <select id="animal-ubicacion-textil"
+                      value={formulario.ubicacionIdentificacionTextil}
+                      onChange={event => cambiar('ubicacionIdentificacionTextil',
+                        event.target.value as '' | UbicacionIdentificacionTextil)}
+                      disabled={camposBloqueados}
+                      aria-invalid={Boolean(errores.ubicacionIdentificacionTextil)}
+                      aria-describedby={errores.ubicacionIdentificacionTextil
+                        ? 'animal-error-ubicacion-textil' : undefined}>
+                      <option value="">Sin ubicación</option>
+                      <option value="IZQUIERDA">Oreja izquierda</option>
+                      <option value="DERECHA">Oreja derecha</option>
+                      <option value="AMBAS">Ambas orejas</option>
+                    </select>
+                    {errores.ubicacionIdentificacionTextil && (
+                      <span className="field-error" id="animal-error-ubicacion-textil">
+                        {errores.ubicacionIdentificacionTextil}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </fieldset>
               <div className="animal-fields-grid">
                 <div className="form-field">
                   <label htmlFor="animal-fecha">Fecha de nacimiento</label>
@@ -515,6 +566,12 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                 <div><dt>Raza</dt><dd>{ficha.raza || 'No indicada'}</dd></div>
                 <div><dt>Arete frontal</dt><dd>{ficha.areteFrente || 'No indicado'}</dd></div>
                 <div><dt>Arete reverso</dt><dd>{ficha.areteReverso || 'No indicado'}</dd></div>
+                <div><dt>Lana o cinta</dt><dd>{ficha.coloresIdentificacionTextil || 'No indicada'}</dd></div>
+                <div><dt>Ubicación textil</dt><dd>{ficha.ubicacionIdentificacionTextil
+                  ? ficha.ubicacionIdentificacionTextil === 'IZQUIERDA' ? 'Oreja izquierda'
+                    : ficha.ubicacionIdentificacionTextil === 'DERECHA' ? 'Oreja derecha'
+                      : 'Ambas orejas'
+                  : 'No indicada'}</dd></div>
                 <div><dt>Nacimiento</dt><dd>{ficha.fechaNacimiento || 'No indicado'}{ficha.nacimientoEstimado ? ' (aproximado)' : ''}</dd></div>
                 <div><dt>Estado</dt><dd>Activo</dd></div>
                 <div><dt>Versión</dt><dd>{ficha.version}</dd></div>

@@ -98,7 +98,7 @@ class ConsultarAnimalesTest {
     private Animal animal(Instant creadoEn) {
         return new Animal(new AnimalId(UUID.randomUUID()), GANADERIA,
                 new DatosAnimal(Sexo.HEMBRA, null, null, null,
-                        null, null, null, null, null),
+                        null, null, null, null, null, null, null),
                 EstadoAnimal.ACTIVO, 1, ACTOR, creadoEn);
     }
 

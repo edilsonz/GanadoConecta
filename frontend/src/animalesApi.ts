@@ -2,6 +2,7 @@ import { codigoError, ErrorRegistro, esObjeto, leerJson, obtenerTokenCsrf } from
 
 export type SexoAnimal = 'MACHO' | 'HEMBRA'
 export type CategoriaAnimal = 'TERNERA' | 'VAQUILLA' | 'VACA' | 'TERNERO' | 'TORETE' | 'TORO'
+export type UbicacionIdentificacionTextil = 'IZQUIERDA' | 'DERECHA' | 'AMBAS'
 
 export type Animal = {
   animalId: string
@@ -10,6 +11,8 @@ export type Animal = {
   nombre: string | null
   areteFrente: string | null
   areteReverso: string | null
+  coloresIdentificacionTextil: string | null
+  ubicacionIdentificacionTextil: UbicacionIdentificacionTextil | null
   raza: string | null
   fechaNacimiento: string | null
   nacimientoEstimado: boolean | null
@@ -30,12 +33,14 @@ export type SolicitudRegistroAnimal = {
   operationId: string
   animalId: string
   tipo: 'CREAR_ANIMAL'
-  schemaVersion: 1
+  schemaVersion: 2
   baseVersion: 0
   sexo: SexoAnimal
   nombre?: string
   areteFrente?: string
   areteReverso?: string
+  coloresIdentificacionTextil?: string
+  ubicacionIdentificacionTextil?: UbicacionIdentificacionTextil
   raza?: string
   fechaNacimiento?: string
   nacimientoEstimado?: boolean
@@ -82,6 +87,12 @@ function esCategoria(valor: unknown): valor is CategoriaAnimal {
     || valor === 'TERNERO' || valor === 'TORETE' || valor === 'TORO'
 }
 
+function esUbicacionIdentificacionTextil(
+  valor: unknown,
+): valor is UbicacionIdentificacionTextil {
+  return valor === 'IZQUIERDA' || valor === 'DERECHA' || valor === 'AMBAS'
+}
+
 function esNullable<T>(valor: unknown, comprobar: (dato: unknown) => dato is T): valor is T | null {
   return valor === null || comprobar(valor)
 }
@@ -94,6 +105,10 @@ function esAnimal(valor: unknown): valor is Animal {
     && esNullable(valor.nombre, dato => typeof dato === 'string')
     && esNullable(valor.areteFrente, dato => typeof dato === 'string')
     && esNullable(valor.areteReverso, dato => typeof dato === 'string')
+    && esNullable(valor.coloresIdentificacionTextil, dato => typeof dato === 'string')
+    && esNullable(valor.ubicacionIdentificacionTextil, esUbicacionIdentificacionTextil)
+    && ((valor.coloresIdentificacionTextil === null)
+      === (valor.ubicacionIdentificacionTextil === null))
     && esNullable(valor.raza, dato => typeof dato === 'string')
     && esNullable(valor.fechaNacimiento, dato => typeof dato === 'string')
     && esNullable(valor.nacimientoEstimado, dato => typeof dato === 'boolean')

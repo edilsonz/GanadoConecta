@@ -19,10 +19,12 @@ import pe.ganadoconecta.modulos.ganado.dominio.DatosAnimal;
 import pe.ganadoconecta.modulos.ganado.dominio.EstadoAnimal;
 import pe.ganadoconecta.modulos.ganado.dominio.GanaderiaId;
 import pe.ganadoconecta.modulos.ganado.dominio.Sexo;
+import pe.ganadoconecta.modulos.ganado.dominio.UbicacionIdentificacionTextil;
 
 public final class ConsultasAnimalesPostgres implements ConsultasAnimales {
     private static final String COLUMNAS = """
             id, ganaderia_id, sexo, nombre, arete_frente, arete_reverso,
+            colores_identificacion_textil, ubicacion_identificacion_textil,
             raza, fecha_nacimiento, nacimiento_estimado, categoria,
             observaciones, estado, version, creado_por, creado_en
             """;
@@ -36,6 +38,11 @@ public final class ConsultasAnimalesPostgres implements ConsultasAnimales {
                         resultado.getString("nombre"),
                         resultado.getString("arete_frente"),
                         resultado.getString("arete_reverso"),
+                        resultado.getString("colores_identificacion_textil"),
+                        resultado.getString("ubicacion_identificacion_textil") == null
+                                ? null : UbicacionIdentificacionTextil.valueOf(
+                                        resultado.getString(
+                                                "ubicacion_identificacion_textil")),
                         resultado.getString("raza"),
                         resultado.getObject("fecha_nacimiento", LocalDate.class),
                         resultado.getObject("nacimiento_estimado", Boolean.class),

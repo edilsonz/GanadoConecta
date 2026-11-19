@@ -133,6 +133,80 @@ class RegistrarAnimalHttpPostgresIntegrationTest extends SoporteJwtPostgres {
     }
 
     @Test
+    void admiteAreteTextilAmbosONingunoConSchemaV2() throws Exception {
+        Cuenta propietario = crearCuenta("identificacion-externa");
+        UUID ganaderiaId = crearGanaderia(propietario);
+
+        Map<String, Object> soloArete = cuerpo(UUID.randomUUID(), UUID.randomUUID());
+        soloArete.put("areteFrente", "P-20");
+        Map<String, Object> soloTextil = cuerpo(UUID.randomUUID(), UUID.randomUUID());
+        soloTextil.put("coloresIdentificacionTextil", "rojo y blanco");
+        soloTextil.put("ubicacionIdentificacionTextil", "AMBAS");
+        Map<String, Object> ambos = cuerpo(UUID.randomUUID(), UUID.randomUUID());
+        ambos.put("areteFrente", "M-8");
+        ambos.put("coloresIdentificacionTextil", "azul");
+        ambos.put("ubicacionIdentificacionTextil", "IZQUIERDA");
+        Map<String, Object> ninguno = cuerpo(UUID.randomUUID(), UUID.randomUUID());
+
+        for (Map<String, Object> identificacion : java.util.List.of(
+                soloArete, soloTextil, ambos, ninguno)) {
+            registrar(propietario.jwt(), ganaderiaId, identificacion, true, ORIGEN)
+                    .andExpect(status().isCreated());
+        }
+        registrar(propietario.jwt(), ganaderiaId, soloTextil, true, ORIGEN)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultado").value("REPROCESADO"));
+
+        assertThat(cantidadAnimales(ganaderiaId)).isEqualTo(4);
+        assertThat(jdbc.queryForObject("""
+                SELECT count(*) FROM ganado.animal
+                WHERE ganaderia_id = ?
+                  AND colores_identificacion_textil = 'rojo y blanco'
+                  AND ubicacion_identificacion_textil = 'AMBAS'
+                  AND arete_frente IS NULL
+                """, Integer.class, ganaderiaId)).isOne();
+        assertThat(jdbc.queryForObject("""
+                SELECT count(*) FROM ganado.animal
+                WHERE ganaderia_id = ?
+                  AND arete_frente = 'M-8'
+                  AND colores_identificacion_textil = 'azul'
+                  AND ubicacion_identificacion_textil = 'IZQUIERDA'
+                """, Integer.class, ganaderiaId)).isOne();
+    }
+
+    @Test
+    void rechazaTextilIncompletoUbicacionDesconocidaYTextilEnSchemaV1()
+            throws Exception {
+        Cuenta propietario = crearCuenta("identificacion-invalida");
+        UUID ganaderiaId = crearGanaderia(propietario);
+
+        Map<String, Object> sinUbicacion = cuerpo(UUID.randomUUID(), UUID.randomUUID());
+        sinUbicacion.put("coloresIdentificacionTextil", "rojo");
+        Map<String, Object> ubicacionDesconocida = cuerpo(
+                UUID.randomUUID(), UUID.randomUUID());
+        ubicacionDesconocida.put("coloresIdentificacionTextil", "rojo");
+        ubicacionDesconocida.put("ubicacionIdentificacionTextil", "CENTRO");
+        Map<String, Object> schemaV1ConTextil = cuerpo(
+                UUID.randomUUID(), UUID.randomUUID());
+        schemaV1ConTextil.put("schemaVersion", 1);
+        schemaV1ConTextil.put("coloresIdentificacionTextil", "rojo");
+        schemaV1ConTextil.put("ubicacionIdentificacionTextil", "DERECHA");
+
+        registrar(propietario.jwt(), ganaderiaId, sinUbicacion, true, ORIGEN)
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.erroresPorCampo.ubicacionIdentificacionTextil")
+                        .exists());
+        registrar(propietario.jwt(), ganaderiaId, ubicacionDesconocida, true, ORIGEN)
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.erroresPorCampo.ubicacionIdentificacionTextil")
+                        .exists());
+        registrar(propietario.jwt(), ganaderiaId, schemaV1ConTextil, true, ORIGEN)
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.codigo").value("ESQUEMA_NO_SOPORTADO"));
+        assertThat(cantidadAnimales(ganaderiaId)).isZero();
+    }
+
+    @Test
     void propietarioYEditorEscribenPeroLectorAjenoYRevocadoNo() throws Exception {
         Cuenta propietario = crearCuenta("roles-propietario");
         Cuenta editor = crearCuenta("roles-editor");
@@ -205,7 +279,7 @@ class RegistrarAnimalHttpPostgresIntegrationTest extends SoporteJwtPostgres {
         UUID ganaderiaId = crearGanaderia(propietario);
 
         Map<String, Object> esquema = cuerpo(UUID.randomUUID(), UUID.randomUUID());
-        esquema.put("schemaVersion", 2);
+        esquema.put("schemaVersion", 3);
         registrar(propietario.jwt(), ganaderiaId, esquema, true, ORIGEN)
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.codigo").value("ESQUEMA_NO_SOPORTADO"));
@@ -350,7 +424,7 @@ class RegistrarAnimalHttpPostgresIntegrationTest extends SoporteJwtPostgres {
         cuerpo.put("operationId", operacionId);
         cuerpo.put("animalId", animalId);
         cuerpo.put("tipo", "CREAR_ANIMAL");
-        cuerpo.put("schemaVersion", 1);
+        cuerpo.put("schemaVersion", 2);
         cuerpo.put("baseVersion", 0);
         cuerpo.put("sexo", "HEMBRA");
         cuerpo.put("nombre", "Luna");

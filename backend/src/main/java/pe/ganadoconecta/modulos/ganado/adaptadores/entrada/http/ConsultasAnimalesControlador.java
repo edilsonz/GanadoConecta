@@ -100,6 +100,8 @@ public class ConsultasAnimalesControlador {
             String nombre,
             String areteFrente,
             String areteReverso,
+            String coloresIdentificacionTextil,
+            String ubicacionIdentificacionTextil,
             String raza,
             LocalDate fechaNacimiento,
             Boolean nacimientoEstimado,
@@ -113,6 +115,9 @@ public class ConsultasAnimalesControlador {
                     animal.id().valor(), animal.ganaderiaId().valor(),
                     animal.datos().sexo().name(), animal.datos().nombre(),
                     animal.datos().areteFrente(), animal.datos().areteReverso(),
+                    animal.datos().coloresIdentificacionTextil(),
+                    animal.datos().ubicacionIdentificacionTextil() == null
+                            ? null : animal.datos().ubicacionIdentificacionTextil().name(),
                     animal.datos().raza(), animal.datos().fechaNacimiento(),
                     animal.datos().nacimientoEstimado(),
                     animal.datos().categoria() == null

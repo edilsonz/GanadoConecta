@@ -16,7 +16,7 @@
 **Base aprobada:** React PWA/IndexedDB, Spring Boot monolito modular/Clean
 Architecture, PostgreSQL principal, identidad interna única, datos opcionales,
 acceso familiar autorizado, permisos/versiones/duplicados al sincronizar.
-**Decisiones adoptadas por el responsable en esta revisión:** DP02–DP08 según la sección 13, incluidas identidad UUIDv4, sexo obligatorio, alcance individual, conflictos conservadores, máximo offline 168 h sin borrado de pendientes, pruebas y zona America/Lima con instantes UTC. DP01 y SPEC-01 se aprobaron documentalmente el 16 de noviembre de 2026. Desde el 17 de noviembre existe implementación incremental de Identidad y ganaderías; el 18 de noviembre se verificaron T04–T10 para alta, listado y ficha backend y su cliente React online. IndexedDB, PWA, sincronización y E2E real siguen pendientes. No se modifican los RF/ADR aprobados ni se declara completo CA03.
+**Decisiones adoptadas por el responsable en esta revisión:** DP02–DP08 según la sección 13, incluidas identidad UUIDv4, sexo obligatorio, alcance individual, conflictos conservadores, máximo offline 168 h sin borrado de pendientes, pruebas y zona America/Lima con instantes UTC. DP01 y SPEC-01 se aprobaron documentalmente el 16 de noviembre de 2026. Desde el 17 de noviembre existe implementación incremental de Identidad y ganaderías; el 18 de noviembre se verificaron T04–T10 para alta, listado y ficha backend y su cliente React online. El 19 de noviembre de 2026 el responsable autorizó y se verificó el cambio controlado T19 para identificar opcionalmente mediante lana/cinta en las orejas, conservando aretes y UUID interno. IndexedDB, PWA, sincronización y E2E real siguen pendientes. No se modifican los RF/ADR aprobados ni se declara completo CA03.
 
 Fuentes locales: [RF](../../docs/01-analisis-de-sistema/03-requisitos-funcionales.md),
 [HU](../../docs/01-analisis-de-sistema/02-historias-de-usuario.md),
@@ -202,9 +202,9 @@ mediante acción explícita; el cuerpo e IDs permanecen iguales.
 | RN04 | Antes de consultar un recibo previo se revalidan permisos. Solo misma cuenta, ganadería y contenido canónico obtienen el recibo de la misma operación. Colisiones no revelan datos de otro ámbito. |
 | RN05 | Alta usa tipo CREAR_ANIMAL y baseVersion=0 (espera inexistencia); éxito produce version=1 y estado ACTIVO. Una versión base distinta no es una edición: se rechaza como conflicto. |
 | RN06 | Repetición idéntica de operationId devuelve el mismo efecto confirmado, sin una nueva alta; mismo ID con distinto contenido produce conflicto. Otro operationId para un animalId existente también produce conflicto, aunque los datos coincidan. |
-| RN07 | El sexo es obligatorio: MACHO o HEMBRA, sin valor predeterminado. Nombre, arete, raza, edad, peso y fotografía son opcionales; su ausencia no bloquea el alta. Categoría puede quedar sin clasificar. |
+| RN07 | El sexo es obligatorio: MACHO o HEMBRA, sin valor predeterminado. Nombre, arete, identificación textil, raza, edad, peso y fotografía son opcionales; su ausencia no bloquea el alta. Categoría puede quedar sin clasificar. |
 | RN08 | Las seis categorías son declaradas; no se infieren por edad, parto ni rol reproductivo. Toda categoría informada debe ser compatible con el sexo obligatorio. Categoría vacía no crea una séptima categoría de negocio. |
-| RN09 | Arete frontal y reverso admiten texto alfanumérico y marcas familiares. Una coincidencia de arete frontal normalizado en la misma ganadería avisa de posible duplicado, no bloquea ni fusiona animales. |
+| RN09 | Arete frontal y reverso admiten texto alfanumérico y marcas familiares. La identificación textil opcional registra colores de lana/cinta y ubicación IZQUIERDA, DERECHA o AMBAS; ambos datos se informan juntos o ambos quedan nulos. Arete y textil son independientes: se permite cualquiera, ambos o ninguno. Una coincidencia de arete frontal normalizado en la misma ganadería avisa de posible duplicado, no bloquea ni fusiona animales. |
 | RN10 | Los reintentos evitan duplicados técnicos, no detectan de forma infalible que dos personas registraron el mismo vacuno físico con IDs diferentes. La interfaz explica esta limitación. |
 | RN11 | Pendientes locales se particionan por cuenta y ganadería; solo esa cuenta puede enviarlos con permisos actuales. No se guardan historiales completos ni credenciales en el almacenamiento offline de esta SPEC. |
 | RN12 | Redis, IA, notificaciones y fotografías no participan en el alta ni en la transacción; su indisponibilidad no bloquea estos flujos. |
@@ -277,13 +277,15 @@ Se rechazan controles invisibles, salvo salto de línea en observaciones.
 | ganaderiaId | UUID en ruta/contexto | Sí, técnico | Ganadería accesible y activa; no se repite en cuerpo. |
 | animalId | UUIDv4 | Sí, técnico | Formato/versión válidos; no depende del reloj ni del arete. |
 | operationId | UUIDv4 | Sí, técnico | Único por intención; nunca se regenera en reintento. |
-| schemaVersion | Entero | Sí, técnico | 1; otra versión -> 422 ESQUEMA_NO_SOPORTADO. |
+| schemaVersion | Entero | Sí, técnico | 1 conserva el contrato histórico sin textil; 2 incorpora identificación textil. Otra versión -> 422 ESQUEMA_NO_SOPORTADO. |
 | tipo | Enumeración | Sí, técnico | CREAR_ANIMAL. |
 | baseVersion | Entero | Sí, técnico | 0; otro entero -> 409 VERSION_INCOMPATIBLE. |
 | sexo | Enumeración | Sí | MACHO o HEMBRA. Ausencia, null, vacío u otro valor se rechazan en cliente y servidor; sin valor predeterminado ni inferencia. |
 | nombre | Texto o null | No | Máximo 100 caracteres; admite espacios y acentos. |
 | areteFrente | Texto o null | No | Máximo 100; no solo numérico, sin unicidad obligatoria. |
 | areteReverso | Texto o null | No | Máximo 100; marca de propiedad distinta del nombre del animal. |
+| coloresIdentificacionTextil | Texto o null | No | Máximo 100 caracteres Unicode, NFC/trim, sin catálogo nuevo. Se informa junto con ubicación o ambos quedan null. |
+| ubicacionIdentificacionTextil | Enumeración o null | No | IZQUIERDA, DERECHA o AMBAS; se informa junto con colores o ambos quedan null. |
 | raza | Texto o null | No | Máximo 100; declarada, sin catálogo de razas nuevo. |
 | fechaNacimiento | Fecha ISO o null | No | Fecha real, no futura respecto a fecha del servidor en America/Lima; no se impone edad máxima. |
 | nacimientoEstimado | Booleano | Sí si hay fecha | Distingue fecha aproximada; sin fecha se omite o es null. |
@@ -293,7 +295,7 @@ Se rechazan controles invisibles, salvo salto de línea en observaciones.
 Compatibilidad: TERNERA/VAQUILLA/VACA con HEMBRA; TERNERO/TORETE/TORO con MACHO.
 Sin sexo válido no se guarda localmente ni se confirma alta remota; la categoría no sustituye la selección de sexo.
 Cliente valida fecha con su reloj como ayuda; el servidor decide al sincronizar usando America/Lima. Los instantes creadoEn, confirmadoEn, expiraciones y auditoría se almacenan en UTC y se devuelven con zona explícita; fechaNacimiento es fecha de negocio sin hora, no un instante.
-El alta mínima contiene sexo y los datos técnicos generados por la aplicación. La edad es opcional y se deriva solo si existe fecha de nacimiento. Peso y foto no son requisitos; su captura queda fuera de este incremento según sección 4, sin añadir campos productivos ni almacenamiento de imágenes.
+El alta mínima contiene sexo y los datos técnicos generados por la aplicación. La edad es opcional y se deriva solo si existe fecha de nacimiento. Peso y foto no son requisitos; su captura queda fuera de este incremento según sección 4, sin añadir campos productivos ni almacenamiento de imágenes. El UUID interno continúa siendo la única identidad técnica aunque no exista arete ni identificación textil.
 
 Salida de alta: operationId, animalId, resultado APLICADO o REPROCESADO,
 versionCreada=1, confirmadoEn del servidor y advertencias no bloqueantes.
@@ -326,8 +328,8 @@ con precisiones: CA01 exige sexo por la decisión confirmada y CA08 no infiere c
 
 | ID | Dado | Cuando | Entonces |
 |---|---|---|---|
-| CA01 | Propietario/editor autenticado, miembro vigente y ganadería activa | Confirma alta con solo sexo MACHO o HEMBRA y datos técnicos generados | Una ficha ACTIVO, version=1, ganadería correcta y animalId estable; no exige nombre, arete, raza, edad, peso ni foto. Sin sexo válido no hay guardado local ni alta remota. |
-| CA02 | Sexo obligatorio y datos opcionales con letras, números, acentos y ausencias | Guarda/consulta o envía sexo omitido/null/vacío/no admitido | Valores opcionales normalizados se conservan; límites y fechas inválidos se rechazan. Sexo inválido produce error de campo sin escritura; la API devuelve 422. |
+| CA01 | Propietario/editor autenticado, miembro vigente y ganadería activa | Confirma alta con solo sexo MACHO o HEMBRA y datos técnicos generados | Una ficha ACTIVO, version=1, ganadería correcta y animalId estable; no exige nombre, arete, textil, raza, edad, peso ni foto. Sin sexo válido no hay guardado local ni alta remota. |
+| CA02 | Sexo obligatorio y datos opcionales con letras, números, acentos y ausencias | Registra solo arete, solo textil, ambos o ninguno; también envía sexo/textos/ubicación inválidos | Las cuatro combinaciones conservan el mismo UUID interno. Textos normalizados se conservan; textil parcial, ubicación desconocida, límites y fechas inválidos se rechazan con 422 sin escritura. |
 | CA03 | Contrato AU01–AU08 en implementación incremental y cuentas de dos ganaderías | Se prueban registro/login, creación inicial y cada rol con sesión real | Registro no concede roles; ganadería/propietario se crean juntos. Propietario/editor crean y leen; lector solo lee; anónimo -> 401, ajeno/rol insuficiente -> 403/404 seguros. Pruebas sintéticas de editor/lector no equivalen a alta familiar real; AU01–AU08 y sus comprobaciones deben pasar antes de habilitar animales reales. |
 | CA04 | Dispositivo preparado offline con permiso local vigente | Confirma alta, reinicia aplicación y reconecta | Pendiente persiste; tras autorización actual se confirma una sola ficha con los mismos IDs. |
 | CA05 | Alta confirmada cuya respuesta se perdió | Se reenvía concurrentemente el mismo sobre, incluso desde dos pestañas | Un Animal y un recibo de éxito; misma confirmación y ningún efecto adicional. |
@@ -338,7 +340,7 @@ con precisiones: CA01 exige sexo por la decisión confirmada y CA08 no infiere c
 | CA10 | Alta con baseVersion distinta de 0 o esquema no soportado | Llega a API | 409 de versión o 422 de esquema, respectivamente; sin modificar Animal ni recibo de éxito. |
 | CA11 | Fallo de PostgreSQL entre alta y recibo, o fallo local al guardar confirmación | Se reintenta | No queda alta parcial sin recibo; una confirmación remota recuperable no origina duplicado. |
 | CA12 | JWT expirado, sesión vencida/revocada o renovación usada/incierta, con pendientes | Se renueva, reautentica o recupera red | Rotación de un solo uso emite nuevo JWT y cookie sin ampliar 24 h; replay de refresh consumido revoca familia y rechaza JWT previos por estado de sesión. Respuesta de refresh incierta exige login sin retry automático. Cola e IDs se conservan; revalidar identidad/ganadería/rol antes de sincronizar. No hay invalidez automática del JWT. |
-| CA13 | Mismo arete frontal en una ganadería o misma descripción física con IDs distintos | Se registra otra alta intencionada | Advierte coincidencia conocida sin fusionar/bloquear; no revela coincidencias de otra ganadería ni promete deduplicación física. |
+| CA13 | Mismo arete frontal en una ganadería o misma descripción física/textil con IDs distintos | Se registra otra alta intencionada | Solo el arete frontal conserva la advertencia conocida; textil no es clave ni fusiona/bloquea. No revela coincidencias de otra ganadería ni promete deduplicación física. |
 | CA14 | Contexto validado hace 168 h y pendientes/resultados desconocidos | Vence ventana, cierra sesión/cambia cuenta o revalida después | No borra/modifica sobres/IDs por plazo o logout. Bloquea acceso/nuevas altas al vencer; logout limpia contexto/copias sincronizadas y conserva pendientes bloqueados. Cierre offline no promete revocación remota; al volver la red se procesa antes de reactivar acceso. Otra cuenta no ve/envía pendientes; solo origen autenticado y con permisos los recupera o descarta explícitamente. |
 | CA15 | Lista paginada online y algunas páginas disponibles offline | Consulta «Mi ganado» y ficha en móvil/escritorio | Respuestas autorizadas, orden estable, sin duplicar provisional/confirmado; copia incompleta etiquetada con fecha y cobertura. |
 | CA16 | Navegador sin preparación, sin UUID seguro o IndexedDB fallido | Intenta registrar offline | Informa la limitación sin afirmar guardado ni generar IDs inseguros; una respuesta mal formada tampoco confirma. |
@@ -357,13 +359,13 @@ navegador real y su IndexedDB además de dobles.
 
 | ID | Tipo y escenario | Criterios |
 |---|---|---|
-| PU01 | Validadores: sexo omitido/null/vacío/inválido, MACHO/HEMBRA válidos, opcionales ausentes, límites 100/101 y 2000/2001, Unicode, fechas y categorías. | CA01, CA02, CA08 |
+| PU01 | Validadores: sexo omitido/null/vacío/inválido, MACHO/HEMBRA válidos, opcionales ausentes, arete/textil en cuatro combinaciones, par textil completo, ubicaciones, límites 100/101 y 2000/2001, Unicode, fechas y categorías. | CA01, CA02, CA08 |
 | PU02 | Autorización por cuenta/ganadería/rol/estado; caso de uso con repositorios simulados. | CA03, CA06 |
 | PU03 | Generación UUID inyectable, sobre inmutable, estados, backoff y parser de confirmaciones. | CA04, CA07, CA10, CA12, CA16 |
 | PU04 | Normalización y huella de operación, IDs distintos/contenido cambiado, deduplicación de vistas. | CA05, CA09, CA13, CA15 |
 | PI01 | Contrato real AU01–AU08: registro, login, sesión, CSRF, propietario inicial atómico, roles por ganadería, revocación y acceso cruzado; fixtures familiares solo test. | CA03, CA06, CA12, CA14 |
 | PI02 | Concurrencia, unicidad, respuesta perdida, rollback entre Animal/recibo, revocación concurrente ordenada. | CA05, CA06, CA09, CA11 |
-| PI03 | Sexo obligatorio en API: ausente/null/vacío/inválido -> 422 sin alta; esquema/versiones/campos no admitidos, listado estable, aislamiento y advertencia arete. | CA01, CA02, CA08, CA10, CA13, CA15 |
+| PI03 | Sexo obligatorio en API: ausente/null/vacío/inválido -> 422 sin alta; esquemas v1/v2, textil, versiones/campos no admitidos, listado estable, aislamiento, compatibilidad de registros anteriores y advertencia arete. | CA01, CA02, CA08, CA10, CA13, CA15 |
 | PI04 | Cliente/IndexedDB real: sexo inválido offline no crea provisional/cola; commit/abort, cuota simulada, recuperación tras recarga y fallo al confirmar localmente. | CA01, CA02, CA04, CA07, CA11, CA16 |
 | PI05 | Arranque y consultas sin conexión con Redis/IA/notificaciones; sin dependencias en flujo privado. | CA17 |
 | EE01 | Registro/login reales -> crear ganadería/propietario -> alta con MACHO/HEMBRA -> listado/ficha. Editor/lector por fixtures aislados, misma autenticación, sin UI de invitaciones; 360 px y escritorio. | CA01, CA02, CA03, CA08, CA15 |

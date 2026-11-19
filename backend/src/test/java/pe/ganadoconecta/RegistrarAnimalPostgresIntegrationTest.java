@@ -104,8 +104,8 @@ class RegistrarAnimalPostgresIntegrationTest extends SoporteJwtPostgres {
         soloReverso = new SolicitudRegistroAnimal(soloReverso.ganaderiaId(),
                 soloReverso.animalId(), soloReverso.operacionId(), soloReverso.tipo(),
                 soloReverso.schemaVersion(), soloReverso.baseVersion(),
-                new DatosAnimal(Sexo.HEMBRA, "Nube", null, "A-10", "Criolla",
-                        null, null, Categoria.VAQUILLA, null));
+                new DatosAnimal(Sexo.HEMBRA, "Nube", null, "A-10", null, null,
+                        "Criolla", null, null, Categoria.VAQUILLA, null));
         ResultadoRegistroAnimal reverso = registrar.ejecutar(soloReverso,
                 escenario.editorId(), escenario.sesionEditorId());
 
@@ -336,8 +336,8 @@ class RegistrarAnimalPostgresIntegrationTest extends SoporteJwtPostgres {
         return new SolicitudRegistroAnimal(new GanaderiaId(ganaderia),
                 new AnimalId(animal), new OperacionId(operacion),
                 "CREAR_ANIMAL", 1, 0,
-                new DatosAnimal(Sexo.HEMBRA, nombre, arete, null, "Criolla",
-                        null, null, Categoria.VAQUILLA, null));
+                new DatosAnimal(Sexo.HEMBRA, nombre, arete, null, null, null,
+                        "Criolla", null, null, Categoria.VAQUILLA, null));
     }
 
     private void bloquearGanaderia(UUID ganaderiaId) {

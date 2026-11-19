@@ -53,6 +53,8 @@ const animal = {
   nombre: 'Luna',
   areteFrente: 'A-15',
   areteReverso: null,
+  coloresIdentificacionTextil: 'rojo y blanco',
+  ubicacionIdentificacionTextil: 'AMBAS' as const,
   raza: 'Brown Swiss',
   fechaNacimiento: '2025-01-10',
   nacimientoEstimado: false,
@@ -85,6 +87,8 @@ describe('Panel de animales', () => {
     expect(await screen.findByRole('heading', { name: 'Luna' })).toBeInTheDocument()
     expect(screen.getByText('Brown Swiss')).toBeInTheDocument()
     expect(screen.getByText('A-15')).toBeInTheDocument()
+    expect(screen.getAllByText('rojo y blanco').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Ambas orejas')).toHaveLength(2)
     expect(consultarAnimal).toHaveBeenCalledWith(ganaderia.id, animal.animalId, sesion.accessToken)
   })
 
@@ -143,8 +147,56 @@ describe('Panel de animales', () => {
       operationId: operacionUuid,
       sexo: 'HEMBRA',
       nombre: 'Luna',
+      schemaVersion: 2,
     }))
     expect(solicitud).not.toHaveProperty('usuarioId')
+  })
+
+  it('registra solo identificación de lana o cinta con sus dos datos', async () => {
+    vi.mocked(listarAnimales).mockResolvedValue(pagina([]))
+    vi.mocked(registrarAnimal).mockResolvedValue({
+      operationId: operacionUuid,
+      animalId: animalUuid,
+      resultado: 'APLICADO',
+      versionCreada: 1,
+      confirmadoEn: '2026-11-19T15:00:00Z',
+      advertencias: [],
+    })
+    vi.spyOn(crypto, 'randomUUID')
+      .mockReturnValueOnce(animalUuid)
+      .mockReturnValueOnce(operacionUuid)
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+    await screen.findByText(/Aún no hay animales/)
+
+    fireEvent.change(screen.getByLabelText('Sexo *'), { target: { value: 'HEMBRA' } })
+    fireEvent.change(screen.getByLabelText('Colores de la lana o cinta'), {
+      target: { value: ' rojo y blanco ' },
+    })
+    fireEvent.change(screen.getByLabelText('Ubicación'), { target: { value: 'AMBAS' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar animal' }))
+
+    await waitFor(() => expect(registrarAnimal).toHaveBeenCalledOnce())
+    expect(vi.mocked(registrarAnimal).mock.calls[0][1]).toEqual(expect.objectContaining({
+      schemaVersion: 2,
+      coloresIdentificacionTextil: 'rojo y blanco',
+      ubicacionIdentificacionTextil: 'AMBAS',
+    }))
+    expect(vi.mocked(registrarAnimal).mock.calls[0][1]).not.toHaveProperty('areteFrente')
+  })
+
+  it('rechaza identificación textil incompleta antes de enviar', async () => {
+    vi.mocked(listarAnimales).mockResolvedValue(pagina([]))
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+    await screen.findByText(/Aún no hay animales/)
+
+    fireEvent.change(screen.getByLabelText('Sexo *'), { target: { value: 'MACHO' } })
+    fireEvent.change(screen.getByLabelText('Colores de la lana o cinta'), {
+      target: { value: 'azul' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar animal' }))
+
+    expect(await screen.findByText(/Selecciona la oreja/)).toBeInTheDocument()
+    expect(registrarAnimal).not.toHaveBeenCalled()
   })
 
   it('reintenta una respuesta incierta con los mismos identificadores', async () => {

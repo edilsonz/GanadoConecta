@@ -139,6 +139,8 @@ class ConsultarAnimalesHttpPostgresIntegrationTest extends SoporteJwtPostgres {
                 .andExpect(jsonPath("$.ganaderiaId").value(ganaderiaId.toString()))
                 .andExpect(jsonPath("$.sexo").value("HEMBRA"))
                 .andExpect(jsonPath("$.nombre").value("Peña"))
+                .andExpect(jsonPath("$.coloresIdentificacionTextil").isEmpty())
+                .andExpect(jsonPath("$.ubicacionIdentificacionTextil").isEmpty())
                 .andExpect(jsonPath("$.categoria").value("VAQUILLA"))
                 .andExpect(jsonPath("$.estado").value("ACTIVO"))
                 .andExpect(jsonPath("$.version").value(1))
