@@ -51,7 +51,7 @@ persistencia y el rechazo de respuestas que mezclen otra ganadería.
 
 No se ejecutó Playwright ni se documentó una revisión visual sistemática en
 320/360/390/768/1440 px en este incremento. La comprobación manual de FIONA no
-incluyó los campos textiles añadidos posteriormente por T19. Tampoco se
+incluyó los campos textiles añadidos posteriormente por T19-ID. Tampoco se
 repitieron aquí las 124 pruebas backend porque T10 no modificó backend. Estas
 son limitaciones, no resultados aprobados.
 

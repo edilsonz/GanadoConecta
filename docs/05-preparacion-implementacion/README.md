@@ -23,9 +23,10 @@
 > [evidencia T08](16-endpoint-registro-animales.md) registra el endpoint seguro de
 > alta individual, la [evidencia T09](17-consulta-animales.md) cubre listado,
 > ficha y paginación autorizados, la [evidencia T10](18-animales-react.md)
-> documenta el cliente React online y la [evidencia T19](19-identificacion-externa-animales.md)
-> cubre la ampliación compatible de aretes y lana/cinta. El funcionamiento
-> offline continúa pendiente. Los estados de propuesta siguientes describen la
+> documenta el cliente React online, la [evidencia T19-ID](19-identificacion-externa-animales.md)
+> cubre la ampliación compatible de aretes y lana/cinta, y la
+> [evidencia T11](20-indexeddb-operaciones-pendientes.md) inicia la persistencia
+> local de la cola. El funcionamiento offline completo continúa pendiente. Los estados de propuesta siguientes describen la
 > preparación arquitectónica original, no acreditan implementación de SPEC-01.
 
 > **Estado de consolidación:** las 16 decisiones aprobadas por el responsable

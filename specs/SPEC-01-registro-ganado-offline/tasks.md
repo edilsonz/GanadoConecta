@@ -1,6 +1,6 @@
 # SPEC-01 — Tareas incrementales propuestas
 
-**Estado: Aprobada — Implementación en curso.** T01 documental fue completada por autorización del responsable el 16 de noviembre de 2026. El 17 de noviembre se implementaron AU01, AU02–AU04 con cliente React, creación/listado/selección de ganaderías, contexto online `/acceso` y revocación AU07. El 18 de noviembre se completaron T04–T10: PostgreSQL/REST para alta, listado y ficha, más su cliente React online; IndexedDB, PWA y sincronización siguen pendientes. Depende de [spec.md](spec.md) y [plan.md](plan.md).
+**Estado: Aprobada — Implementación en curso.** T01 documental fue completada por autorización del responsable el 16 de noviembre de 2026. El 17 de noviembre se implementaron AU01, AU02–AU04 con cliente React, creación/listado/selección de ganaderías, contexto online `/acceso` y revocación AU07. El 18 de noviembre se completaron T04–T10: PostgreSQL/REST para alta, listado y ficha, más su cliente React online. El 19 se implementó el primer incremento T11 de persistencia IndexedDB; PWA, autorización offline, integración y sincronización siguen pendientes. Depende de [spec.md](spec.md) y [plan.md](plan.md).
 
 ## 0. Aprobación y dependencias
 
@@ -57,7 +57,7 @@ requisito para ejecutar pruebas de integración en entornos aislados.
 | ID | Tarea | Depende de | Verificación / CA |
 |---|---|---|---|
 | T10 | **COMPLETADA PARA EL CLIENTE ONLINE:** formulario y lista/ficha responsivos en español; `/acceso`, sexo obligatorio, opcionales aprobados, permisos visibles y replay en memoria del mismo sobre. No incluye IndexedDB/offline ni acredita aún navegador/teclado/resoluciones reales. | T01, T03 | Componentes/cliente: 14 pruebas dirigidas; regresión frontend 51/51, TypeScript y build correctos. EE01 y CA01/CA02/CA03/CA08/CA15 parciales. [Evidencia](../../docs/05-preparacion-implementacion/18-animales-react.md). |
-| T11 | Implementar adaptador UUIDv4 y almacenamiento IndexedDB por cuenta/ganadería, transacción de provisional+cola y fallos de cuota. | T03, T06 | PU03/PI04; CA04/CA07/CA11/CA16. |
+| T11 | **PARCIAL:** adaptador IndexedDB nativo para operaciones pendientes implementado con sobre/IDs inmutables, aislamiento por cuenta/ganadería, estados, errores seguros, reapertura y fallos de escritura. No se conecta aún al formulario; faltan provisional+cola atómicos y navegador real. | T03, T06 | PU03/PI04 parciales; CA04/CA07/CA11/CA14/CA16. [Evidencia](../../docs/05-preparacion-implementacion/20-indexeddb-operaciones-pendientes.md). |
 | T12 | Preparar recursos PWA estáticos y opt-in offline; páginas/fichas descargadas, contexto recordado y autorización de 168 h sin TTL ni borrado de pendientes. | T09, T10, T11 | EE02/EE03; sin cachear respuestas privadas en Service Worker. CA04/CA14/CA15/CA16. |
 | T13 | Implementar cliente HTTP y orquestador de cola con cuerpo inmutable, lease entre pestañas, backoff/Retry-After y recuperación tras recarga. | T08, T11 | PU03/PU04/PI04; CA04/CA05/CA07/CA09/CA10/CA11/CA12/CA16. |
 | T14 | Mostrar estados, errores y conflictos; confirmar localmente por IDs, no degradar versiones remotas y no reenviar como otra alta. | T10, T13 | EE02/EE04; CA05/CA07/CA09/CA10/CA11/CA15. |
@@ -67,7 +67,7 @@ requisito para ejecutar pruebas de integración en entornos aislados.
 
 | ID | Tarea | Depende de | Verificación / CA |
 |---|---|---|---|
-| T19 | **IMPLEMENTADA Y VERIFICADA:** extender dominio, API, PostgreSQL y React con colores+ubicación de lana/cinta como par opcional; conservar aretes, UUID e idempotencia v1 mediante schema v2 y V6 aditiva. | T08–T10 | Solo arete, solo textil, ambos, ninguno; ubicación/colores inválidos, permisos, replay v1/v2, consulta y compatibilidad de filas previas. CA01/CA02/CA03/CA05/CA09/CA13/CA15. Evidencia: `docs/05-preparacion-implementacion/19-identificacion-externa-animales.md`. |
+| T19-ID | **IMPLEMENTADA Y VERIFICADA:** extender dominio, API, PostgreSQL y React con colores+ubicación de lana/cinta como par opcional; conservar aretes, UUID e idempotencia v1 mediante schema v2 y V6 aditiva. Sufijo `-ID` evita colisionar con la tarea superior T19 de carga. | T08–T10 | Solo arete, solo textil, ambos, ninguno; ubicación/colores inválidos, permisos, replay v1/v2, consulta y compatibilidad de filas previas. CA01/CA02/CA03/CA05/CA09/CA13/CA15. Evidencia: `docs/05-preparacion-implementacion/19-identificacion-externa-animales.md`. |
 
 ## 3. Pruebas e integración del flujo
 

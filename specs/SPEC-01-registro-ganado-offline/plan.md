@@ -1,7 +1,7 @@
 # SPEC-01 — Plan técnico propuesto
 
 **Estado: Aprobada — Implementación en curso.** Plan aprobado documentalmente junto con
-[spec.md](spec.md) y el contrato DP01, el 16 de noviembre de 2026 por autorización del responsable. La implementación comenzó con T02.1 el 17 de noviembre; T04–T10 se verificaron el 18 de noviembre. El cliente React online de animales existe; IndexedDB, PWA y sincronización permanecen pendientes. Este plan no modifica los ADR aprobados. [Tareas](tasks.md).
+[spec.md](spec.md) y el contrato DP01, el 16 de noviembre de 2026 por autorización del responsable. La implementación comenzó con T02.1 el 17 de noviembre; T04–T10 se verificaron el 18 de noviembre y el primer almacenamiento T11 el 19. El cliente React online de animales y el adaptador de operaciones pendientes existen; su integración, PWA, autorización offline y sincronización permanecen pendientes. Este plan no modifica los ADR aprobados. [Tareas](tasks.md).
 
 ## 1. Arquitectura y límites
 
@@ -397,8 +397,15 @@ anuncios, ni se registran pagos, ventas, notificaciones o llamadas de IA.
 
 ## 6. IndexedDB, PWA y permisos locales
 
-Propuesta: adaptador con API nativa IndexedDB; sin añadir biblioteca hasta
-revisión. DB con object stores `animalesConfirmados`, `animalesPendientes`,
+El primer incremento de T11 implementa con API nativa IndexedDB, sin biblioteca
+de ejecución adicional, el object store `operacionesPendientes`. Guarda el sobre
+inmutable, cuenta, ganadería, estado, error seguro y fechas; usa índices únicos
+para operationId y animal pendiente por contexto. Sus consultas exigen cuenta y
+ganadería. No aplica TTL ni limpieza por edad. Rechaza propiedades no admitidas
+para impedir que tokens o contraseñas entren en el sobre. La integración con UI,
+el contexto de autorización y el provisional atómico siguen pendientes.
+
+El diseño completo mantiene previstos los object stores `animalesConfirmados`, `animalesPendientes`,
 `operaciones` y `contextos`. Claves incluyen cuentaId/ganaderiaId; operación
 única por operationId y pendientes únicos por animalId dentro de su contexto.
 No guardar secretos ni respuestas privadas en Service Worker/Cache Storage.
@@ -530,9 +537,9 @@ capacidad demostrada. No ejecutar carga mientras no exista el flujo funcional.
 DP01–DP08 y SPEC-01 aprobadas documentalmente. Ejecutar sus tareas y verificar especialmente contrato de acceso,
 sexo obligatorio confirmado, límites/zonas horarias, UUID/recibos, recuperación y retención local.
 El despliegue y las versiones de herramientas se concretarán antes del código
-que las requiera. Membresías y autorización protegen T07–T09,
+que las requiera. Membresías y autorización protegen T07–T09.
 El cliente online T10 ya consume T08/T09 con revalidación de `/acceso`; la
-ausencia de IndexedDB, PWA, sincronización y E2E real impide declarar completo
+falta de integración de T11, PWA, autorización local, sincronización y E2E real impide declarar completo
 el alcance Offline-First de SPEC-01.
 La UI de registro no amplía permisos para administrar ganaderías.
 

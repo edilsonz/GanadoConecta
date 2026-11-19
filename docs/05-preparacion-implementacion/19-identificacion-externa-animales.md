@@ -1,4 +1,4 @@
-# T19 — Identificación externa con aretes y lana/cinta
+# T19-ID — Identificación externa con aretes y lana/cinta
 
 Fecha: 19 de noviembre de 2026, America/Lima. Estado: **implementada y
 verificada automáticamente; revisión manual de los campos nuevos pendiente**.
@@ -45,7 +45,7 @@ Playwright ni una nueva revisión visual en Chrome.
 
 | Elemento | Estado |
 |---|---|
-| T19 | Implementada en dominio, API, PostgreSQL y React. |
+| T19-ID | Implementada en dominio, API, PostgreSQL y React. El sufijo distingue este cambio controlado de la tarea superior T19 de carga. |
 | CA01 / CA02 | Las cuatro combinaciones y validaciones textiles están cubiertas online. |
 | CA05 / CA09 | Replay v1 compatible y replay v2 idempotente verificados. |
 | CA03 / CA13 / CA15 | Permisos, no deduplicación por textil y exposición en listado/ficha conservados. |
@@ -53,4 +53,4 @@ Playwright ni una nueva revisión visual en Chrome.
 
 Pendiente para revisión humana: comprobar en Chrome la ergonomía de los campos
 de colores/ubicación y la visualización de una ficha creada con lana/cinta. No
-se implementaron vacunas, ventas, IA ni otras funciones fuera de T19.
+se implementaron vacunas, ventas, IA ni otras funciones fuera de T19-ID.

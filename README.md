@@ -421,6 +421,7 @@ y la [evidencia de revocación AU07](docs/05-preparacion-implementacion/14-revoc
 y la [evidencia del núcleo T04–T07](docs/05-preparacion-implementacion/15-nucleo-registro-animales.md),
 y las evidencias del [endpoint T08](docs/05-preparacion-implementacion/16-endpoint-registro-animales.md),
 [consulta T09](docs/05-preparacion-implementacion/17-consulta-animales.md),
-[cliente React T10](docs/05-preparacion-implementacion/18-animales-react.md) e
-[identificación externa T19](docs/05-preparacion-implementacion/19-identificacion-externa-animales.md),
+[cliente React T10](docs/05-preparacion-implementacion/18-animales-react.md),
+[identificación externa T19-ID](docs/05-preparacion-implementacion/19-identificacion-externa-animales.md) y
+[almacenamiento IndexedDB T11](docs/05-preparacion-implementacion/20-indexeddb-operaciones-pendientes.md),
 para resultados realmente ejecutados y limitaciones.
