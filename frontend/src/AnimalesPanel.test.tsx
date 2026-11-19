@@ -16,6 +16,10 @@ import {
   prepararAccesoOfflineConfirmado,
   requerirRevalidacionOffline,
 } from './registroAnimalesOffline'
+import {
+  ErrorSincronizacion,
+  sincronizarPendientesManualmente,
+} from './sincronizacionAnimales'
 
 vi.mock('./animalesApi', async importOriginal => {
   const original = await importOriginal<typeof import('./animalesApi')>()
@@ -38,6 +42,16 @@ vi.mock('./registroAnimalesOffline', () => ({
   listarPendientesAutorizados: vi.fn(),
   prepararAccesoOfflineConfirmado: vi.fn(),
   requerirRevalidacionOffline: vi.fn(),
+}))
+
+vi.mock('./sincronizacionAnimales', () => ({
+  ErrorSincronizacion: class ErrorSincronizacion extends Error {
+    constructor(public readonly tipo: string) {
+      super(tipo)
+      this.name = 'ErrorSincronizacion'
+    }
+  },
+  sincronizarPendientesManualmente: vi.fn(),
 }))
 
 const ganaderia = {
@@ -95,6 +109,10 @@ function operacionLocal(payload: Parameters<typeof guardarRegistroPendienteAutor
     ultimoError: null,
     creadoEnLocal: '2026-11-19T15:00:00Z',
     actualizadoEnLocal: '2026-11-19T15:00:00Z',
+    intentos: 0,
+    leaseId: null,
+    leaseHasta: null,
+    confirmacion: null,
   }
 }
 
@@ -113,6 +131,7 @@ describe('Panel de animales', () => {
       autorizacion: 'AUTORIZADA_ESCRITURA', contexto: null, operaciones: [],
     })
     vi.mocked(guardarRegistroPendienteAutorizado).mockReset()
+    vi.mocked(sincronizarPendientesManualmente).mockReset()
     vi.mocked(consultarAccesoGanaderia).mockResolvedValue(accesoPropietario)
     vi.mocked(listarAnimales).mockResolvedValue(pagina())
   })
@@ -498,5 +517,111 @@ describe('Panel de animales', () => {
     vista.rerender(<AnimalesPanel ganaderia={{ ...ganaderia, id: 'otra-ganaderia' }}
       sesion={sesion} onSesionInvalida={invalidar} />)
     await waitFor(() => expect(invalidar).toHaveBeenCalledOnce())
+  })
+
+  it('sincroniza pendientes solo por acción explícita y actualiza el listado confirmado', async () => {
+    const payload = {
+      operationId: operacionUuid,
+      animalId: animalUuid,
+      tipo: 'CREAR_ANIMAL' as const,
+      schemaVersion: 2 as const,
+      baseVersion: 0 as const,
+      sexo: 'HEMBRA' as const,
+      nombre: 'Offline local',
+    }
+    vi.mocked(listarPendientesAutorizados)
+      .mockResolvedValueOnce({
+        autorizacion: 'AUTORIZADA_ESCRITURA', contexto: null,
+        operaciones: [operacionLocal(payload)],
+      })
+      .mockResolvedValueOnce({
+        autorizacion: 'AUTORIZADA_ESCRITURA', contexto: null, operaciones: [],
+      })
+    vi.mocked(listarAnimales).mockReset()
+      .mockResolvedValueOnce(pagina([]))
+      .mockResolvedValueOnce(pagina([animal]))
+    vi.mocked(sincronizarPendientesManualmente).mockResolvedValue({
+      total: 1,
+      sincronizadas: 1,
+      confirmadasRemotamente: 1,
+      fallidas: 0,
+      ocupadas: 0,
+      operaciones: [{
+        operationId: operacionUuid,
+        animalId: animalUuid,
+        estado: 'SINCRONIZADA',
+        confirmadaRemotamente: true,
+        resultadoRemoto: 'APLICADO',
+      }],
+    })
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+
+    const boton = await screen.findByRole('button', { name: 'Sincronizar pendientes' })
+    expect(screen.getByText('Offline local')).toBeInTheDocument()
+    expect(sincronizarPendientesManualmente).not.toHaveBeenCalled()
+
+    fireEvent.click(boton)
+
+    await waitFor(() => expect(sincronizarPendientesManualmente).toHaveBeenCalledOnce())
+    expect(sincronizarPendientesManualmente).toHaveBeenCalledWith(
+      sesion, ganaderia.id, expect.any(AbortSignal),
+    )
+    expect(await screen.findByText('1 registro pendiente sincronizado correctamente.'))
+      .toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /Luna/ })).toBeInTheDocument()
+    expect(screen.queryByText('Offline local')).not.toBeInTheDocument()
+  })
+
+  it('conserva visible un pendiente ante un fallo de red y permite reintento manual', async () => {
+    vi.mocked(listarAnimales).mockResolvedValue(pagina([]))
+    const payload = {
+      operationId: operacionUuid,
+      animalId: animalUuid,
+      tipo: 'CREAR_ANIMAL' as const,
+      schemaVersion: 2 as const,
+      baseVersion: 0 as const,
+      sexo: 'MACHO' as const,
+      nombre: 'Pendiente seguro',
+    }
+    vi.mocked(listarPendientesAutorizados).mockResolvedValue({
+      autorizacion: 'AUTORIZADA_ESCRITURA', contexto: null,
+      operaciones: [operacionLocal(payload)],
+    })
+    vi.mocked(sincronizarPendientesManualmente)
+      .mockRejectedValue(new ErrorSincronizacion('conexion'))
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Sincronizar pendientes' }))
+
+    expect(await screen.findByText(/Las operaciones permanecen guardadas/)).toBeInTheDocument()
+    expect(screen.getByText('Pendiente seguro')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sincronizar pendientes' })).toBeEnabled()
+  })
+
+  it('invalida la vista al fallar la revalidación de sesión durante sincronización', async () => {
+    vi.mocked(listarAnimales).mockResolvedValue(pagina([]))
+    const payload = {
+      operationId: operacionUuid,
+      animalId: animalUuid,
+      tipo: 'CREAR_ANIMAL' as const,
+      schemaVersion: 2 as const,
+      baseVersion: 0 as const,
+      sexo: 'HEMBRA' as const,
+    }
+    vi.mocked(listarPendientesAutorizados).mockResolvedValue({
+      autorizacion: 'AUTORIZADA_ESCRITURA', contexto: null,
+      operaciones: [operacionLocal(payload)],
+    })
+    vi.mocked(sincronizarPendientesManualmente)
+      .mockRejectedValue(new ErrorSincronizacion('sesion'))
+    const invalidar = vi.fn()
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={invalidar} />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Sincronizar pendientes' }))
+
+    await waitFor(() => expect(invalidar).toHaveBeenCalledOnce())
+    expect(requerirRevalidacionOffline).toHaveBeenCalledWith({
+      usuarioId: sesion.usuarioId, ganaderiaId: ganaderia.id,
+    })
   })
 })

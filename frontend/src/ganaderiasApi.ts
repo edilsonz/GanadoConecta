@@ -82,6 +82,7 @@ export async function listarGanaderias(accessToken: string): Promise<Ganaderia[]
 export async function consultarAccesoGanaderia(
   ganaderiaId: string,
   accessToken: string,
+  signal?: AbortSignal,
 ): Promise<AccesoGanaderia> {
   try {
     const response = await fetch(`/api/v1/ganaderias/${encodeURIComponent(ganaderiaId)}/acceso`, {
@@ -92,6 +93,7 @@ export async function consultarAccesoGanaderia(
         Accept: 'application/json',
         Authorization: `Bearer ${accessToken}`,
       },
+      signal,
     })
     const body = await leerJson(response)
     if (response.ok && esAccesoGanaderia(body) && body.ganaderiaId === ganaderiaId) return body

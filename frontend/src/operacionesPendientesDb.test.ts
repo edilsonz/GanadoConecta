@@ -16,6 +16,8 @@ const operacion3 = '77777777-7777-4777-8777-777777777777'
 const animal1 = '88888888-8888-4888-8888-888888888888'
 const animal2 = '99999999-9999-4999-8999-999999999999'
 const animal3 = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+const lease1 = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+const lease2 = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'
 
 function payload(
   operationId = operacion1,
@@ -146,6 +148,71 @@ describe('almacenamiento IndexedDB de operaciones pendientes', () => {
     await expect(almacen.obtener(ambito, operacion1)).resolves.toMatchObject({
       operationId: operacion1,
       estado: 'SINCRONIZADO',
+    })
+  })
+
+  it('reclama atómicamente con lease y recupera un envío abandonado al vencer', async () => {
+    const fabrica = new FabricaIndexedDbFalsa()
+    let ahora = new Date('2026-11-19T12:00:00Z')
+    const almacen = crearAlmacen(fabrica, () => ahora)
+    const ambito = { usuarioId: usuario1, ganaderiaId: ganaderia1 }
+    await almacen.guardarPendiente(ambito, payload())
+
+    await expect(almacen.reclamarParaSincronizar(ambito, operacion1, lease1))
+      .resolves.toMatchObject({
+        estado: 'SINCRONIZANDO', leaseId: lease1, intentos: 1,
+      })
+    await expect(almacen.reclamarParaSincronizar(ambito, operacion1, lease2))
+      .resolves.toBeNull()
+
+    ahora = new Date('2026-11-19T12:01:01Z')
+    await expect(almacen.reclamarParaSincronizar(ambito, operacion1, lease2))
+      .resolves.toMatchObject({
+        estado: 'SINCRONIZANDO', leaseId: lease2, intentos: 2,
+      })
+  })
+
+  it('conserva el recibo idempotente y la evidencia local al confirmar', async () => {
+    const almacen = crearAlmacen(new FabricaIndexedDbFalsa())
+    const ambito = { usuarioId: usuario1, ganaderiaId: ganaderia1 }
+    await almacen.guardarPendiente(ambito, payload())
+    await almacen.reclamarParaSincronizar(ambito, operacion1, lease1)
+    const confirmacion = {
+      operationId: operacion1,
+      animalId: animal1,
+      resultado: 'REPROCESADO' as const,
+      versionCreada: 1 as const,
+      confirmadoEn: '2026-11-19T12:00:01Z',
+      advertencias: [],
+    }
+
+    await expect(almacen.finalizarSincronizacion(
+      ambito, operacion1, lease1, confirmacion,
+    )).resolves.toMatchObject({
+      estado: 'SINCRONIZADO', confirmacion, leaseId: null,
+    })
+    await expect(almacen.listarPendientes(ambito)).resolves.toEqual([])
+    await expect(almacen.obtener(ambito, operacion1)).resolves.toMatchObject({
+      payload: payload(), confirmacion,
+    })
+  })
+
+  it('libera el lease con un error seguro sin cambiar cuerpo ni IDs', async () => {
+    const almacen = crearAlmacen(new FabricaIndexedDbFalsa())
+    const ambito = { usuarioId: usuario1, ganaderiaId: ganaderia1 }
+    await almacen.guardarPendiente(ambito, payload())
+    await almacen.reclamarParaSincronizar(ambito, operacion1, lease1)
+
+    await expect(almacen.fallarSincronizacion(
+      ambito,
+      operacion1,
+      lease1,
+      'ERROR_REINTENTABLE',
+      'RED',
+    )).resolves.toMatchObject({
+      estado: 'ERROR_REINTENTABLE', ultimoError: 'RED',
+      operationId: operacion1, animalId: animal1, payload: payload(),
+      leaseId: null, leaseHasta: null,
     })
   })
 

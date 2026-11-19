@@ -48,6 +48,17 @@ export type SolicitudRegistroAnimal = {
   observaciones?: string
 }
 
+export type SolicitudRegistroAnimalV1 = Omit<SolicitudRegistroAnimal,
+  'schemaVersion' | 'coloresIdentificacionTextil' | 'ubicacionIdentificacionTextil'> & {
+    schemaVersion: 1
+    coloresIdentificacionTextil?: never
+    ubicacionIdentificacionTextil?: never
+  }
+
+export type SolicitudRegistroAnimalCompatible =
+  | SolicitudRegistroAnimal
+  | SolicitudRegistroAnimalV1
+
 export type ResultadoRegistroAnimal = {
   operationId: string
   animalId: string
@@ -164,7 +175,7 @@ function esPagina(valor: unknown, ganaderiaId: string): valor is PaginaAnimales 
     && Number.isFinite(Date.parse(valor.consultadoEn))
 }
 
-function esResultado(valor: unknown, solicitud: SolicitudRegistroAnimal): valor is ResultadoRegistroAnimal {
+function esResultado(valor: unknown, solicitud: SolicitudRegistroAnimalCompatible): valor is ResultadoRegistroAnimal {
   return esObjeto(valor)
     && valor.operationId === solicitud.operationId
     && valor.animalId === solicitud.animalId
@@ -227,9 +238,10 @@ export async function consultarAnimal(
 
 async function enviarRegistro(
   ganaderiaId: string,
-  solicitud: SolicitudRegistroAnimal,
+  solicitud: SolicitudRegistroAnimalCompatible,
   accessToken: string,
   tokenCsrf: string,
+  signal?: AbortSignal,
 ) {
   return fetch(`/api/v1/ganaderias/${encodeURIComponent(ganaderiaId)}/animales`, {
     method: 'POST',
@@ -242,21 +254,23 @@ async function enviarRegistro(
       'X-CSRF-TOKEN': tokenCsrf,
     },
     body: JSON.stringify(solicitud),
+    signal,
   })
 }
 
 export async function registrarAnimal(
   ganaderiaId: string,
-  solicitud: SolicitudRegistroAnimal,
+  solicitud: SolicitudRegistroAnimalCompatible,
   accessToken: string,
+  signal?: AbortSignal,
 ): Promise<ResultadoRegistroAnimal> {
   try {
-    let tokenCsrf = await obtenerTokenCsrf()
-    let response = await enviarRegistro(ganaderiaId, solicitud, accessToken, tokenCsrf)
+    let tokenCsrf = await obtenerTokenCsrf(signal)
+    let response = await enviarRegistro(ganaderiaId, solicitud, accessToken, tokenCsrf, signal)
     let body = await leerJson(response)
     if (response.status === 403 && codigoError(body) === 'CSRF_INVALIDO') {
-      tokenCsrf = await obtenerTokenCsrf()
-      response = await enviarRegistro(ganaderiaId, solicitud, accessToken, tokenCsrf)
+      tokenCsrf = await obtenerTokenCsrf(signal)
+      response = await enviarRegistro(ganaderiaId, solicitud, accessToken, tokenCsrf, signal)
       body = await leerJson(response)
     }
     if ((response.status === 200 || response.status === 201) && esResultado(body, solicitud)) {

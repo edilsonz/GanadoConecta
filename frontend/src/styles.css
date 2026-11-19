@@ -979,6 +979,13 @@ h1 span {
   gap:12px
 }
 
+.local-pending-heading>div {
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:9px
+}
+
 .local-pending-heading h4 {
   margin:0;
   font-size:15px
@@ -992,6 +999,12 @@ h1 span {
   color:#fff;
   font-size:11px;
   text-align:center
+}
+
+.sync-pending-button {
+  min-height:42px;
+  padding:9px 13px;
+  white-space:nowrap
 }
 
 .local-pending>p {
@@ -1447,6 +1460,14 @@ footer p {
   }
   .animal-detail dl {
     grid-template-columns:minmax(0,1fr)
+  }
+  .local-pending-heading {
+    align-items:stretch;
+    flex-direction:column
+  }
+  .sync-pending-button {
+    width:100%;
+    min-height:46px
   }
   .farm-create {
     grid-template-columns:minmax(0,1fr)

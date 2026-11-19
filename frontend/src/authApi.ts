@@ -53,12 +53,13 @@ export function codigoError(body: unknown): string | undefined {
     : undefined
 }
 
-export async function obtenerTokenCsrf(): Promise<string> {
+export async function obtenerTokenCsrf(signal?: AbortSignal): Promise<string> {
   const response = await fetch('/api/v1/auth/csrf', {
     method: 'GET',
     credentials: 'same-origin',
     cache: 'no-store',
     headers: { Accept: 'application/json' },
+    signal,
   })
   const body = await leerJson(response)
   if (!response.ok || !esObjeto(body) || typeof body.token !== 'string' || body.token.length === 0) {

@@ -25,6 +25,10 @@ import {
   requerirRevalidacionOffline,
 } from './registroAnimalesOffline'
 import type { OperacionPendienteLocal } from './operacionesPendientesDb'
+import {
+  ErrorSincronizacion,
+  sincronizarPendientesManualmente,
+} from './sincronizacionAnimales'
 
 type AnimalesPanelProps = {
   ganaderia: Ganaderia
@@ -96,6 +100,16 @@ const mensajesAutorizacionOffline = {
   RED_NO_DISPONIBLE: 'No hay conexión para verificar el acceso de esta ganadería.',
   SERVICIO_NO_DISPONIBLE: 'El servicio no pudo verificar el acceso offline.',
   AUTORIZADA_ESCRITURA: '',
+} as const
+
+const etiquetasEstadoPendiente = {
+  PENDIENTE: 'Pendiente de sincronización',
+  SINCRONIZANDO: 'Sincronización en curso',
+  ERROR_REINTENTABLE: 'Error temporal · puedes reintentar',
+  REQUIERE_SESION: 'Requiere una sesión vigente',
+  RECHAZADO: 'Requiere revisar acceso o datos',
+  CONFLICTO: 'Conflicto · requiere revisión',
+  SINCRONIZADO: 'Sincronizado',
 } as const
 
 const controlesNoAdmitidos = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]|\p{Cf}/u
@@ -205,10 +219,13 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
   const [pendientesLocales, setPendientesLocales] = useState<OperacionPendienteLocal[]>([])
   const [modoSinConexion, setModoSinConexion] = useState(false)
   const [offlinePreparado, setOfflinePreparado] = useState(false)
+  const [sincronizando, setSincronizando] = useState(false)
   const [navegadorSinConexion, setNavegadorSinConexion] = useState(
     () => typeof navigator !== 'undefined' && navigator.onLine === false,
   )
   const envioEnCurso = useRef(false)
+  const sincronizacionEnCurso = useRef(false)
+  const controlSincronizacion = useRef<AbortController | null>(null)
 
   const ambitoLocal = { usuarioId: sesion.usuarioId, ganaderiaId: ganaderia.id }
 
@@ -269,6 +286,75 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
     }
   }
 
+  async function sincronizarPendientes() {
+    if (!acceso || acceso.rol === 'LECTOR' || sincronizacionEnCurso.current
+        || navegadorSinConexion || pendientesLocales.length === 0) return
+
+    sincronizacionEnCurso.current = true
+    setSincronizando(true)
+    setMensaje(null)
+    const control = new AbortController()
+    controlSincronizacion.current = control
+    try {
+      const resultado = await sincronizarPendientesManualmente(
+        sesion,
+        ganaderia.id,
+        control.signal,
+      )
+      const pendientes = await cargarPendientesLocales()
+      if (resultado.confirmadasRemotamente > 0) {
+        try {
+          await cargarPrimeraPagina()
+        } catch (error) {
+          const errorAnimal = fallo(error)
+          if (errorAnimal.tipo === 'sesion' || errorAnimal.tipo === 'permiso') {
+            aplicarFallo(errorAnimal)
+            return
+          }
+        }
+      }
+      setModoSinConexion(false)
+      if (resultado.sincronizadas === resultado.total && resultado.total > 0) {
+        setMensaje(`${resultado.sincronizadas} ${resultado.sincronizadas === 1
+          ? 'registro pendiente sincronizado' : 'registros pendientes sincronizados'} correctamente.`)
+      } else if (resultado.confirmadasRemotamente > 0 && resultado.fallidas > 0) {
+        setMensaje('El servidor confirmó el registro, pero falta completar su confirmación local. No generes otra operación; vuelve a sincronizar más tarde.')
+      } else if (resultado.fallidas > 0) {
+        setMensaje(`${resultado.fallidas} ${resultado.fallidas === 1
+          ? 'operación requiere' : 'operaciones requieren'} atención. Revisa el estado antes de reintentar.`)
+      } else if (resultado.ocupadas > 0) {
+        setMensaje('Otra pestaña ya está procesando estas operaciones. Actualiza el listado en unos segundos.')
+      } else if (pendientes.operaciones.length === 0) {
+        setMensaje('No hay operaciones pendientes para sincronizar.')
+      }
+    } catch (error) {
+      if (control.signal.aborted) return
+      const tipo = error instanceof ErrorSincronizacion ? error.tipo : 'servicio'
+      if (tipo === 'sesion') {
+        aplicarFallo(new ErrorAnimal('sesion'))
+      } else if (tipo === 'permiso') {
+        aplicarFallo(new ErrorAnimal('permiso'))
+      } else if (tipo === 'conexion') {
+        setMensaje('No hay conexión estable. Las operaciones permanecen guardadas en este dispositivo.')
+      } else if (tipo === 'almacenamiento') {
+        setMensaje('No pudimos actualizar el almacenamiento local. No se descartó ninguna operación pendiente.')
+      } else if (tipo === 'enCurso') {
+        setMensaje('La sincronización ya está en curso.')
+      } else {
+        setMensaje('El servicio no pudo iniciar la sincronización. Las operaciones locales se conservan.')
+      }
+      try {
+        await cargarPendientesLocales()
+      } catch {
+        // La operación permanece en IndexedDB aunque no podamos refrescar la vista.
+      }
+    } finally {
+      if (controlSincronizacion.current === control) controlSincronizacion.current = null
+      sincronizacionEnCurso.current = false
+      setSincronizando(false)
+    }
+  }
+
   useEffect(() => {
     let activo = true
     setAcceso(null)
@@ -278,6 +364,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
     setPendientesLocales([])
     setModoSinConexion(false)
     setOfflinePreparado(false)
+    setSincronizando(false)
     setMensaje(null)
     setErrores({})
     setFormulario(formularioInicial)
@@ -348,7 +435,12 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
       }
     }
     void cargar()
-    return () => { activo = false }
+    return () => {
+      activo = false
+      controlSincronizacion.current?.abort()
+      controlSincronizacion.current = null
+      sincronizacionEnCurso.current = false
+    }
   }, [ganaderia.id, sesion.accessToken, sesion.usuarioId, onSesionInvalida])
 
   function cambiar<K extends keyof FormularioAnimal>(campo: K, valor: FormularioAnimal[K]) {
@@ -517,6 +609,10 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
 
   const puedeRegistrar = acceso?.rol === 'PROPIETARIO' || acceso?.rol === 'EDITOR'
   const camposBloqueados = enviando || Boolean(pendienteIncierto)
+  const animalesConfirmados = new Set(animales.map(item => item.animalId))
+  const pendientesVisibles = pendientesLocales.filter(
+    operacion => !animalesConfirmados.has(operacion.animalId),
+  )
 
   return (
     <section className="animals-panel" id="mis-animales" aria-labelledby="animals-title">
@@ -562,15 +658,25 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                 {cargandoMas ? 'Cargando…' : 'Cargar más'}
               </button>
             )}
-            {pendientesLocales.length > 0 && (
+            {pendientesVisibles.length > 0 && (
               <section className="local-pending" aria-labelledby="local-pending-title">
                 <div className="local-pending-heading">
-                  <h4 id="local-pending-title">Pendientes en este dispositivo</h4>
-                  <span>{pendientesLocales.length}</span>
+                  <div>
+                    <h4 id="local-pending-title">Pendientes en este dispositivo</h4>
+                    <span>{pendientesVisibles.length}</span>
+                  </div>
+                  {puedeRegistrar && (
+                    <button className="button button-primary sync-pending-button" type="button"
+                      onClick={() => void sincronizarPendientes()}
+                      disabled={sincronizando || navegadorSinConexion}
+                      aria-describedby="local-pending-help">
+                      {sincronizando ? 'Sincronizando…' : 'Sincronizar pendientes'}
+                    </button>
+                  )}
                 </div>
-                <p>No están guardados en PostgreSQL y no se enviarán automáticamente.</p>
+                <p id="local-pending-help">No están guardados en PostgreSQL y solo se enviarán cuando pulses el botón.</p>
                 <div className="local-pending-list">
-                  {pendientesLocales.map(operacion => (
+                  {pendientesVisibles.map(operacion => (
                     <article className="local-pending-item" key={operacion.operationId}>
                       <span>
                         <strong>{operacion.payload.nombre
@@ -578,7 +684,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                           || (operacion.payload.sexo === 'HEMBRA' ? 'Hembra sin nombre' : 'Macho sin nombre')}</strong>
                         <small>{operacion.payload.sexo === 'HEMBRA' ? 'Hembra' : 'Macho'}</small>
                       </span>
-                      <b>Pendiente de sincronización</b>
+                      <b>{etiquetasEstadoPendiente[operacion.estado]}</b>
                     </article>
                   ))}
                 </div>

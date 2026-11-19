@@ -406,7 +406,9 @@ ganadería. No aplica TTL ni limpieza por edad. Rechaza propiedades no admitidas
 para impedir que tokens o contraseñas entren en el sobre. React ya guarda esa
 operación como representación provisional única después de una caída real de red,
 solo con contexto de escritura vigente, y espera la transacción antes de confirmar.
-Sincronización, lease multipestaña y navegador real siguen pendientes.
+El primer incremento T13/T14 añade sincronización exclusivamente manual, lease
+persistido, recibo idempotente y estados seguros. PWA, ejecución automática,
+backoff programado y validación multipestaña en navegador real siguen pendientes.
 
 El diseño completo mantiene previstos los object stores `animalesConfirmados`, `animalesPendientes`,
 `operaciones` y `contextos`. Claves incluyen cuentaId/ganaderiaId; operación
@@ -425,6 +427,9 @@ Para dos pestañas: reclamar operationId en transacción IndexedDB con lease de
 o detectar envío interrumpido se recupera la operación. No se mantiene una
 transacción IndexedDB abierta durante HTTP. La unicidad remota es la defensa
 final ante duplicación, suspensión de pestañas o reloj local alterado.
+El incremento manual implementa esta reclamación y usa Web Locks cuando está
+disponible como coordinación adicional; la transacción IndexedDB y la idempotencia
+remota son las defensas que permanecen aunque Web Locks no exista.
 
 Mismo formulario confirmado conserva su operationId; doble clic se deshabilita
 mientras se confirma el guardado. Formularios independientes pueden crear IDs
@@ -482,6 +487,14 @@ Priorizar recuperación de operaciones con resultado desconocido, conservando ID
 Red/5xx/429 y protocolo inválido usan el backoff de SPEC; 401 pausa; solo 403 por membresía/rol bloquea
 contexto. Un 403 CSRF_INVALIDO conserva copias/cola: recuperar CSRF y reintentar una sola vez el sobre de animal con mismos IDs, luego pausar si persiste. 409 requiere revisión; 400/413/422 permiten corregir únicamente después del
 rechazo definitivo, creando nuevo operationId para el mismo animalId.
+
+El primer orquestador implementado se ejecuta solo al pulsar «Sincronizar
+pendientes». Antes del lote consulta de nuevo `/acceso`; solo PROPIETARIO o EDITOR
+pueden enviar. Conserva el sobre original, usa timeout de 20 s, detiene el lote
+ante 401/403 de autorización y registra APLICADO/REPROCESADO como recibo local.
+No existe efecto de montaje, evento `online` ni tarea de fondo que envíe la cola.
+Los reintentos automáticos con backoff/Retry-After y la sincronización PWA siguen
+pendientes; los fallos temporales requieren una nueva acción manual informada.
 
 baseVersion=0 comprueba inexistencia en esta SPEC de creación. version=1 es la
 primera versión remota; no hay endpoint PUT/PATCH ni edición offline de datos
@@ -553,8 +566,9 @@ DP01–DP08 y SPEC-01 aprobadas documentalmente. Ejecutar sus tareas y verificar
 sexo obligatorio confirmado, límites/zonas horarias, UUID/recibos, recuperación y retención local.
 El despliegue y las versiones de herramientas se concretarán antes del código
 que las requiera. Membresías y autorización protegen T07–T09.
-El cliente T10 consume T08/T09 y conecta T11/T12/T15 de forma limitada; la
-falta de PWA, sincronización, conflictos, lease multipestaña y E2E real impide declarar completo
+El cliente T10 consume T08/T09 y conecta T11/T12/T15; T13/T14 incorporan el
+primer envío manual con lease y recibos. La falta de PWA, sincronización automática,
+resolución asistida de conflictos y E2E multipestaña real impide declarar completo
 el alcance Offline-First de SPEC-01.
 La UI de registro no amplía permisos para administrar ganaderías.
 

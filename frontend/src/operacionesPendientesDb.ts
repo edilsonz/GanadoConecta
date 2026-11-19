@@ -1,4 +1,7 @@
-import type { SolicitudRegistroAnimal } from './animalesApi'
+import type {
+  ResultadoRegistroAnimal,
+  SolicitudRegistroAnimalCompatible,
+} from './animalesApi'
 import {
   abrirBaseOffline,
   ALMACEN_OPERACIONES,
@@ -55,14 +58,7 @@ export type AmbitoOperacionLocal = {
   ganaderiaId: string
 }
 
-export type SolicitudRegistroAnimalLocal =
-  | SolicitudRegistroAnimal
-  | (Omit<SolicitudRegistroAnimal,
-    'schemaVersion' | 'coloresIdentificacionTextil' | 'ubicacionIdentificacionTextil'> & {
-      schemaVersion: 1
-      coloresIdentificacionTextil?: never
-      ubicacionIdentificacionTextil?: never
-    })
+export type SolicitudRegistroAnimalLocal = SolicitudRegistroAnimalCompatible
 
 export type OperacionPendienteLocal = AmbitoOperacionLocal & {
   operationId: string
@@ -72,6 +68,10 @@ export type OperacionPendienteLocal = AmbitoOperacionLocal & {
   ultimoError: CodigoErrorSeguroOperacion | null
   creadoEnLocal: string
   actualizadoEnLocal: string
+  intentos: number
+  leaseId: string | null
+  leaseHasta: string | null
+  confirmacion: ResultadoRegistroAnimal | null
 }
 
 type RegistroOperacion = OperacionPendienteLocal & {
@@ -206,6 +206,93 @@ export class AlmacenOperacionesPendientesIndexedDb {
     }
   }
 
+  async reclamarParaSincronizar(
+    ambito: AmbitoOperacionLocal,
+    operationId: string,
+    leaseId: string,
+    duracionLeaseMs = 60_000,
+  ): Promise<OperacionPendienteLocal | null> {
+    const ambitoValidado = validarAmbito(ambito)
+    validarUuid(operationId)
+    validarUuid(leaseId)
+    if (!Number.isInteger(duracionLeaseMs) || duracionLeaseMs < 1_000) {
+      throw new ErrorAlmacenamientoLocal('DATOS_INVALIDOS')
+    }
+    const db = await this.abrir()
+    try {
+      const reclamada = await reclamarEnTransaccion(
+        db,
+        ambitoValidado,
+        operationId,
+        leaseId,
+        duracionLeaseMs,
+        this.ahora,
+      )
+      return reclamada ? exponer(reclamada) : null
+    } catch (error) {
+      throw traducirError(error)
+    }
+  }
+
+  async finalizarSincronizacion(
+    ambito: AmbitoOperacionLocal,
+    operationId: string,
+    leaseId: string,
+    confirmacion: ResultadoRegistroAnimal,
+  ): Promise<OperacionPendienteLocal> {
+    const ambitoValidado = validarAmbito(ambito)
+    validarUuid(operationId)
+    validarUuid(leaseId)
+    validarConfirmacion(confirmacion, operationId)
+    const db = await this.abrir()
+    try {
+      const actualizada = await resolverLeaseEnTransaccion(
+        db,
+        ambitoValidado,
+        operationId,
+        leaseId,
+        'SINCRONIZADO',
+        null,
+        confirmacion,
+        this.ahora,
+      )
+      return exponer(actualizada)
+    } catch (error) {
+      throw traducirError(error)
+    }
+  }
+
+  async fallarSincronizacion(
+    ambito: AmbitoOperacionLocal,
+    operationId: string,
+    leaseId: string,
+    estado: Exclude<EstadoOperacionLocal, 'PENDIENTE' | 'SINCRONIZANDO' | 'SINCRONIZADO'>,
+    ultimoError: CodigoErrorSeguroOperacion,
+  ): Promise<OperacionPendienteLocal> {
+    const ambitoValidado = validarAmbito(ambito)
+    validarUuid(operationId)
+    validarUuid(leaseId)
+    if (!ESTADOS.has(estado) || !ERRORES_SEGUROS.has(ultimoError)) {
+      throw new ErrorAlmacenamientoLocal('DATOS_INVALIDOS')
+    }
+    const db = await this.abrir()
+    try {
+      const actualizada = await resolverLeaseEnTransaccion(
+        db,
+        ambitoValidado,
+        operationId,
+        leaseId,
+        estado,
+        ultimoError,
+        null,
+        this.ahora,
+      )
+      return exponer(actualizada)
+    } catch (error) {
+      throw traducirError(error)
+    }
+  }
+
   async cerrar(): Promise<void> {
     const apertura = this.apertura
     this.apertura = undefined
@@ -295,6 +382,10 @@ function guardarEnTransaccion(
           ultimoError: null,
           creadoEnLocal: instante,
           actualizadoEnLocal: instante,
+          intentos: 0,
+          leaseId: null,
+          leaseHasta: null,
+          confirmacion: null,
           clave: claveOperacion(ambito, payload.operationId),
           contextoClave: claveContexto(ambito),
           animalClave: claveAnimal(ambito, payload.animalId),
@@ -353,15 +444,153 @@ function actualizarEnTransaccion(
         return
       }
       const actualizado: RegistroOperacion = {
-        ...registro,
+        ...normalizarRegistro(registro),
         estado,
         ultimoError,
         actualizadoEnLocal: ahora().toISOString(),
+        ...(estado !== 'SINCRONIZANDO' && {
+          leaseId: null,
+          leaseHasta: null,
+        }),
       }
       const guardado = almacen.put(actualizado)
       guardado.onsuccess = () => {
         resultado = actualizado
       }
+    }
+  })
+}
+
+function reclamarEnTransaccion(
+  db: IDBDatabase,
+  ambito: AmbitoOperacionLocal,
+  operationId: string,
+  leaseId: string,
+  duracionLeaseMs: number,
+  ahora: () => Date,
+): Promise<RegistroOperacion | null> {
+  return new Promise((resolve, reject) => {
+    const transaccion = db.transaction(ALMACEN_OPERACIONES, 'readwrite')
+    const almacen = transaccion.objectStore(ALMACEN_OPERACIONES)
+    let resultado: RegistroOperacion | null = null
+    let errorControlado: ErrorAlmacenamientoLocal | undefined
+    let finalizada = false
+    const fallar = (error: ErrorAlmacenamientoLocal) => {
+      if (!finalizada) {
+        finalizada = true
+        reject(error)
+      }
+    }
+    transaccion.oncomplete = () => {
+      if (errorControlado) fallar(errorControlado)
+      else {
+        finalizada = true
+        resolve(resultado)
+      }
+    }
+    transaccion.onerror = () => fallar(
+      new ErrorAlmacenamientoLocal('TRANSACCION_FALLIDA'),
+    )
+    transaccion.onabort = () => fallar(
+      new ErrorAlmacenamientoLocal('TRANSACCION_FALLIDA'),
+    )
+
+    const consulta = almacen.get(claveOperacion(ambito, operationId))
+    consulta.onsuccess = () => {
+      const encontrado = consulta.result as RegistroOperacion | undefined
+      if (!encontrado) {
+        errorControlado = new ErrorAlmacenamientoLocal('OPERACION_NO_ENCONTRADA')
+        return
+      }
+      const registro = normalizarRegistro(encontrado)
+      const instante = ahora()
+      const leaseVigente = registro.estado === 'SINCRONIZANDO'
+        && registro.leaseHasta !== null
+        && Date.parse(registro.leaseHasta) > instante.getTime()
+      const recuperable = registro.estado === 'PENDIENTE'
+        || registro.estado === 'ERROR_REINTENTABLE'
+        || registro.estado === 'REQUIERE_SESION'
+        || (registro.estado === 'RECHAZADO'
+          && registro.ultimoError === 'AUTORIZACION')
+        || (registro.estado === 'SINCRONIZANDO' && !leaseVigente)
+      if (!recuperable || leaseVigente) return
+
+      resultado = {
+        ...registro,
+        estado: 'SINCRONIZANDO',
+        ultimoError: null,
+        intentos: registro.intentos + 1,
+        leaseId,
+        leaseHasta: new Date(instante.getTime() + duracionLeaseMs).toISOString(),
+        actualizadoEnLocal: instante.toISOString(),
+      }
+      almacen.put(resultado)
+    }
+  })
+}
+
+function resolverLeaseEnTransaccion(
+  db: IDBDatabase,
+  ambito: AmbitoOperacionLocal,
+  operationId: string,
+  leaseId: string,
+  estado: EstadoOperacionLocal,
+  ultimoError: CodigoErrorSeguroOperacion | null,
+  confirmacion: ResultadoRegistroAnimal | null,
+  ahora: () => Date,
+): Promise<RegistroOperacion> {
+  return new Promise((resolve, reject) => {
+    const transaccion = db.transaction(ALMACEN_OPERACIONES, 'readwrite')
+    const almacen = transaccion.objectStore(ALMACEN_OPERACIONES)
+    let resultado: RegistroOperacion | undefined
+    let errorControlado: ErrorAlmacenamientoLocal | undefined
+    let finalizada = false
+    const fallar = (error: ErrorAlmacenamientoLocal) => {
+      if (!finalizada) {
+        finalizada = true
+        reject(error)
+      }
+    }
+    transaccion.oncomplete = () => {
+      if (errorControlado) fallar(errorControlado)
+      else if (resultado) {
+        finalizada = true
+        resolve(resultado)
+      } else fallar(new ErrorAlmacenamientoLocal('TRANSACCION_FALLIDA'))
+    }
+    transaccion.onerror = () => fallar(
+      new ErrorAlmacenamientoLocal('TRANSACCION_FALLIDA'),
+    )
+    transaccion.onabort = () => fallar(
+      new ErrorAlmacenamientoLocal('TRANSACCION_FALLIDA'),
+    )
+
+    const consulta = almacen.get(claveOperacion(ambito, operationId))
+    consulta.onsuccess = () => {
+      const encontrado = consulta.result as RegistroOperacion | undefined
+      if (!encontrado) {
+        errorControlado = new ErrorAlmacenamientoLocal('OPERACION_NO_ENCONTRADA')
+        return
+      }
+      const registro = normalizarRegistro(encontrado)
+      if (registro.estado !== 'SINCRONIZANDO' || registro.leaseId !== leaseId) {
+        errorControlado = new ErrorAlmacenamientoLocal('OPERACION_CONFLICTIVA')
+        return
+      }
+      if (confirmacion && confirmacion.animalId !== registro.animalId) {
+        errorControlado = new ErrorAlmacenamientoLocal('OPERACION_CONFLICTIVA')
+        return
+      }
+      resultado = {
+        ...registro,
+        estado,
+        ultimoError,
+        leaseId: null,
+        leaseHasta: null,
+        confirmacion,
+        actualizadoEnLocal: ahora().toISOString(),
+      }
+      almacen.put(resultado)
     }
   })
 }
@@ -486,6 +715,23 @@ function validarUuid(valor: string): void {
   }
 }
 
+function validarConfirmacion(
+  confirmacion: ResultadoRegistroAnimal,
+  operationId: string,
+): void {
+  if (!confirmacion || confirmacion.operationId !== operationId
+      || typeof confirmacion.animalId !== 'string'
+      || !UUID_V4.test(confirmacion.animalId)
+      || (confirmacion.resultado !== 'APLICADO'
+        && confirmacion.resultado !== 'REPROCESADO')
+      || confirmacion.versionCreada !== 1
+      || !Number.isFinite(Date.parse(confirmacion.confirmadoEn))
+      || !Array.isArray(confirmacion.advertencias)
+      || confirmacion.advertencias.some(item => item !== 'ARETE_COINCIDENTE')) {
+    throw new ErrorAlmacenamientoLocal('DATOS_INVALIDOS')
+  }
+}
+
 function claveContexto(ambito: AmbitoOperacionLocal): string {
   return `${ambito.usuarioId}:${ambito.ganaderiaId}`
 }
@@ -509,13 +755,25 @@ function mismaOperacion(
 }
 
 function exponer(registro: RegistroOperacion): OperacionPendienteLocal {
+  const normalizado = normalizarRegistro(registro)
   const {
     clave: _clave,
     contextoClave: _contextoClave,
     animalClave: _animalClave,
     ...publico
-  } = registro
+  } = normalizado
   return structuredClone(publico)
+}
+
+function normalizarRegistro(registro: RegistroOperacion): RegistroOperacion {
+  return {
+    ...registro,
+    intentos: Number.isInteger(registro.intentos) && registro.intentos >= 0
+      ? registro.intentos : 0,
+    leaseId: typeof registro.leaseId === 'string' ? registro.leaseId : null,
+    leaseHasta: typeof registro.leaseHasta === 'string' ? registro.leaseHasta : null,
+    confirmacion: registro.confirmacion ?? null,
+  }
 }
 
 function traducirError(
