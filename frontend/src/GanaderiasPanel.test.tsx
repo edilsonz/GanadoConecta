@@ -3,6 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { GanaderiasPanel } from './GanaderiasPanel'
 import { crearGanaderia, ErrorGanaderia, listarGanaderias } from './ganaderiasApi'
 
+vi.mock('./AnimalesPanel', () => ({
+  AnimalesPanel: () => <section aria-label="Mis animales" />,
+}))
+
 vi.mock('./ganaderiasApi', async importOriginal => {
   const original = await importOriginal<typeof import('./ganaderiasApi')>()
   return {
@@ -56,7 +60,7 @@ describe('Panel de ganaderías', () => {
     fireEvent.click(opcion)
 
     expect(opcion).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByText(/seleccionada para futuras operaciones/)).toBeInTheDocument()
+    expect(screen.getByText(/volverá a verificar tu membresía/)).toBeInTheDocument()
     expect(localStorage.length).toBe(0)
     expect(sessionStorage.length).toBe(0)
   })

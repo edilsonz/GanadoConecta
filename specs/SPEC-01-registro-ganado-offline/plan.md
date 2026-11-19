@@ -1,7 +1,7 @@
 # SPEC-01 — Plan técnico propuesto
 
 **Estado: Aprobada — Implementación en curso.** Plan aprobado documentalmente junto con
-[spec.md](spec.md) y el contrato DP01, el 16 de noviembre de 2026 por autorización del responsable. La implementación comenzó con T02.1 el 17 de noviembre; T04–T09 se verificaron el 18 de noviembre. React de animales y offline permanecen pendientes. Este plan no modifica los ADR aprobados. [Tareas](tasks.md).
+[spec.md](spec.md) y el contrato DP01, el 16 de noviembre de 2026 por autorización del responsable. La implementación comenzó con T02.1 el 17 de noviembre; T04–T10 se verificaron el 18 de noviembre. El cliente React online de animales existe; IndexedDB, PWA y sincronización permanecen pendientes. Este plan no modifica los ADR aprobados. [Tareas](tasks.md).
 
 ## 1. Arquitectura y límites
 
@@ -524,7 +524,9 @@ DP01–DP08 y SPEC-01 aprobadas documentalmente. Ejecutar sus tareas y verificar
 sexo obligatorio confirmado, límites/zonas horarias, UUID/recibos, recuperación y retención local.
 El despliegue y las versiones de herramientas se concretarán antes del código
 que las requiera. Membresías y autorización protegen T07–T09,
-pero la ausencia del cliente de animales y offline impide habilitar el flujo real.
+El cliente online T10 ya consume T08/T09 con revalidación de `/acceso`; la
+ausencia de IndexedDB, PWA, sincronización y E2E real impide declarar completo
+el alcance Offline-First de SPEC-01.
 La UI de registro no amplía permisos para administrar ganaderías.
 
 Los instantes de servidor y sesión se almacenan como instantes UTC (PostgreSQL timestamptz, serialización ISO 8601 con Z); conexiones configuradas UTC. FechaNacimiento permanece tipo date; la validación de fecha futura usa America/Lima. No confundir conversión de presentación con cambio de la fecha de negocio.

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { crearGanaderia, ErrorGanaderia, listarGanaderias } from './ganaderiasApi'
+import { consultarAccesoGanaderia, crearGanaderia, ErrorGanaderia, listarGanaderias } from './ganaderiasApi'
 
 function respuesta(status: number, body: unknown): Response {
   return {
@@ -87,5 +87,22 @@ describe('API de ganaderías', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(respuesta(200, [{ id: 'incompleta' }])))
     await expect(listarGanaderias('jwt'))
       .rejects.toBeInstanceOf(ErrorGanaderia)
+  })
+
+  it('revalida el acceso vigente de la ganadería seleccionada', async () => {
+    const acceso = {
+      ganaderiaId: ganaderia.id,
+      rol: 'EDITOR',
+      estado: 'ACTIVA',
+      validadoEn: '2026-11-18T18:00:00Z',
+    }
+    const fetchMock = vi.fn().mockResolvedValue(respuesta(200, acceso))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(consultarAccesoGanaderia(ganaderia.id, 'jwt-memoria')).resolves.toEqual(acceso)
+    expect(fetchMock).toHaveBeenCalledWith(
+      `/api/v1/ganaderias/${ganaderia.id}/acceso`,
+      expect.objectContaining({ headers: expect.objectContaining({ Authorization: 'Bearer jwt-memoria' }) }),
+    )
   })
 })

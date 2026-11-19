@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
+import { AnimalesPanel } from './AnimalesPanel'
 import {
   crearGanaderia,
   ErrorGanaderia,
@@ -102,7 +103,7 @@ export function GanaderiasPanel({ sesion, onSesionInvalida }: GanaderiasPanelPro
       <div className="farms-heading">
         <p className="eyebrow"><span className="small-rule" /> MIS GANADERÍAS</p>
         <h2 id="farms-title">Elige dónde trabajar.</h2>
-        <p>La selección prepara el contexto para próximas funciones. No habilita todavía el registro de animales.</p>
+        <p>Selecciona una ganadería para consultar y registrar sus animales según tu permiso vigente.</p>
       </div>
 
       {!sesion ? (
@@ -154,11 +155,18 @@ export function GanaderiasPanel({ sesion, onSesionInvalida }: GanaderiasPanelPro
           )}
           {seleccionada && (
             <p className="farm-selection" role="status">
-              Ganadería seleccionada para futuras operaciones. «Mi ganado» continúa en preparación.
+              Ganadería seleccionada. El servidor volverá a verificar tu membresía antes de cada operación.
             </p>
           )}
         </div>
       )}
+      {sesion && seleccionada && (() => {
+        const ganaderia = ganaderias.find(item => item.id === seleccionada)
+        return ganaderia
+          ? <AnimalesPanel key={ganaderia.id} ganaderia={ganaderia}
+              sesion={sesion} onSesionInvalida={onSesionInvalida} />
+          : null
+      })()}
     </section>
   )
 }

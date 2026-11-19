@@ -9,6 +9,13 @@ export type Ganaderia = {
   rol: RolGanaderia
 }
 
+export type AccesoGanaderia = {
+  ganaderiaId: string
+  rol: RolGanaderia
+  estado: 'ACTIVA'
+  validadoEn: string
+}
+
 export type TipoErrorGanaderia =
   | 'validacion'
   | 'conflicto'
@@ -30,6 +37,15 @@ function esGanaderia(valor: unknown): valor is Ganaderia {
     && typeof valor.nombre === 'string'
     && valor.estado === 'ACTIVA'
     && (valor.rol === 'PROPIETARIO' || valor.rol === 'EDITOR' || valor.rol === 'LECTOR')
+}
+
+function esAccesoGanaderia(valor: unknown): valor is AccesoGanaderia {
+  return esObjeto(valor)
+    && typeof valor.ganaderiaId === 'string'
+    && (valor.rol === 'PROPIETARIO' || valor.rol === 'EDITOR' || valor.rol === 'LECTOR')
+    && valor.estado === 'ACTIVA'
+    && typeof valor.validadoEn === 'string'
+    && Number.isFinite(Date.parse(valor.validadoEn))
 }
 
 function convertirError(error: unknown): never {
@@ -55,6 +71,30 @@ export async function listarGanaderias(accessToken: string): Promise<Ganaderia[]
     })
     const body = await leerJson(response)
     if (response.ok && Array.isArray(body) && body.every(esGanaderia)) return body
+    if (response.status === 401) throw new ErrorGanaderia('sesion')
+    if (response.status === 403) throw new ErrorGanaderia('seguridad')
+    throw new ErrorGanaderia('servicio')
+  } catch (error) {
+    convertirError(error)
+  }
+}
+
+export async function consultarAccesoGanaderia(
+  ganaderiaId: string,
+  accessToken: string,
+): Promise<AccesoGanaderia> {
+  try {
+    const response = await fetch(`/api/v1/ganaderias/${encodeURIComponent(ganaderiaId)}/acceso`, {
+      method: 'GET',
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+    const body = await leerJson(response)
+    if (response.ok && esAccesoGanaderia(body) && body.ganaderiaId === ganaderiaId) return body
     if (response.status === 401) throw new ErrorGanaderia('sesion')
     if (response.status === 403) throw new ErrorGanaderia('seguridad')
     throw new ErrorGanaderia('servicio')

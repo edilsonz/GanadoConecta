@@ -6,7 +6,7 @@ import { RegistroCuenta } from './RegistroCuenta'
 import type { SesionActiva } from './sesionApi'
 
 const futureSections = [
-  { number: '01', title: 'Mi ganado', text: 'La información de cada animal, organizada en un solo lugar.' },
+  { number: '01', title: 'Funcionamiento sin internet', text: 'La continuidad offline se incorporará en un incremento posterior.' },
   { number: '02', title: 'Cuidado y seguimiento', text: 'Una forma sencilla de consultar actividades e historiales.' },
   { number: '03', title: 'Calendario', text: 'Un espacio para planificar las próximas actividades de tu ganadería.' },
 ]
@@ -28,7 +28,7 @@ export default function App() {
           <a href="#iniciar-sesion">Iniciar sesión</a>
           <a href="#crear-cuenta">Crear cuenta</a>
           <a href="#mis-ganaderias">Ganaderías</a>
-          <button disabled>Mi ganado <span className="soon-label">Próximamente</span></button>
+          <a href="#mis-animales">Mi ganado</a>
           <button disabled>Calendario</button>
         </nav>
         <span className="edition"><span aria-hidden="true">◌</span> En preparación</span>
@@ -41,7 +41,7 @@ export default function App() {
             <h1 id="hero-title">Tu ganado.<br />Su cuidado.<br /><span>Todo conectado.</span></h1>
             <p className="hero-description">Estamos construyendo un espacio sencillo para organizar la información y acompañar el cuidado de tu ganado vacuno.</p>
             <a className="button button-primary" href="#crear-cuenta">Crear mi cuenta <span aria-hidden="true">↗</span></a>
-            <p className="hero-note">Primera versión en desarrollo · Sin registros de animales todavía</p>
+            <p className="hero-note">Primera versión en desarrollo · Registro individual disponible con conexión</p>
           </div>
           <div className="landscape" aria-hidden="true">
             <div className="landscape-caption"><span>GANADOCONECTA</span><span>CRECER CON CUIDADO ↗</span></div>

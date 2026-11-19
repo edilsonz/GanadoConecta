@@ -21,10 +21,10 @@ describe('Inicio de GanadoConecta', () => {
     mockHealth()
     render(<App />)
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Todo conectado.')
-    expect(screen.getByRole('button', { name: /Mi ganado/ })).toBeDisabled()
+    expect(screen.getByRole('link', { name: 'Mi ganado' })).toHaveAttribute('href', '#mis-animales')
     expect(screen.getByRole('heading', { name: 'Crea tu cuenta.' })).toBeInTheDocument()
     expect(screen.getByRole('textbox', { name: 'Correo electrónico' })).toBeInTheDocument()
-    expect(screen.getByText(/Sin registros de animales todavía/)).toBeInTheDocument()
+    expect(screen.getByText(/Registro individual disponible con conexión/)).toBeInTheDocument()
     expect(await screen.findByText('Conexión con el servicio disponible')).toBeInTheDocument()
   })
 
