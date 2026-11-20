@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react'
 import { VacunacionesPanel } from './VacunacionesPanel'
 import { HistorialSanitarioPanel } from './HistorialSanitarioPanel'
 import { AgendaSanitariaPanel } from './AgendaSanitariaPanel'
+import { ReproduccionPanel } from './ReproduccionPanel'
 import {
   ejecutarConProteccionActualizacionPwa,
   useProteccionActualizacionPwa,
@@ -1168,6 +1169,9 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                 revisionLocal={revisionSanidadLocal}
                 onPendientesLocalesChange={() => void cargarPendientesLocales()}
                 onSesionInvalida={onSesionInvalida} />
+              <ReproduccionPanel ganaderiaId={ganaderia.id} animal={ficha}
+                animales={animales} accessToken={sesion.accessToken}
+                puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
             </>
           )}
         </div>
