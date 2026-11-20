@@ -3,6 +3,7 @@ import { VacunacionesPanel } from './VacunacionesPanel'
 import { HistorialSanitarioPanel } from './HistorialSanitarioPanel'
 import { AgendaSanitariaPanel } from './AgendaSanitariaPanel'
 import { ReproduccionPanel } from './ReproduccionPanel'
+import { PartosPanel } from './PartosPanel'
 import {
   ejecutarConProteccionActualizacionPwa,
   useProteccionActualizacionPwa,
@@ -1170,6 +1171,9 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                 onPendientesLocalesChange={() => void cargarPendientesLocales()}
                 onSesionInvalida={onSesionInvalida} />
               <ReproduccionPanel ganaderiaId={ganaderia.id} animal={ficha}
+                animales={animales} accessToken={sesion.accessToken}
+                puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
+              <PartosPanel ganaderiaId={ganaderia.id} madre={ficha}
                 animales={animales} accessToken={sesion.accessToken}
                 puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
             </>

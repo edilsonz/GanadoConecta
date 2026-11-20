@@ -1,0 +1,1 @@
+package pe.ganadoconecta.modulos.reproduccion.aplicacion;import java.util.*;import pe.ganadoconecta.modulos.reproduccion.dominio.Parto;public interface RepositorioPartos{ResultadoRegistroParto registrar(Parto p,UUID op,byte[] huella,int schema);List<Parto> listar(UUID ganaderia,UUID madre);}

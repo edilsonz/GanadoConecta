@@ -1,6 +1,6 @@
 package pe.ganadoconecta.modulos.reproduccion.adaptadores.entrada.http;
 import java.util.*;import org.springframework.context.annotation.Profile;import org.springframework.http.*;import org.springframework.web.bind.annotation.*;import pe.ganadoconecta.modulos.ganado.aplicacion.AnimalNoEncontradoException;import pe.ganadoconecta.modulos.identidad.aplicacion.AccesoGanaderiaDenegadoException;import pe.ganadoconecta.modulos.reproduccion.aplicacion.*;import pe.ganadoconecta.modulos.reproduccion.dominio.DatoReproductivoInvalidoException;
-@RestControllerAdvice(assignableTypes=ReproduccionControlador.class) @Profile("postgres")
+@RestControllerAdvice(assignableTypes={ReproduccionControlador.class,PartosControlador.class}) @Profile("postgres")
 public class ErroresReproduccionControlador{
  record Error(String codigo,String mensajeSeguro,Map<String,String> erroresPorCampo){}
  @ExceptionHandler(DatoReproductivoInvalidoException.class)ResponseEntity<Error> invalido(DatoReproductivoInvalidoException e){return ResponseEntity.unprocessableEntity().body(new Error("DATOS_INVALIDOS","Revise los datos reproductivos.",Map.of(e.campo(),"El campo no es válido.")));}

@@ -1,0 +1,1 @@
+package pe.ganadoconecta.modulos.reproduccion.aplicacion;import java.time.Instant;import java.util.UUID;public record ResultadoRegistroParto(UUID operationId,UUID partoId,Estado estado,Instant confirmadoEn){public enum Estado{APLICADO,REPROCESADO}}

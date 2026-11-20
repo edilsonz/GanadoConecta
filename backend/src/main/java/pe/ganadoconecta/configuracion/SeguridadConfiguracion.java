@@ -88,6 +88,10 @@ public class SeguridadConfiguracion {
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/ganaderias/*/animales/*/eventos-reproductivos").authenticated()
                         .requestMatchers(HttpMethod.GET,
+                                "/api/v1/ganaderias/*/animales/*/partos").authenticated()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/ganaderias/*/animales/*/partos").authenticated()
+                        .requestMatchers(HttpMethod.GET,
                                 "/api/v1/ganaderias/*/agenda-sanitaria").authenticated()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/ganaderias/*/agenda-sanitaria").authenticated()

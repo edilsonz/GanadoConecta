@@ -1,0 +1,1 @@
+package pe.ganadoconecta.modulos.reproduccion.aplicacion;import java.time.LocalDate;import java.util.*;import pe.ganadoconecta.modulos.reproduccion.dominio.ResultadoParto;public record SolicitudParto(UUID ganaderiaId,UUID madreId,UUID partoId,UUID operationId,int schemaVersion,LocalDate fecha,ResultadoParto resultado,UUID padreId,String observaciones,List<UUID> criaIds){}
