@@ -7,6 +7,7 @@ import {
   type Ganaderia,
 } from './ganaderiasApi'
 import type { SesionActiva } from './sesionApi'
+import { useProteccionActualizacionPwa } from './pwaActividad'
 
 type GanaderiasPanelProps = {
   sesion: SesionActiva | null
@@ -35,6 +36,11 @@ export function GanaderiasPanel({ sesion, onSesionInvalida }: GanaderiasPanelPro
   const [mensaje, setMensaje] = useState<string | null>(null)
   const [errorNombre, setErrorNombre] = useState<string | null>(null)
   const envioEnCurso = useRef(false)
+  useProteccionActualizacionPwa(
+    'formulario-crear-ganaderia',
+    'FORMULARIO',
+    Boolean(nombre || creando),
+  )
 
   useEffect(() => {
     if (!sesion) {

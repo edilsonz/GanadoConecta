@@ -454,6 +454,14 @@ IndexedDB, no modifica contextos ni sincroniza. Al arrancar offline sin sesión 
 memoria, React muestra una barrera segura y oculta información privada; instalar
 la PWA no equivale a preparar una ganadería ni a autorizar el dispositivo.
 
+El ciclo de actualización registra únicamente actividad efímera: cada formulario
+en edición o sincronización mantiene un Web Lock compartido y la activación pide
+el lock exclusivo con `ifAvailable`. Así no interrumpe trabajo local de otra
+ventana compatible. Sin Web Locks la protección se limita a la ventana actual y
+se documenta esa limitación. Una marca booleana en `sessionStorage` confirma la
+recarga aplicada; no contiene identidad, token, rol ni datos de negocio. El código
+nuevo no migra IndexedDB ni borra cachés/operaciones al instalarse.
+
 La autorización offline tiene máximo adoptado de 168 horas, separada de la
 conservación de registros. ContextoOffline incorpora autorizadoHasta y estado
 VIGENTE/REQUIERE_REVALIDACION/BLOQUEADO; son metadatos de acceso, no TTL de cola.

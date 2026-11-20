@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
+import { useProteccionActualizacionPwa } from './pwaActividad'
 import {
   consultarAnimal,
   ErrorAnimal,
@@ -62,6 +63,20 @@ const formularioInicial: FormularioAnimal = {
   nacimientoEstimado: false,
   categoria: '',
   observaciones: '',
+}
+
+function formularioAnimalModificado(formulario: FormularioAnimal) {
+  return formulario.sexo !== ''
+    || formulario.nombre !== ''
+    || formulario.raza !== ''
+    || formulario.areteFrente !== ''
+    || formulario.areteReverso !== ''
+    || formulario.coloresIdentificacionTextil !== ''
+    || formulario.ubicacionIdentificacionTextil !== ''
+    || formulario.fechaNacimiento !== ''
+    || formulario.nacimientoEstimado
+    || formulario.categoria !== ''
+    || formulario.observaciones !== ''
 }
 
 const categoriasPorSexo = {
@@ -226,6 +241,17 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
   const envioEnCurso = useRef(false)
   const sincronizacionEnCurso = useRef(false)
   const controlSincronizacion = useRef<AbortController | null>(null)
+
+  useProteccionActualizacionPwa(
+    `formulario-animal:${ganaderia.id}`,
+    'FORMULARIO',
+    formularioAnimalModificado(formulario) || enviando || Boolean(pendienteIncierto),
+  )
+  useProteccionActualizacionPwa(
+    `sincronizacion-animal:${ganaderia.id}`,
+    'SINCRONIZACION',
+    sincronizando,
+  )
 
   const ambitoLocal = { usuarioId: sesion.usuarioId, ganaderiaId: ganaderia.id }
 

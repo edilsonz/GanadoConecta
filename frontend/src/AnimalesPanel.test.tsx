@@ -20,6 +20,7 @@ import {
   ErrorSincronizacion,
   sincronizarPendientesManualmente,
 } from './sincronizacionAnimales'
+import { useEstadoActividadPwa } from './pwaActividad'
 
 vi.mock('./animalesApi', async importOriginal => {
   const original = await importOriginal<typeof import('./animalesApi')>()
@@ -116,6 +117,13 @@ function operacionLocal(payload: Parameters<typeof guardarRegistroPendienteAutor
   }
 }
 
+function EstadoActividadPwa() {
+  const estado = useEstadoActividadPwa()
+  return <output aria-label="Actividad PWA">
+    {estado.formularioEnEdicion ? 'formulario-activo' : 'sin-formulario'}
+  </output>
+}
+
 describe('Panel de animales', () => {
   beforeEach(() => {
     vi.mocked(consultarAccesoGanaderia).mockReset()
@@ -157,6 +165,23 @@ describe('Panel de animales', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Registrar animal' }))
     expect(await screen.findByText('Selecciona MACHO o HEMBRA.')).toBeInTheDocument()
     expect(registrarAnimal).not.toHaveBeenCalled()
+  })
+
+  it('protege una actualización mientras el formulario de animal tiene cambios', async () => {
+    vi.mocked(listarAnimales).mockResolvedValue(pagina([]))
+    render(<>
+      <AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />
+      <EstadoActividadPwa />
+    </>)
+
+    const nombre = await screen.findByLabelText('Nombre')
+    expect(screen.getByLabelText('Actividad PWA')).toHaveTextContent('sin-formulario')
+
+    fireEvent.change(nombre, { target: { value: 'Borrador local' } })
+    expect(await screen.findByText('formulario-activo')).toBeInTheDocument()
+
+    fireEvent.change(nombre, { target: { value: '' } })
+    expect(await screen.findByText('sin-formulario')).toBeInTheDocument()
   })
 
   it('prepara offline solo tras una decisión explícita en un dispositivo de confianza', async () => {

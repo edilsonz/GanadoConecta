@@ -1,5 +1,6 @@
 import { FormEvent, useRef, useState } from 'react'
 import { ErrorRegistro, registrarCuenta } from './authApi'
+import { useProteccionActualizacionPwa } from './pwaActividad'
 
 type ErroresFormulario = Partial<Record<'correo' | 'contrasena' | 'confirmacion', string>>
 
@@ -46,6 +47,11 @@ export function RegistroCuenta() {
   const [correoCreado, setCorreoCreado] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
   const envioEnCurso = useRef(false)
+  useProteccionActualizacionPwa(
+    'formulario-registro-cuenta',
+    'FORMULARIO',
+    Boolean(correo || contrasena || confirmacion || enviando),
+  )
 
   async function enviar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()

@@ -1,5 +1,30 @@
 import { useEffect, useState } from 'react'
 import { registrarPwa, type ActualizadorPwa } from './pwaRegistro'
+import {
+  ejecutarActualizacionSeguraPwa,
+  useEstadoActividadPwa,
+} from './pwaActividad'
+
+const MARCA_ACTUALIZACION_APLICADA = 'ganadoconecta:pwa-actualizacion-aplicada'
+
+function marcarActualizacionAplicada(pendiente: boolean) {
+  try {
+    if (pendiente) sessionStorage.setItem(MARCA_ACTUALIZACION_APLICADA, '1')
+    else sessionStorage.removeItem(MARCA_ACTUALIZACION_APLICADA)
+  } catch {
+    // El aviso es auxiliar y nunca sustituye el estado del Service Worker.
+  }
+}
+
+function consumirActualizacionAplicada() {
+  try {
+    const aplicada = sessionStorage.getItem(MARCA_ACTUALIZACION_APLICADA) === '1'
+    sessionStorage.removeItem(MARCA_ACTUALIZACION_APLICADA)
+    return aplicada
+  } catch {
+    return false
+  }
+}
 
 type EventoInstalacion = Event & {
   prompt: () => Promise<void>
@@ -36,6 +61,11 @@ export function PwaEstado({ conectado, sesionActiva }: PwaEstadoProps) {
   const [instalando, setInstalando] = useState(false)
   const [actualizando, setActualizando] = useState(false)
   const [actualizar, setActualizar] = useState<ActualizadorPwa | null>(null)
+  const [bloqueoOtraVentana, setBloqueoOtraVentana] = useState(false)
+  const [actualizacionAplicada, setActualizacionAplicada] = useState(
+    consumirActualizacionAplicada,
+  )
+  const actividad = useEstadoActividadPwa()
 
   useEffect(() => {
     const capturar = (evento: Event) => {
@@ -54,7 +84,10 @@ export function PwaEstado({ conectado, sesionActiva }: PwaEstadoProps) {
   useEffect(() => {
     const ejecutarActualizacion = registrarPwa({
       onListaOffline: () => setListaOffline(true),
-      onNuevaVersion: () => setNuevaVersion(true),
+      onNuevaVersion: () => {
+        setNuevaVersion(true)
+        setBloqueoOtraVentana(false)
+      },
       onError: () => setErrorPreparacion(true),
     })
     setActualizar(() => ejecutarActualizacion)
@@ -75,15 +108,40 @@ export function PwaEstado({ conectado, sesionActiva }: PwaEstadoProps) {
   async function confirmarActualizacion() {
     if (!actualizar || actualizando) return
     setActualizando(true)
+    setBloqueoOtraVentana(false)
     try {
-      await actualizar(true)
+      const resultado = await ejecutarActualizacionSeguraPwa(
+        async () => {
+          marcarActualizacionAplicada(true)
+          await actualizar(true)
+        },
+        actividad,
+      )
+      if (resultado === 'BLOQUEADA_OTRA_VENTANA') {
+        marcarActualizacionAplicada(false)
+        setBloqueoOtraVentana(true)
+        setActualizando(false)
+        return
+      }
+      if (resultado !== 'APLICADA') {
+        setActualizando(false)
+        return
+      }
+      setNuevaVersion(false)
+      setActualizacionAplicada(true)
+      setActualizando(false)
     } catch {
+      marcarActualizacionAplicada(false)
       setActualizando(false)
       setErrorPreparacion(true)
     }
   }
 
-  if (conectado && !instalacion && !listaOffline && !nuevaVersion && !errorPreparacion) {
+  const actualizacionBloqueada = actividad.formularioEnEdicion
+    || actividad.sincronizacionEnCurso
+
+  if (conectado && !instalacion && !listaOffline && !nuevaVersion
+      && !errorPreparacion && !actualizacionAplicada) {
     return null
   }
 
@@ -95,12 +153,12 @@ export function PwaEstado({ conectado, sesionActiva }: PwaEstadoProps) {
           <strong>Aplicación sin conexión</strong>
           <span>{sesionActiva
             ? 'La estructura está disponible localmente. Solo usa funciones offline previamente preparadas.'
-            : 'La estructura está disponible, pero debes recuperar conexión e iniciar sesión para acceder a datos privados.'}</span>
+            : 'Se necesita conexión para verificar la sesión. Las operaciones locales permanecen conservadas y ocultas hasta iniciar sesión con la cuenta autorizada.'}</span>
         </div>
       )}
       {listaOffline && conectado && (
         <div className="pwa-status-message">
-          <strong>Recursos básicos disponibles sin conexión</strong>
+          <strong>Aplicación disponible sin conexión</strong>
           <span>Esto no sustituye el inicio de sesión ni los permisos de cada ganadería.</span>
           <button type="button" onClick={() => setListaOffline(false)}>Entendido</button>
         </div>
@@ -117,17 +175,33 @@ export function PwaEstado({ conectado, sesionActiva }: PwaEstadoProps) {
       {nuevaVersion && (
         <div className="pwa-status-message">
           <strong>Nueva versión disponible</strong>
-          <span>Termina cualquier formulario o sincronización antes de actualizar. No se recargará automáticamente.</span>
+          <span>{actividad.sincronizacionEnCurso
+            ? 'Hay una sincronización manual en curso. Espera a que termine para actualizar.'
+            : actividad.formularioEnEdicion
+              ? 'Hay un formulario con cambios sin guardar. Complétalo o vacíalo antes de actualizar.'
+              : bloqueoOtraVentana
+                ? 'Otra ventana tiene un formulario o una sincronización en curso. Ciérrala o termina esa tarea y vuelve a intentar.'
+                : 'Puedes actualizar ahora. No se recargará automáticamente sin tu confirmación.'}</span>
           <button type="button" onClick={() => void confirmarActualizacion()}
-            disabled={actualizando}>
+            disabled={actualizando || actualizacionBloqueada}>
             {actualizando ? 'Actualizando…' : 'Actualizar ahora'}
           </button>
         </div>
       )}
+      {actualizacionAplicada && (
+        <div className="pwa-status-message">
+          <strong>Actualización aplicada correctamente</strong>
+          <span>La estructura está actualizada y las operaciones locales se conservaron.</span>
+          <button type="button" onClick={() => {
+            marcarActualizacionAplicada(false)
+            setActualizacionAplicada(false)
+          }}>Entendido</button>
+        </div>
+      )}
       {errorPreparacion && (
         <div className="pwa-status-message pwa-status-error">
-          <strong>No se prepararon los recursos offline</strong>
-          <span>Continúa con conexión. Tus operaciones de IndexedDB no se eliminaron.</span>
+          <strong>Actualización no disponible o fallida</strong>
+          <span>La versión anterior sigue disponible. Tus operaciones de IndexedDB no se eliminaron.</span>
           <button type="button" onClick={() => setErrorPreparacion(false)}>Cerrar</button>
         </div>
       )}
@@ -144,7 +218,8 @@ export function AccesoOfflineSeguro() {
         ganaderías, animales ni operaciones locales hasta recuperar conexión e
         iniciar sesión con la cuenta autorizada.</p>
       <p className="offline-safe-note">Instalar la aplicación y abrir su estructura
-        sin internet no concede autorización para trabajar con datos privados.</p>
+        sin internet no concede autorización para trabajar con datos privados.
+        Las operaciones pendientes se conservan, pero permanecen ocultas.</p>
     </section>
   )
 }

@@ -7,6 +7,7 @@ import {
   type SesionActiva,
 } from './sesionApi'
 import { bloquearContextosOfflineUsuario } from './registroAnimalesOffline'
+import { useProteccionActualizacionPwa } from './pwaActividad'
 
 const MARCA_CIERRE_PENDIENTE = 'ganadoconecta:salida-remota-pendiente'
 
@@ -49,6 +50,11 @@ export function AccesoCuenta({ sesion, onSesionChange }: AccesoCuentaProps) {
   const [mensajeError, setMensajeError] = useState<string | null>(null)
   const [errorCorreo, setErrorCorreo] = useState<string | null>(null)
   const envioEnCurso = useRef(false)
+  useProteccionActualizacionPwa(
+    'formulario-inicio-sesion',
+    'FORMULARIO',
+    Boolean(enviando || (!sesion && (correo || contrasena))),
+  )
 
   useEffect(() => {
     let activo = true
