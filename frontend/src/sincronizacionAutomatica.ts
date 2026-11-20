@@ -168,8 +168,12 @@ export class ControladorSincronizacionAutomatica {
           .map(operacion => operacion.reintentoDespuesMs ?? 0))
         this.programarReintento(retryAfterMs)
       } else if (resultado.operaciones.some(operacion =>
-        operacion.estado === 'REQUIERE_SESION')) {
+        operacion.estado === 'REQUIERE_SESION'
+          || operacion.codigoError === 'AUTENTICACION')) {
         this.publicar({ tipo: 'SESION_EXPIRADA' })
+      } else if (resultado.operaciones.some(operacion =>
+        operacion.codigoError === 'AUTORIZACION')) {
+        this.publicar({ tipo: 'PERMISO_INSUFICIENTE' })
       } else if (resultado.operaciones.some(operacion =>
         operacion.estado === 'RECHAZADA'
           || operacion.estado === 'CONFLICTO'

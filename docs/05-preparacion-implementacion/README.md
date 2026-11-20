@@ -32,7 +32,9 @@
 > documenta el primer envío seguro de la cola y la [PWA](24-pwa-carga-basica-offline.md)
 > añade instalación y carga básica del app shell sin cachear datos privados; la
 > [sincronización automática en primer plano](25-sincronizacion-automatica-primer-plano.md)
-> incorpora opt-in por sesión/contexto y reintentos acotados.
+> incorpora opt-in por sesión/contexto y reintentos acotados, y la
+> [gestión de errores y conflictos](26-errores-conflictos-sincronizacion.md)
+> mantiene visibles los fallos y bloquea reintentos permanentes.
 > Background Sync, caché privada autorizada y E2E offline integral
 > continúan pendientes. Los estados de propuesta siguientes describen la
 > preparación arquitectónica original, no acreditan implementación de SPEC-01.

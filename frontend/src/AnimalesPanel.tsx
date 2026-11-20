@@ -135,6 +135,42 @@ const etiquetasEstadoPendiente = {
   SINCRONIZADO: 'Sincronizado',
 } as const
 
+function esOperacionRecuperable(operacion: OperacionPendienteLocal) {
+  return operacion.estado === 'PENDIENTE'
+    || operacion.estado === 'ERROR_REINTENTABLE'
+    || operacion.estado === 'REQUIERE_SESION'
+    || operacion.estado === 'SINCRONIZANDO'
+    || (operacion.estado === 'RECHAZADO'
+      && operacion.ultimoError === 'AUTORIZACION')
+}
+
+function detalleEstadoPendiente(operacion: OperacionPendienteLocal) {
+  if (operacion.estado === 'PENDIENTE') {
+    return 'Todavía no se confirmó en PostgreSQL. Puedes enviarlo manualmente o con la sincronización automática.'
+  }
+  if (operacion.estado === 'SINCRONIZANDO') {
+    return 'Existe un envío en curso o interrumpido. El motor recuperará su lease sin crear otra identidad.'
+  }
+  if (operacion.estado === 'ERROR_REINTENTABLE') {
+    return operacion.ultimoError === 'RED'
+      ? 'La red no permitió confirmar el resultado. Es seguro reintentar la misma operación.'
+      : 'El servidor no pudo confirmar temporalmente el resultado. Es seguro reintentar la misma operación.'
+  }
+  if (operacion.estado === 'REQUIERE_SESION') {
+    return 'La sesión venció. Inicia sesión con la misma cuenta y recupera una autorización válida antes de reenviar.'
+  }
+  if (operacion.estado === 'CONFLICTO') {
+    return 'El servidor informó un conflicto 409. No se reintentará ni fusionará automáticamente; requiere revisión.'
+  }
+  if (operacion.ultimoError === 'AUTORIZACION') {
+    return 'La membresía fue revocada o el rol no permite escribir. Solo podrá reenviarse tras recuperar permisos válidos.'
+  }
+  if (operacion.ultimoError === 'VALIDACION') {
+    return 'El servidor rechazó los datos. Requiere revisión y no se reintentará automáticamente.'
+  }
+  return 'La solicitud fue rechazada de forma definitiva por seguridad o protocolo. Requiere revisión.'
+}
+
 const estadoAutomaticoInicial: EstadoSincronizacionAutomatica = { tipo: 'DESACTIVADA' }
 
 function textoEstadoAutomatico(estado: EstadoSincronizacionAutomatica) {
@@ -281,10 +317,12 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
       alCambiarEstado: estado => {
         setEstadoSincronizacionAutomatica(estado)
         if (estado.tipo === 'SESION_EXPIRADA') {
+          setMensaje(mensajesError.sesion)
           void requerirRevalidacionOffline(ambitoActual.current).catch(() => undefined)
           invalidarSesionActual.current()
         }
         if (estado.tipo === 'PERMISO_INSUFICIENTE') {
+          setMensaje(mensajesError.permiso)
           void bloquearAccesoOffline(ambitoActual.current).catch(() => undefined)
           setAcceso(null)
           setAnimales([])
@@ -309,9 +347,8 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
   )
 
   const ambitoLocal = { usuarioId: sesion.usuarioId, ganaderiaId: ganaderia.id }
-  const hayPendientesAutomaticos = pendientesLocales.some(
-    operacion => operacion.estado !== 'SINCRONIZADO',
-  )
+  const operacionesRecuperables = pendientesLocales.filter(esOperacionRecuperable)
+  const hayPendientesAutomaticos = operacionesRecuperables.length > 0
 
   useEffect(() => {
     const marcarOnline = () => setNavegadorSinConexion(false)
@@ -404,6 +441,18 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
     resultado: ResultadoSincronizacionManual,
     automatica: boolean,
   ) {
+    if (!automatica && resultado.operaciones.some(
+      operacion => operacion.codigoError === 'AUTENTICACION',
+    )) {
+      aplicarFallo(new ErrorAnimal('sesion'))
+      return
+    }
+    if (!automatica && resultado.operaciones.some(
+      operacion => operacion.codigoError === 'AUTORIZACION',
+    )) {
+      aplicarFallo(new ErrorAnimal('permiso'))
+      return
+    }
     const pendientes = await cargarPendientesLocales()
     if (resultado.confirmadasRemotamente > 0) {
       try {
@@ -439,7 +488,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
 
   async function sincronizarPendientes() {
     if (!acceso || acceso.rol === 'LECTOR' || sincronizacionEnCurso.current
-        || navegadorSinConexion || pendientesLocales.length === 0) return
+        || navegadorSinConexion || operacionesRecuperables.length === 0) return
 
     sincronizacionEnCurso.current = true
     setSincronizando(true)
@@ -736,10 +785,10 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
   const puedeRegistrar = acceso?.rol === 'PROPIETARIO' || acceso?.rol === 'EDITOR'
   const sincronizandoAutomaticamente = estadoSincronizacionAutomatica.tipo === 'SINCRONIZANDO'
   const camposBloqueados = enviando || Boolean(pendienteIncierto)
-  const animalesConfirmados = new Set(animales.map(item => item.animalId))
-  const pendientesVisibles = pendientesLocales.filter(
-    operacion => !animalesConfirmados.has(operacion.animalId),
-  )
+  // IndexedDB excluye SINCRONIZADO. Una operación no resuelta debe seguir
+  // visible aunque el animal ya aparezca en GET: puede faltar guardar el recibo.
+  const pendientesVisibles = pendientesLocales
+  const recuperablesVisibles = pendientesVisibles.filter(esOperacionRecuperable)
 
   return (
     <section className="animals-panel" id="mis-animales" aria-labelledby="animals-title">
@@ -813,13 +862,17 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                   {puedeRegistrar && (
                     <button className="button button-primary sync-pending-button" type="button"
                       onClick={() => void sincronizarPendientes()}
-                      disabled={sincronizando || sincronizandoAutomaticamente || navegadorSinConexion}
+                      disabled={sincronizando || sincronizandoAutomaticamente
+                        || navegadorSinConexion || recuperablesVisibles.length === 0}
                       aria-describedby="local-pending-help">
-                      {sincronizando ? 'Sincronizando…' : 'Sincronizar pendientes'}
+                      {sincronizando ? 'Sincronizando…'
+                        : recuperablesVisibles.length > 0
+                          ? 'Sincronizar pendientes'
+                          : 'Sin operaciones recuperables'}
                     </button>
                   )}
                 </div>
-                <p id="local-pending-help">No están guardados en PostgreSQL. Se enviarán al pulsar el botón o, si la activas, mediante sincronización automática en primer plano.</p>
+                <p id="local-pending-help">Los datos e identificadores originales permanecen en este dispositivo. {recuperablesVisibles.length} {recuperablesVisibles.length === 1 ? 'operación recuperable puede' : 'operaciones recuperables pueden'} reenviarse con el botón o mediante sincronización automática.</p>
                 <div className="local-pending-list">
                   {pendientesVisibles.map(operacion => (
                     <article className="local-pending-item" key={operacion.operationId}>
@@ -828,8 +881,12 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                           || operacion.payload.areteFrente
                           || (operacion.payload.sexo === 'HEMBRA' ? 'Hembra sin nombre' : 'Macho sin nombre')}</strong>
                         <small>{operacion.payload.sexo === 'HEMBRA' ? 'Hembra' : 'Macho'}</small>
+                        <small className="local-pending-reason">{detalleEstadoPendiente(operacion)}</small>
                       </span>
-                      <b>{etiquetasEstadoPendiente[operacion.estado]}</b>
+                      <footer>
+                        <b>{etiquetasEstadoPendiente[operacion.estado]}</b>
+                        <small>{operacion.intentos} {operacion.intentos === 1 ? 'intento' : 'intentos'}</small>
+                      </footer>
                     </article>
                   ))}
                 </div>

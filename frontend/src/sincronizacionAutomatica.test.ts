@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ErrorSincronizacion, type ResultadoSincronizacionManual } from './sincronizacionAnimales'
+import type { CodigoErrorSeguroOperacion } from './operacionesPendientesDb'
 import {
   ControladorSincronizacionAutomatica,
   type ContextoSincronizacionAutomatica,
@@ -22,6 +23,7 @@ const contextoBase: ContextoSincronizacionAutomatica = {
 function resultado(
   estado: ResultadoSincronizacionManual['operaciones'][number]['estado'] = 'SINCRONIZADA',
   retryAfterMs?: number,
+  codigoError?: CodigoErrorSeguroOperacion,
 ): ResultadoSincronizacionManual {
   return {
     total: 1,
@@ -35,6 +37,7 @@ function resultado(
       estado,
       confirmadaRemotamente: estado === 'SINCRONIZADA',
       ...(retryAfterMs !== undefined && { reintentoDespuesMs: retryAfterMs }),
+      ...(codigoError !== undefined && { codigoError }),
     }],
   }
 }
@@ -122,6 +125,23 @@ describe('sincronización automática controlada en primer plano', () => {
     controlador.activar(contextoBase)
     await vaciarPromesas()
     expect(estados.at(-1)?.tipo).toBe('ACCION_REQUERIDA')
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('distingue una revocación confirmada de otros rechazos permanentes', async () => {
+    const sincronizar = vi.fn().mockResolvedValue(
+      resultado('RECHAZADA', undefined, 'AUTORIZACION'),
+    )
+    const estados: EstadoSincronizacionAutomatica[] = []
+    const controlador = new ControladorSincronizacionAutomatica({
+      sincronizar,
+      alCambiarEstado: valor => estados.push(valor),
+    })
+
+    controlador.activar(contextoBase)
+    await vaciarPromesas()
+
+    expect(estados.at(-1)?.tipo).toBe('PERMISO_INSUFICIENTE')
     expect(vi.getTimerCount()).toBe(0)
   })
 

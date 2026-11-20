@@ -79,6 +79,7 @@ export type ResultadoOperacionSincronizacion = {
   confirmadaRemotamente: boolean
   resultadoRemoto?: ResultadoRegistroAnimal['resultado']
   reintentoDespuesMs?: number
+  codigoError?: CodigoErrorSeguroOperacion
 }
 
 export type ResultadoSincronizacionManual = {
@@ -283,6 +284,7 @@ export class ServicioSincronizacionAnimales {
           reclamada,
           clasificacion.estadoResultado,
           clasificacion.reintentoDespuesMs,
+          clasificacion.errorSeguro,
         ),
         detenerLote: clasificacion.detenerLote,
       }
@@ -384,6 +386,14 @@ function clasificarFallo(error: unknown): {
       detenerLote: false,
     }
   }
+  if (fallo.tipo === 'seguridad') {
+    return {
+      estadoLocal: 'RECHAZADO',
+      errorSeguro: 'PROTOCOLO',
+      estadoResultado: 'RECHAZADA',
+      detenerLote: true,
+    }
+  }
   if (fallo.tipo === 'conflicto') {
     return {
       estadoLocal: 'CONFLICTO',
@@ -394,8 +404,7 @@ function clasificarFallo(error: unknown): {
   }
   return {
     estadoLocal: 'ERROR_REINTENTABLE',
-    errorSeguro: fallo.tipo === 'conexion' ? 'RED'
-      : fallo.tipo === 'seguridad' ? 'PROTOCOLO' : 'SERVIDOR',
+    errorSeguro: fallo.tipo === 'conexion' ? 'RED' : 'SERVIDOR',
     estadoResultado: 'ERROR_REINTENTABLE',
     detenerLote: false,
     reintentoDespuesMs: fallo.retryAfterMs,
@@ -406,6 +415,7 @@ function resultadoLocal(
   operacion: Pick<OperacionPendienteLocal, 'operationId' | 'animalId'>,
   estado: EstadoResultadoOperacion,
   reintentoDespuesMs?: number,
+  codigoError?: CodigoErrorSeguroOperacion,
 ): ResultadoOperacionSincronizacion {
   return {
     operationId: operacion.operationId,
@@ -413,6 +423,7 @@ function resultadoLocal(
     estado,
     confirmadaRemotamente: false,
     ...(reintentoDespuesMs !== undefined && { reintentoDespuesMs }),
+    ...(codigoError !== undefined && { codigoError }),
   }
 }
 

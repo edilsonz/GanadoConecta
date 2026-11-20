@@ -245,6 +245,7 @@ describe('sincronización manual de animales pendientes', () => {
   it.each([
     ['validacion', 'RECHAZADO', 'VALIDACION'],
     ['conflicto', 'CONFLICTO', 'CONFLICTO'],
+    ['seguridad', 'RECHAZADO', 'PROTOCOLO'],
     ['servicio', 'ERROR_REINTENTABLE', 'SERVIDOR'],
   ] as const)('clasifica de forma segura el fallo %s', async (tipo, estado, codigo) => {
     const almacen = crearAlmacen()
@@ -256,10 +257,11 @@ describe('sincronización manual de animales pendientes', () => {
       crearLeaseId: () => lease1,
     })
 
-    await servicio.sincronizar(sesion, ganaderia)
+    const resultado = await servicio.sincronizar(sesion, ganaderia)
 
     await expect(almacen.obtener({ usuarioId: usuario, ganaderiaId: ganaderia }, operacion))
       .resolves.toMatchObject({ estado, ultimoError: codigo, payload })
+    expect(resultado.operaciones[0]).toMatchObject({ codigoError: codigo })
   })
 
   it('propaga Retry-After solo como demora segura de un error reintentable', async () => {
@@ -368,5 +370,39 @@ describe('sincronización manual de animales pendientes', () => {
     await expect(almacenReal.obtener(
       { usuarioId: usuario, ganaderiaId: ganaderia }, operacion,
     )).resolves.toMatchObject({ estado: 'SINCRONIZANDO', leaseId: lease1 })
+  })
+
+  it('conserva payload e identificadores si falla actualizar el estado local del envío', async () => {
+    const almacenReal = crearAlmacen()
+    await preparar(almacenReal)
+    const almacen = {
+      listarPendientes: almacenReal.listarPendientes.bind(almacenReal),
+      actualizarEstado: almacenReal.actualizarEstado.bind(almacenReal),
+      reclamarParaSincronizar: almacenReal.reclamarParaSincronizar.bind(almacenReal),
+      finalizarSincronizacion: almacenReal.finalizarSincronizacion.bind(almacenReal),
+      fallarSincronizacion: vi.fn().mockRejectedValue(new Error('fallo local')),
+    }
+    const servicio = new ServicioSincronizacionAnimales({
+      almacen,
+      registrar: vi.fn().mockRejectedValue(new ErrorAnimal('conexion')),
+      consultarAcceso: vi.fn().mockResolvedValue(acceso()),
+      crearLeaseId: () => lease1,
+    })
+
+    await expect(servicio.sincronizar(sesion, ganaderia)).resolves.toMatchObject({
+      operaciones: [{
+        operationId: operacion,
+        animalId: animal,
+        estado: 'ERROR_LOCAL',
+      }],
+    })
+    await expect(almacenReal.obtener(
+      { usuarioId: usuario, ganaderiaId: ganaderia }, operacion,
+    )).resolves.toMatchObject({
+      operationId: operacion,
+      animalId: animal,
+      payload,
+      estado: 'SINCRONIZANDO',
+    })
   })
 })

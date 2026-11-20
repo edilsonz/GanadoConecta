@@ -21,6 +21,7 @@ import {
   sincronizarPendientesManualmente,
 } from './sincronizacionAnimales'
 import { useEstadoActividadPwa } from './pwaActividad'
+import type { OperacionPendienteLocal } from './operacionesPendientesDb'
 
 vi.mock('./animalesApi', async importOriginal => {
   const original = await importOriginal<typeof import('./animalesApi')>()
@@ -99,7 +100,10 @@ function pagina(items: Animal[] = [animal], siguienteCursor: string | null = nul
   return { items, siguienteCursor, consultadoEn: '2026-11-18T18:02:00Z' }
 }
 
-function operacionLocal(payload: Parameters<typeof guardarRegistroPendienteAutorizado>[1]) {
+function operacionLocal(
+  payload: Parameters<typeof guardarRegistroPendienteAutorizado>[1],
+  cambios: Partial<Pick<OperacionPendienteLocal, 'estado' | 'ultimoError' | 'intentos'>> = {},
+) {
   return {
     usuarioId: sesion.usuarioId,
     ganaderiaId: ganaderia.id,
@@ -114,6 +118,7 @@ function operacionLocal(payload: Parameters<typeof guardarRegistroPendienteAutor
     leaseId: null,
     leaseHasta: null,
     confirmacion: null,
+    ...cambios,
   }
 }
 
@@ -684,10 +689,17 @@ describe('Panel de animales', () => {
       sexo: 'MACHO' as const,
       nombre: 'Pendiente seguro',
     }
-    vi.mocked(listarPendientesAutorizados).mockResolvedValue({
-      autorizacion: 'AUTORIZADA_ESCRITURA', contexto: null,
-      operaciones: [operacionLocal(payload)],
-    })
+    vi.mocked(listarPendientesAutorizados)
+      .mockResolvedValueOnce({
+        autorizacion: 'AUTORIZADA_ESCRITURA', contexto: null,
+        operaciones: [operacionLocal(payload)],
+      })
+      .mockResolvedValue({
+        autorizacion: 'AUTORIZADA_ESCRITURA', contexto: null,
+        operaciones: [operacionLocal(payload, {
+          estado: 'ERROR_REINTENTABLE', ultimoError: 'RED', intentos: 1,
+        })],
+      })
     vi.mocked(sincronizarPendientesManualmente)
       .mockRejectedValue(new ErrorSincronizacion('conexion'))
     render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
@@ -696,7 +708,130 @@ describe('Panel de animales', () => {
 
     expect(await screen.findByText(/Las operaciones permanecen guardadas/)).toBeInTheDocument()
     expect(screen.getByText('Pendiente seguro')).toBeInTheDocument()
+    expect(screen.getByText(/red no permitió confirmar/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sincronizar pendientes' })).toBeEnabled()
+  })
+
+  it('no oculta una operación local sin recibo aunque el animal ya aparezca confirmado', async () => {
+    const payload = {
+      operationId: operacionUuid,
+      animalId: animalUuid,
+      tipo: 'CREAR_ANIMAL' as const,
+      schemaVersion: 2 as const,
+      baseVersion: 0 as const,
+      sexo: 'HEMBRA' as const,
+      nombre: 'Luna pendiente de recibo',
+    }
+    vi.mocked(listarAnimales).mockResolvedValue(pagina([animal]))
+    vi.mocked(listarPendientesAutorizados).mockResolvedValue({
+      autorizacion: 'AUTORIZADA_ESCRITURA', contexto: null,
+      operaciones: [operacionLocal(payload, {
+        estado: 'ERROR_REINTENTABLE', ultimoError: 'RED', intentos: 1,
+      })],
+    })
+
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+
+    expect(await screen.findByText('Luna pendiente de recibo')).toBeInTheDocument()
+    expect(screen.getByText(/misma operación/)).toBeInTheDocument()
+  })
+
+  it.each([
+    ['CONFLICTO', 'CONFLICTO', /conflicto 409/],
+    ['RECHAZADO', 'VALIDACION', /servidor rechazó los datos/],
+    ['RECHAZADO', 'PROTOCOLO', /seguridad o protocolo/],
+  ] as const)('explica %s/%s y bloquea reintentos indebidos', async (estado, codigo, texto) => {
+    vi.mocked(listarAnimales).mockResolvedValue(pagina([]))
+    const payload = {
+      operationId: operacionUuid,
+      animalId: animalUuid,
+      tipo: 'CREAR_ANIMAL' as const,
+      schemaVersion: 2 as const,
+      baseVersion: 0 as const,
+      sexo: 'HEMBRA' as const,
+      nombre: 'Revisión requerida',
+    }
+    vi.mocked(listarPendientesAutorizados).mockResolvedValue({
+      autorizacion: 'AUTORIZADA_ESCRITURA', contexto: null,
+      operaciones: [operacionLocal(payload, { estado, ultimoError: codigo, intentos: 1 })],
+    })
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+
+    expect(await screen.findByText(texto)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sin operaciones recuperables' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('checkbox', {
+      name: 'Sincronización automática al recuperar conexión',
+    }))
+    expect(sincronizarPendientesManualmente).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['REQUIERE_SESION', 'AUTENTICACION', /sesión venció/],
+    ['RECHAZADO', 'AUTORIZACION', /membresía fue revocada/],
+  ] as const)('muestra la recuperación exigida para %s', async (estado, codigo, texto) => {
+    vi.mocked(listarAnimales).mockResolvedValue(pagina([]))
+    const payload = {
+      operationId: operacionUuid,
+      animalId: animalUuid,
+      tipo: 'CREAR_ANIMAL' as const,
+      schemaVersion: 2 as const,
+      baseVersion: 0 as const,
+      sexo: 'MACHO' as const,
+      nombre: 'Acceso por recuperar',
+    }
+    vi.mocked(listarPendientesAutorizados).mockResolvedValue({
+      autorizacion: 'AUTORIZADA_ESCRITURA', contexto: null,
+      operaciones: [operacionLocal(payload, { estado, ultimoError: codigo })],
+    })
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+
+    expect(await screen.findByText(texto)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sincronizar pendientes' })).toBeEnabled()
+  })
+
+  it.each([
+    ['AUTENTICACION', 'REQUIERE_SESION', 'sesion'],
+    ['AUTORIZACION', 'RECHAZADA', 'permiso'],
+  ] as const)('aplica el bloqueo seguro cuando el envío devuelve %s', async (
+    codigoError, estado, efecto,
+  ) => {
+    vi.mocked(listarAnimales).mockResolvedValue(pagina([]))
+    const payload = {
+      operationId: operacionUuid,
+      animalId: animalUuid,
+      tipo: 'CREAR_ANIMAL' as const,
+      schemaVersion: 2 as const,
+      baseVersion: 0 as const,
+      sexo: 'HEMBRA' as const,
+    }
+    vi.mocked(listarPendientesAutorizados).mockResolvedValue({
+      autorizacion: 'AUTORIZADA_ESCRITURA', contexto: null,
+      operaciones: [operacionLocal(payload)],
+    })
+    vi.mocked(sincronizarPendientesManualmente).mockResolvedValue({
+      total: 1, sincronizadas: 0, confirmadasRemotamente: 0, fallidas: 1, ocupadas: 0,
+      operaciones: [{
+        operationId: operacionUuid,
+        animalId: animalUuid,
+        estado,
+        confirmadaRemotamente: false,
+        codigoError,
+      }],
+    })
+    const invalidar = vi.fn()
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={invalidar} />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Sincronizar pendientes' }))
+
+    if (efecto === 'sesion') {
+      await waitFor(() => expect(invalidar).toHaveBeenCalledOnce())
+      expect(requerirRevalidacionOffline).toHaveBeenCalled()
+      expect(screen.getByText(/Tu sesión terminó/)).toBeInTheDocument()
+    } else {
+      expect(await screen.findByText(/No hay acceso vigente/)).toBeInTheDocument()
+      expect(bloquearAccesoOffline).toHaveBeenCalled()
+      expect(screen.getByText(/Tu acceso a esta ganadería cambió/)).toBeInTheDocument()
+    }
   })
 
   it('invalida la vista al fallar la revalidación de sesión durante sincronización', async () => {
