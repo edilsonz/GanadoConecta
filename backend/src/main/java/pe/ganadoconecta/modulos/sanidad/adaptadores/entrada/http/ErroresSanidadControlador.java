@@ -20,7 +20,8 @@ import pe.ganadoconecta.modulos.sanidad.aplicacion.ConflictoSanitarioException;
 import pe.ganadoconecta.modulos.sanidad.aplicacion.PersistenciaSanitariaException;
 import pe.ganadoconecta.modulos.sanidad.dominio.DatoSanitarioInvalidoException;
 
-@RestControllerAdvice(assignableTypes = VacunacionesControlador.class)
+@RestControllerAdvice(assignableTypes = {VacunacionesControlador.class,
+        HistorialSanitarioControlador.class})
 @Profile("postgres")
 public class ErroresSanidadControlador {
     private static final Logger LOGGER = LoggerFactory.getLogger(ErroresSanidadControlador.class);

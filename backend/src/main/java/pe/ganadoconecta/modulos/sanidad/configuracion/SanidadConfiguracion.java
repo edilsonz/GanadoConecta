@@ -9,6 +9,10 @@ import pe.ganadoconecta.modulos.ganado.aplicacion.AutorizarLecturaGanaderia;
 import pe.ganadoconecta.modulos.ganado.aplicacion.UnidadDeTrabajo;
 import pe.ganadoconecta.modulos.identidad.aplicacion.AutorizarAccesoGanaderiaTransaccional;
 import pe.ganadoconecta.modulos.sanidad.adaptadores.salida.RepositorioVacunacionesPostgres;
+import pe.ganadoconecta.modulos.sanidad.adaptadores.salida.RepositorioEventosSanitariosPostgres;
+import pe.ganadoconecta.modulos.sanidad.aplicacion.ListarHistorialSanitario;
+import pe.ganadoconecta.modulos.sanidad.aplicacion.RegistrarEventoSanitario;
+import pe.ganadoconecta.modulos.sanidad.aplicacion.RepositorioEventosSanitarios;
 import pe.ganadoconecta.modulos.sanidad.aplicacion.ListarVacunaciones;
 import pe.ganadoconecta.modulos.sanidad.aplicacion.RegistrarVacunacion;
 import pe.ganadoconecta.modulos.sanidad.aplicacion.RepositorioVacunaciones;
@@ -32,5 +36,18 @@ public class SanidadConfiguracion {
     ListarVacunaciones listarVacunaciones(AutorizarLecturaGanaderia autorizador,
             RepositorioVacunaciones repositorio) {
         return new ListarVacunaciones(autorizador, repositorio);
+    }
+
+    @Bean RepositorioEventosSanitarios repositorioEventosSanitarios(JdbcTemplate jdbc){
+        return new RepositorioEventosSanitariosPostgres(jdbc);
+    }
+    @Bean RegistrarEventoSanitario registrarEventoSanitario(UnidadDeTrabajo unidad,
+            AutorizarAccesoGanaderiaTransaccional autorizador,
+            RepositorioEventosSanitarios repositorio,Clock reloj){
+        return new RegistrarEventoSanitario(unidad,autorizador,repositorio,reloj);
+    }
+    @Bean ListarHistorialSanitario listarHistorialSanitario(
+            AutorizarLecturaGanaderia autorizador,RepositorioEventosSanitarios repositorio){
+        return new ListarHistorialSanitario(autorizador,repositorio);
     }
 }

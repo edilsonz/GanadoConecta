@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import { VacunacionesPanel } from './VacunacionesPanel'
+import { HistorialSanitarioPanel } from './HistorialSanitarioPanel'
 import {
   ejecutarConProteccionActualizacionPwa,
   useProteccionActualizacionPwa,
@@ -1107,6 +1108,9 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
               <VacunacionesPanel key={`${ganaderia.id}-${ficha.animalId}`} ganaderiaId={ganaderia.id}
                 animalId={ficha.animalId} accessToken={sesion.accessToken}
                 puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
+              <HistorialSanitarioPanel ganaderiaId={ganaderia.id} animalId={ficha.animalId}
+                accessToken={sesion.accessToken} puedeEscribir={puedeRegistrar}
+                onSesionInvalida={onSesionInvalida} />
             </>
           )}
         </div>

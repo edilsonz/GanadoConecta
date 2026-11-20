@@ -1817,3 +1817,7 @@ footer p {
 .vaccinations-panel li { margin:12px 0 }
 .vaccinations-panel input,.vaccinations-panel textarea { box-sizing:border-box; width:100%; min-width:0 }
 .vaccinations-panel .animals-list-heading { flex-wrap:wrap; gap:12px }
+.health-history { margin-top:24px; padding-top:20px; border-top:1px solid #c4d6bb; min-width:0 }
+.health-history ol { padding-left:20px; overflow-wrap:anywhere }
+.health-history li { margin:14px 0 }
+.health-history small { display:block }

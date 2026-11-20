@@ -42,6 +42,7 @@ class VacunacionesPostgresIntegrationTest extends SoporteJwtPostgres {
         jwt=tokens.emitir(usuario,sesion,Instant.now(),Instant.now().plusSeconds(600)).valor();
     }
     String ruta() { return "/api/v1/ganaderias/"+ganaderia+"/animales/"+animal+"/vacunaciones"; }
+    String rutaHistorial() { return "/api/v1/ganaderias/"+ganaderia+"/animales/"+animal+"/eventos-sanitarios"; }
     String cuerpo(UUID op, UUID evento, String nombre) throws Exception {
         return json.writeValueAsString(Map.of("operationId",op,"eventId",evento,"schemaVersion",1,
                 "nombreVacuna",nombre,"fechaAplicacion","2026-01-01","responsable","Responsable sintético","proximaFecha","2026-02-01"));
@@ -49,6 +50,16 @@ class VacunacionesPostgresIntegrationTest extends SoporteJwtPostgres {
     org.springframework.test.web.servlet.ResultActions guardar(String body) throws Exception {
         return mvc.perform(post(ruta()).header("Authorization","Bearer "+jwt)
                 .header("Origin","https://127.0.0.1:5173").with(csrf().asHeader()).contentType("application/json").content(body));
+    }
+    String cuerpoEvento(UUID op,UUID evento,String tipo,String descripcion) throws Exception{
+        return json.writeValueAsString(Map.of("operationId",op,"eventId",evento,"schemaVersion",1,
+                "tipo",tipo,"fecha","2026-01-02","descripcion",descripcion,
+                "responsable","Responsable sintético","producto","Producto informado"));
+    }
+    org.springframework.test.web.servlet.ResultActions guardarEvento(String body)throws Exception{
+        return mvc.perform(post(rutaHistorial()).header("Authorization","Bearer "+jwt)
+                .header("Origin","https://127.0.0.1:5173").with(csrf().asHeader())
+                .contentType("application/json").content(body));
     }
     @Test void registraConsultaYReintentaSinDuplicar() throws Exception {
         var op=UUID.randomUUID(); var evento=UUID.randomUUID(); var body=cuerpo(op,evento,"Vacuna informada");
@@ -87,5 +98,29 @@ class VacunacionesPostgresIntegrationTest extends SoporteJwtPostgres {
         jdbc.update("UPDATE identidad.membresia SET rol='LECTOR' WHERE usuario_id=?",miembro);
         guardar(cuerpo(UUID.randomUUID(),UUID.randomUUID(),"Vacuna")).andExpect(status().isForbidden());
         mvc.perform(get(ruta()).header("Authorization","Bearer "+jwt)).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1));
+    }
+    @Test void historialRegistraTresTiposFiltraOrdenaYReprocesa()throws Exception{
+        for(String tipo:new String[]{"DESPARASITACION","TRATAMIENTO_SANITARIO","REVISION_VETERINARIA"}){
+            UUID op=UUID.randomUUID(),evento=UUID.randomUUID();String body=cuerpoEvento(op,evento,tipo,"Hecho "+tipo);
+            guardarEvento(body).andExpect(status().isCreated());
+            guardarEvento(body).andExpect(status().isOk()).andExpect(jsonPath("$.resultado").value("REPROCESADO"));
+        }
+        mvc.perform(get(rutaHistorial()).header("Authorization","Bearer "+jwt)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3));
+        mvc.perform(get(rutaHistorial()+"?tipo=TRATAMIENTO_SANITARIO").header("Authorization","Bearer "+jwt))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].producto").value("Producto informado"));
+    }
+    @Test void historialValidaTipoCamposPermisoYAislamiento()throws Exception{
+        guardarEvento(cuerpoEvento(UUID.randomUUID(),UUID.randomUUID(),"VACUNACION","No admitida aquí"))
+                .andExpect(status().isUnprocessableEntity());
+        guardarEvento(cuerpoEvento(UUID.randomUUID(),UUID.randomUUID(),"DESPARASITACION"," "))
+                .andExpect(status().isUnprocessableEntity());
+        jdbc.update("UPDATE identidad.membresia SET rol='LECTOR' WHERE usuario_id=?",usuario);
+        guardarEvento(cuerpoEvento(UUID.randomUUID(),UUID.randomUUID(),"DESPARASITACION","Hecho"))
+                .andExpect(status().isForbidden());
+        mvc.perform(get(rutaHistorial()).header("Authorization","Bearer "+jwt)).andExpect(status().isOk());
+        animal=UUID.randomUUID();
+        mvc.perform(get(rutaHistorial()).header("Authorization","Bearer "+jwt)).andExpect(status().isNotFound());
     }
 }

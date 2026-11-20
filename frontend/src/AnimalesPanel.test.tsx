@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AnimalesPanel } from './AnimalesPanel'
 vi.mock('./VacunacionesPanel', () => ({ VacunacionesPanel: () => null }))
+vi.mock('./HistorialSanitarioPanel', () => ({ HistorialSanitarioPanel: () => null }))
 import {
   consultarAnimal,
   ErrorAnimal,
