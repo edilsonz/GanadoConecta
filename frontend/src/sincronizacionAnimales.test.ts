@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { ErrorAnimal, type ResultadoRegistroAnimal } from './animalesApi'
 import { ErrorGanaderia } from './ganaderiasApi'
 import { AlmacenOperacionesPendientesIndexedDb } from './operacionesPendientesDb'
+import { AlmacenEventosSanitariosPendientesIndexedDb } from './eventosSanitariosPendientesDb'
+import { ErrorSanidad } from './vacunacionesApi'
 import {
   ErrorSincronizacion,
   ServicioSincronizacionAnimales,
@@ -404,5 +406,224 @@ describe('sincronización manual de animales pendientes', () => {
       payload,
       estado: 'SINCRONIZANDO',
     })
+  })
+})
+
+describe('sincronización sanitaria mediante el motor compartido', () => {
+  const operacionSanitaria = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'
+  const eventoSanitario = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'
+  const payloadSanitario = {
+    operationId: operacionSanitaria,
+    eventId: eventoSanitario,
+    schemaVersion: 1 as const,
+    tipo: 'DESPARASITACION' as const,
+    fecha: '2026-11-19',
+    descripcion: 'Hecho documentado sin conexión',
+  }
+  const confirmacionSanitaria = {
+    operationId: operacionSanitaria,
+    eventId: eventoSanitario,
+    resultado: 'APLICADO' as const,
+    confirmadoEn: '2026-11-19T18:00:01Z',
+  }
+
+  function crearAlmacenesSanitarios() {
+    const fabrica = new FabricaIndexedDbFalsa()
+    const opciones = {
+      indexedDB: fabrica.factory,
+      nombreBase: 'sincronizacion-sanitaria-prueba',
+      ahora: () => instante,
+    }
+    return {
+      animales: new AlmacenOperacionesPendientesIndexedDb(opciones),
+      sanidad: new AlmacenEventosSanitariosPendientesIndexedDb(opciones),
+    }
+  }
+
+  it('envía el payload sanitario intacto y guarda solo una confirmación válida', async () => {
+    const almacenes = crearAlmacenesSanitarios()
+    await almacenes.sanidad.guardarPendiente(
+      { usuarioId: usuario, ganaderiaId: ganaderia }, animal, payloadSanitario,
+    )
+    const registrarEvento = vi.fn().mockResolvedValue(confirmacionSanitaria)
+    const servicio = new ServicioSincronizacionAnimales({
+      almacen: almacenes.animales,
+      almacenSanidad: almacenes.sanidad,
+      registrarEvento,
+      consultarAcceso: vi.fn().mockResolvedValue(acceso('EDITOR')),
+      crearLeaseId: () => lease1,
+    })
+
+    await expect(servicio.sincronizar(sesion, ganaderia)).resolves.toMatchObject({
+      total: 1,
+      sincronizadas: 1,
+      operaciones: [{ tipoOperacion: 'REGISTRAR_EVENTO_SANITARIO' }],
+    })
+    expect(registrarEvento).toHaveBeenCalledWith(
+      ganaderia, animal, sesion.accessToken, payloadSanitario, expect.any(AbortSignal),
+    )
+    await expect(almacenes.sanidad.obtener(
+      { usuarioId: usuario, ganaderiaId: ganaderia }, operacionSanitaria,
+    )).resolves.toMatchObject({
+      estado: 'SINCRONIZADO',
+      payload: payloadSanitario,
+      confirmacion: confirmacionSanitaria,
+    })
+  })
+
+  it('sincroniza vacunaciones por el mismo motor sin inventar datos clínicos', async () => {
+    const almacenes = crearAlmacenesSanitarios()
+    const solicitud = {
+      operationId: operacionSanitaria,
+      eventId: eventoSanitario,
+      schemaVersion: 1 as const,
+      nombreVacuna: 'Aplicación informada',
+      fechaAplicacion: '2026-11-19',
+    }
+    await almacenes.sanidad.guardarPendiente(
+      { usuarioId: usuario, ganaderiaId: ganaderia }, animal, solicitud,
+    )
+    const registrarVacuna = vi.fn().mockResolvedValue(confirmacionSanitaria)
+    const servicio = new ServicioSincronizacionAnimales({
+      almacen: almacenes.animales,
+      almacenSanidad: almacenes.sanidad,
+      registrarVacuna,
+      consultarAcceso: vi.fn().mockResolvedValue(acceso()),
+      crearLeaseId: () => lease1,
+    })
+
+    await expect(servicio.sincronizar(sesion, ganaderia)).resolves.toMatchObject({
+      sincronizadas: 1,
+      operaciones: [{ tipoOperacion: 'REGISTRAR_VACUNACION' }],
+    })
+    expect(registrarVacuna).toHaveBeenCalledWith(
+      ganaderia, animal, sesion.accessToken, solicitud, expect.any(AbortSignal),
+    )
+  })
+
+  it('reintenta una respuesta perdida con los mismos UUID y acepta REPROCESADO', async () => {
+    const almacenes = crearAlmacenesSanitarios()
+    await almacenes.sanidad.guardarPendiente(
+      { usuarioId: usuario, ganaderiaId: ganaderia }, animal, payloadSanitario,
+    )
+    const registrarEvento = vi.fn()
+      .mockRejectedValueOnce(new ErrorSanidad('conexion'))
+      .mockResolvedValueOnce({ ...confirmacionSanitaria, resultado: 'REPROCESADO' })
+    const opciones = {
+      almacen: almacenes.animales,
+      almacenSanidad: almacenes.sanidad,
+      registrarEvento,
+      consultarAcceso: vi.fn().mockResolvedValue(acceso()),
+    }
+
+    await new ServicioSincronizacionAnimales({
+      ...opciones, crearLeaseId: () => lease1,
+    }).sincronizar(sesion, ganaderia)
+    await new ServicioSincronizacionAnimales({
+      ...opciones, crearLeaseId: () => lease2,
+    }).sincronizar(sesion, ganaderia)
+
+    expect(registrarEvento).toHaveBeenCalledTimes(2)
+    expect(registrarEvento.mock.calls[0][3]).toEqual(payloadSanitario)
+    expect(registrarEvento.mock.calls[1][3]).toEqual(payloadSanitario)
+    await expect(almacenes.sanidad.obtener(
+      { usuarioId: usuario, ganaderiaId: ganaderia }, operacionSanitaria,
+    )).resolves.toMatchObject({
+      estado: 'SINCRONIZADO',
+      confirmacion: { resultado: 'REPROCESADO' },
+    })
+  })
+
+  it('bloquea una membresía revocada antes de enviar y conserva el pendiente', async () => {
+    const almacenes = crearAlmacenesSanitarios()
+    await almacenes.sanidad.guardarPendiente(
+      { usuarioId: usuario, ganaderiaId: ganaderia }, animal, payloadSanitario,
+    )
+    const registrarEvento = vi.fn()
+    const servicio = new ServicioSincronizacionAnimales({
+      almacen: almacenes.animales,
+      almacenSanidad: almacenes.sanidad,
+      registrarEvento,
+      consultarAcceso: vi.fn().mockRejectedValue(new ErrorGanaderia('seguridad')),
+      bloquearAcceso: vi.fn().mockResolvedValue(undefined),
+      crearLeaseId: () => lease1,
+    })
+
+    await expect(servicio.sincronizar(sesion, ganaderia))
+      .rejects.toMatchObject({ tipo: 'permiso' })
+    expect(registrarEvento).not.toHaveBeenCalled()
+    await expect(almacenes.sanidad.obtener(
+      { usuarioId: usuario, ganaderiaId: ganaderia }, operacionSanitaria,
+    )).resolves.toMatchObject({ estado: 'RECHAZADO', ultimoError: 'AUTORIZACION' })
+  })
+
+  it.each([
+    ['validacion', 'RECHAZADO', 'VALIDACION'],
+    ['conflicto', 'CONFLICTO', 'CONFLICTO'],
+    ['temporal', 'ERROR_REINTENTABLE', 'SERVIDOR'],
+    ['sesion', 'REQUIERE_SESION', 'AUTENTICACION'],
+    ['permiso', 'RECHAZADO', 'AUTORIZACION'],
+  ] as const)('clasifica el error sanitario %s sin perder el payload', async (
+    tipo, estado, codigo,
+  ) => {
+    const almacenes = crearAlmacenesSanitarios()
+    await almacenes.sanidad.guardarPendiente(
+      { usuarioId: usuario, ganaderiaId: ganaderia }, animal, payloadSanitario,
+    )
+    const servicio = new ServicioSincronizacionAnimales({
+      almacen: almacenes.animales,
+      almacenSanidad: almacenes.sanidad,
+      registrarEvento: vi.fn().mockRejectedValue(new ErrorSanidad(tipo)),
+      consultarAcceso: vi.fn().mockResolvedValue(acceso()),
+      requerirSesion: vi.fn().mockResolvedValue(undefined),
+      bloquearAcceso: vi.fn().mockResolvedValue(undefined),
+      crearLeaseId: () => lease1,
+    })
+
+    await servicio.sincronizar(sesion, ganaderia)
+
+    await expect(almacenes.sanidad.obtener(
+      { usuarioId: usuario, ganaderiaId: ganaderia }, operacionSanitaria,
+    )).resolves.toMatchObject({ estado, ultimoError: codigo, payload: payloadSanitario })
+  })
+
+  it('coordina dos ventanas con el mismo Web Lock y lease sanitario', async () => {
+    const almacenes = crearAlmacenesSanitarios()
+    await almacenes.sanidad.guardarPendiente(
+      { usuarioId: usuario, ganaderiaId: ganaderia }, animal, payloadSanitario,
+    )
+    const colas = new Map<string, Promise<unknown>>()
+    const conBloqueo = async <T,>(nombre: string, accion: () => Promise<T>) => {
+      const anterior = colas.get(nombre) ?? Promise.resolve()
+      const actual = anterior.then(accion, accion)
+      colas.set(nombre, actual)
+      return actual
+    }
+    let resolver: ((valor: typeof confirmacionSanitaria) => void) | undefined
+    const registrarEvento = vi.fn().mockReturnValue(new Promise(resolve => {
+      resolver = resolve
+    }))
+    const base = {
+      almacen: almacenes.animales,
+      almacenSanidad: almacenes.sanidad,
+      registrarEvento,
+      consultarAcceso: vi.fn().mockResolvedValue(acceso()),
+      conBloqueo,
+    }
+    const primera = new ServicioSincronizacionAnimales({
+      ...base, crearLeaseId: () => lease1,
+    })
+    const segunda = new ServicioSincronizacionAnimales({
+      ...base, crearLeaseId: () => lease2,
+    })
+
+    const intento1 = primera.sincronizar(sesion, ganaderia)
+    const intento2 = segunda.sincronizar(sesion, ganaderia)
+    await vi.waitFor(() => expect(registrarEvento).toHaveBeenCalledOnce())
+    resolver?.(confirmacionSanitaria)
+
+    await expect(intento1).resolves.toMatchObject({ sincronizadas: 1 })
+    await expect(intento2).resolves.toMatchObject({ ocupadas: 1 })
+    expect(registrarEvento).toHaveBeenCalledOnce()
   })
 })

@@ -8,7 +8,13 @@
 - Las escrituras usan la unidad de trabajo existente y el autorizador bloqueante
   para impedir una escritura posterior a una revocación confirmada.
 - React amplía la ficha individual y conserva JWT solo en memoria.
-- El contrato offline se evaluará después de completar los endpoints idempotentes.
+- El motor offline único procesa las colas de animales y sanidad mediante los
+  mismos Web Locks, leases, tiempos límite, reintentos y barreras de
+  autorización. IndexedDB V3 conserva stores separados y compatibles; el
+  orquestador discrimina `CREAR_ANIMAL`, vacunación y evento sanitario sin
+  alterar los sobres existentes. Solo una respuesta HTTP válida con los mismos
+  `operationId`/identificador de entidad y resultado `APLICADO` o `REPROCESADO`
+  permite persistir el comprobante y marcar `SINCRONIZADO`.
 
 ## Contrato HTTP de vacunaciones
 

@@ -39,7 +39,9 @@
 > confirmado, error inicial y datos conservados potencialmente desactualizados.
 > La [preparación sanitaria offline](31-sanidad-offline-local.md) amplía
 > IndexedDB con eventos pendientes aislados y documenta por qué su transmisión
-> sigue bloqueada hasta generalizar de forma segura el motor existente.
+> requería generalizar el motor existente; la
+> [sincronización sanitaria offline](32-sincronizacion-sanitaria-offline.md)
+> completa ese contrato con el mismo orquestador, leases y comprobantes.
 > Background Sync, caché privada autorizada y E2E offline integral
 > continúan pendientes. Los estados de propuesta siguientes describen la
 > preparación arquitectónica original, no acreditan implementación de SPEC-01.

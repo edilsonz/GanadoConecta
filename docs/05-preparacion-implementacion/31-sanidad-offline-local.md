@@ -1,5 +1,9 @@
 # Sanidad offline local — SPEC-02 S07
 
+> Evidencia del incremento de preparación local. El bloqueo de transmisión aquí
+> documentado se resolvió posteriormente mediante el motor único descrito en
+> [32-sincronizacion-sanitaria-offline.md](32-sincronizacion-sanitaria-offline.md).
+
 ## Alcance implementado
 
 La base `ganadoconecta-offline` aumenta aditivamente de la versión 2 a la 3 y

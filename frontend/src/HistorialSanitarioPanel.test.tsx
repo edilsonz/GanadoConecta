@@ -12,7 +12,7 @@ vi.mock('./registroSanidadOffline', () => ({
   listarEventosSanitariosPendientesAutorizados: vi.fn(),
 }))
 const p={usuarioId:'u',ganaderiaId:'g',animalId:'a',accessToken:'t',puedeEscribir:true,onSesionInvalida:vi.fn()}
-beforeEach(()=>{vi.resetAllMocks();Object.defineProperty(navigator,'onLine',{configurable:true,value:true});vi.mocked(listarHistorialSanitario).mockResolvedValue([]);vi.mocked(registrarEventoSanitario).mockResolvedValue();vi.mocked(listarEventosSanitariosPendientesAutorizados).mockResolvedValue({autorizacion:'AUTORIZADA_ESCRITURA',operaciones:[]})})
+beforeEach(()=>{vi.resetAllMocks();Object.defineProperty(navigator,'onLine',{configurable:true,value:true});vi.mocked(listarHistorialSanitario).mockResolvedValue([]);vi.mocked(registrarEventoSanitario).mockResolvedValue({operationId:'o',eventId:'e',resultado:'APLICADO',confirmadoEn:'2026-11-20T00:00:00Z'});vi.mocked(listarEventosSanitariosPendientesAutorizados).mockResolvedValue({autorizacion:'AUTORIZADA_ESCRITURA',operaciones:[]})})
 afterEach(cleanup)
 describe('Historial sanitario',()=>{
  it('distingue vacío confirmado y error',async()=>{vi.mocked(listarHistorialSanitario).mockRejectedValueOnce(new Error())
@@ -28,7 +28,7 @@ describe('Historial sanitario',()=>{
  it('lector consulta y no registra',async()=>{render(<HistorialSanitarioPanel {...p} puedeEscribir={false}/>);await screen.findByText('Aún no hay eventos sanitarios con este filtro.');expect(screen.queryByText('Guardar evento sanitario')).not.toBeInTheDocument()})
  it('guarda localmente una caída real de red y la separa del historial confirmado',async()=>{
   Object.defineProperty(navigator,'onLine',{configurable:true,value:false})
-  vi.mocked(guardarEventoSanitarioPendienteAutorizado).mockImplementation(async(ambito,animalId,payload)=>({autorizacion:'AUTORIZADA_ESCRITURA',operacion:{...ambito,animalId,operationId:payload.operationId,eventId:payload.eventId,payload,estado:'PENDIENTE',creadoEnLocal:'2026-11-20T10:00:00Z',actualizadoEnLocal:'2026-11-20T10:00:00Z'}}))
+  vi.mocked(guardarEventoSanitarioPendienteAutorizado).mockImplementation(async(ambito,animalId,payload)=>({autorizacion:'AUTORIZADA_ESCRITURA',operacion:{...ambito,clase:'EVENTO_SANITARIO',animalId,operationId:payload.operationId,eventId:payload.eventId,payload,estado:'PENDIENTE',ultimoError:null,creadoEnLocal:'2026-11-20T10:00:00Z',actualizadoEnLocal:'2026-11-20T10:00:00Z',intentos:0,leaseId:null,leaseHasta:null,confirmacion:null}}))
   render(<HistorialSanitarioPanel {...p}/>);await screen.findByText('Aún no hay eventos sanitarios con este filtro.')
   fireEvent.change(screen.getByLabelText('Fecha *'),{target:{value:'2026-01-02'}});fireEvent.change(screen.getByLabelText('Descripción del hecho *'),{target:{value:'Hecho local'}})
   fireEvent.click(screen.getByText('Guardar evento sanitario'))

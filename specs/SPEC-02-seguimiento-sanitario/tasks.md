@@ -6,9 +6,9 @@
 - [x] S04 React: formulario, listado y estados de vacunaciones.
 - [x] S05 Otros eventos e historial unificado con filtros.
 - [x] S06 Agenda sanitaria y estados derivados.
-- [x] S07 Evaluar y ampliar de forma segura IndexedDB: eventos pendientes,
-  aislamiento, autorización e IDs inmutables integrados en React. La
-  sincronización sanitaria queda bloqueada hasta generalizar el protocolo y los
-  comprobantes del motor actual, exclusivos de animales.
-- [x] S08 Regresión final, evidencia y revisión de secretos: frontend 191/191,
-  build PWA/TypeScript y backend/PostgreSQL 146/146 con Flyway V1–V8.
+- [x] S07 IndexedDB y sincronización sanitaria integrados en el motor único:
+  eventos y vacunaciones conservan ámbito, payload, IDs, lease y comprobante;
+  manual y automática reutilizan autorización, Web Locks e idempotencia sin
+  alterar `CREAR_ANIMAL`.
+- [x] S08 Regresión y evidencia actualizadas: frontend 211/211, build
+  PWA/TypeScript y backend sanitario PostgreSQL 8/8 con Flyway V1–V8.

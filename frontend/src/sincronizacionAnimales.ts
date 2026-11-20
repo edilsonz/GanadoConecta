@@ -20,6 +20,22 @@ import {
   bloquearAccesoOffline,
   requerirRevalidacionOffline,
 } from './registroAnimalesOffline'
+import {
+  AlmacenEventosSanitariosPendientesIndexedDb,
+  type ConfirmacionSanitariaLocal,
+  type EventoSanitarioPendienteLocal,
+} from './eventosSanitariosPendientesDb'
+import {
+  registrarEventoSanitario,
+  type ResultadoEventoSanitario,
+  type SolicitudEventoSanitario,
+} from './historialSanitarioApi'
+import {
+  ErrorSanidad,
+  registrarVacunacion,
+  type ResultadoVacunacion,
+  type SolicitudVacunacion,
+} from './vacunacionesApi'
 import type { SesionActiva } from './sesionApi'
 
 const DURACION_LEASE_MS = 60_000
@@ -38,6 +54,22 @@ type Registrar = (
   signal?: AbortSignal,
 ) => Promise<ResultadoRegistroAnimal>
 
+type RegistrarEvento = (
+  ganaderiaId: string,
+  animalId: string,
+  accessToken: string,
+  payload: SolicitudEventoSanitario,
+  signal?: AbortSignal,
+) => Promise<ResultadoEventoSanitario>
+
+type RegistrarVacuna = (
+  ganaderiaId: string,
+  animalId: string,
+  accessToken: string,
+  payload: SolicitudVacunacion,
+  signal?: AbortSignal,
+) => Promise<ResultadoVacunacion>
+
 type AlmacenSincronizacion = Pick<AlmacenOperacionesPendientesIndexedDb,
   | 'listarPendientes'
   | 'actualizarEstado'
@@ -45,12 +77,32 @@ type AlmacenSincronizacion = Pick<AlmacenOperacionesPendientesIndexedDb,
   | 'finalizarSincronizacion'
   | 'fallarSincronizacion'>
 
+type AlmacenSincronizacionSanitaria = Pick<AlmacenEventosSanitariosPendientesIndexedDb,
+  | 'listarPendientes'
+  | 'actualizarEstado'
+  | 'reclamarParaSincronizar'
+  | 'finalizarSincronizacion'
+  | 'fallarSincronizacion'>
+
+type TipoOperacionSincronizable =
+  | 'CREAR_ANIMAL'
+  | 'REGISTRAR_VACUNACION'
+  | 'REGISTRAR_EVENTO_SANITARIO'
+
+type OperacionSincronizable =
+  | { tipoOperacion: 'CREAR_ANIMAL'; dato: OperacionPendienteLocal }
+  | { tipoOperacion: 'REGISTRAR_VACUNACION'; dato: EventoSanitarioPendienteLocal }
+  | { tipoOperacion: 'REGISTRAR_EVENTO_SANITARIO'; dato: EventoSanitarioPendienteLocal }
+
 type ConBloqueo = <T>(nombre: string, accion: () => Promise<T>) => Promise<T>
 
 type OpcionesServicio = {
   almacen?: AlmacenSincronizacion
+  almacenSanidad?: AlmacenSincronizacionSanitaria
   consultarAcceso?: ConsultarAcceso
   registrar?: Registrar
+  registrarEvento?: RegistrarEvento
+  registrarVacuna?: RegistrarVacuna
   bloquearAcceso?: (ambito: AmbitoOperacionLocal) => Promise<void>
   requerirSesion?: (ambito: AmbitoOperacionLocal) => Promise<void>
   conBloqueo?: ConBloqueo
@@ -61,6 +113,14 @@ type OpcionesServicio = {
 
 type ResultadoOperacionInterno = ResultadoOperacionSincronizacion & {
   detenerLote: boolean
+}
+
+const ALMACEN_SANITARIO_VACIO: AlmacenSincronizacionSanitaria = {
+  listarPendientes: async () => [],
+  actualizarEstado: async () => { throw new Error('Almacén sanitario no configurado') },
+  reclamarParaSincronizar: async () => null,
+  finalizarSincronizacion: async () => { throw new Error('Almacén sanitario no configurado') },
+  fallarSincronizacion: async () => { throw new Error('Almacén sanitario no configurado') },
 }
 
 export type EstadoResultadoOperacion =
@@ -75,6 +135,7 @@ export type EstadoResultadoOperacion =
 export type ResultadoOperacionSincronizacion = {
   operationId: string
   animalId: string
+  tipoOperacion?: TipoOperacionSincronizable
   estado: EstadoResultadoOperacion
   confirmadaRemotamente: boolean
   resultadoRemoto?: ResultadoRegistroAnimal['resultado']
@@ -108,8 +169,11 @@ export class ErrorSincronizacion extends Error {
 
 export class ServicioSincronizacionAnimales {
   private readonly almacen: AlmacenSincronizacion
+  private readonly almacenSanidad: AlmacenSincronizacionSanitaria
   private readonly consultarAcceso: ConsultarAcceso
   private readonly registrar: Registrar
+  private readonly registrarEvento: RegistrarEvento
+  private readonly registrarVacuna: RegistrarVacuna
   private readonly bloquearAcceso: (ambito: AmbitoOperacionLocal) => Promise<void>
   private readonly requerirSesion: (ambito: AmbitoOperacionLocal) => Promise<void>
   private readonly conBloqueo: ConBloqueo
@@ -120,8 +184,13 @@ export class ServicioSincronizacionAnimales {
 
   constructor(opciones: OpcionesServicio = {}) {
     this.almacen = opciones.almacen ?? new AlmacenOperacionesPendientesIndexedDb()
+    this.almacenSanidad = opciones.almacenSanidad
+      ?? (opciones.almacen ? ALMACEN_SANITARIO_VACIO
+        : new AlmacenEventosSanitariosPendientesIndexedDb())
     this.consultarAcceso = opciones.consultarAcceso ?? consultarAccesoGanaderia
     this.registrar = opciones.registrar ?? registrarAnimal
+    this.registrarEvento = opciones.registrarEvento ?? registrarEventoSanitario
+    this.registrarVacuna = opciones.registrarVacuna ?? registrarVacunacion
     this.bloquearAcceso = opciones.bloquearAcceso ?? bloquearAccesoOffline
     this.requerirSesion = opciones.requerirSesion ?? requerirRevalidacionOffline
     this.conBloqueo = opciones.conBloqueo ?? bloqueoNavegador
@@ -157,7 +226,7 @@ export class ServicioSincronizacionAnimales {
 
       const pendientes = await this.listar(ambito)
       const operaciones: ResultadoOperacionSincronizacion[] = []
-      for (const pendiente of pendientes.filter(esCandidata)) {
+      for (const pendiente of pendientes.filter(item => esCandidata(item.dato))) {
         if (signal?.aborted) break
         const { detenerLote, ...resultado } = await this.sincronizarOperacion(
           ambito,
@@ -211,17 +280,12 @@ export class ServicioSincronizacionAnimales {
   private async sincronizarOperacion(
     ambito: AmbitoOperacionLocal,
     accessToken: string,
-    pendiente: OperacionPendienteLocal,
+    pendiente: OperacionSincronizable,
     signal?: AbortSignal,
   ): Promise<ResultadoOperacionInterno> {
     const reclamada = await this.conBloqueo(
-      `ganadoconecta-sync:${pendiente.operationId}`,
-      () => this.almacen.reclamarParaSincronizar(
-        ambito,
-        pendiente.operationId,
-        this.leaseId,
-        DURACION_LEASE_MS,
-      ),
+      `ganadoconecta-sync:${pendiente.dato.operationId}`,
+      () => this.reclamar(ambito, pendiente),
     )
     if (!reclamada) {
       return { ...resultadoLocal(pendiente, 'OCUPADA'), detenerLote: false }
@@ -229,19 +293,11 @@ export class ServicioSincronizacionAnimales {
 
     const control = crearControlTimeout(signal, this.timeoutMs)
     try {
-      const confirmacion = await this.registrar(
-        ambito.ganaderiaId,
-        reclamada.payload,
-        accessToken,
-        control.signal,
+      const confirmacion = await this.enviar(
+        ambito, reclamada, accessToken, control.signal,
       )
       try {
-        await this.almacen.finalizarSincronizacion(
-          ambito,
-          reclamada.operationId,
-          this.leaseId,
-          confirmacion,
-        )
+        await this.finalizar(ambito, reclamada, confirmacion)
         return {
           ...resultadoLocal(reclamada, 'SINCRONIZADA'),
           confirmadaRemotamente: true,
@@ -259,13 +315,7 @@ export class ServicioSincronizacionAnimales {
     } catch (error) {
       const clasificacion = clasificarFallo(error)
       try {
-        await this.almacen.fallarSincronizacion(
-          ambito,
-          reclamada.operationId,
-          this.leaseId,
-          clasificacion.estadoLocal,
-          clasificacion.errorSeguro,
-        )
+        await this.fallar(ambito, reclamada, clasificacion)
       } catch {
         return {
           ...resultadoLocal(reclamada, 'ERROR_LOCAL'),
@@ -293,9 +343,133 @@ export class ServicioSincronizacionAnimales {
     }
   }
 
-  private async listar(ambito: AmbitoOperacionLocal): Promise<OperacionPendienteLocal[]> {
+  private async reclamar(
+    ambito: AmbitoOperacionLocal,
+    operacion: OperacionSincronizable,
+  ): Promise<OperacionSincronizable | null> {
+    const dato = operacion.tipoOperacion === 'CREAR_ANIMAL'
+      ? await this.almacen.reclamarParaSincronizar(
+        ambito, operacion.dato.operationId, this.leaseId, DURACION_LEASE_MS,
+      )
+      : await this.almacenSanidad.reclamarParaSincronizar(
+        ambito, operacion.dato.operationId, this.leaseId, DURACION_LEASE_MS,
+      )
+    return dato ? { ...operacion, dato } as OperacionSincronizable : null
+  }
+
+  private async enviar(
+    ambito: AmbitoOperacionLocal,
+    operacion: OperacionSincronizable,
+    accessToken: string,
+    signal: AbortSignal,
+  ): Promise<ResultadoRegistroAnimal | ConfirmacionSanitariaLocal> {
+    if (operacion.tipoOperacion === 'CREAR_ANIMAL') {
+      return this.registrar(
+        ambito.ganaderiaId,
+        operacion.dato.payload,
+        accessToken,
+        signal,
+      )
+    }
+    if (operacion.tipoOperacion === 'REGISTRAR_VACUNACION') {
+      return this.registrarVacuna(
+        ambito.ganaderiaId,
+        operacion.dato.animalId,
+        accessToken,
+        operacion.dato.payload as SolicitudVacunacion,
+        signal,
+      )
+    }
+    return this.registrarEvento(
+      ambito.ganaderiaId,
+      operacion.dato.animalId,
+      accessToken,
+      operacion.dato.payload as SolicitudEventoSanitario,
+      signal,
+    )
+  }
+
+  private async finalizar(
+    ambito: AmbitoOperacionLocal,
+    operacion: OperacionSincronizable,
+    confirmacion: ResultadoRegistroAnimal | ConfirmacionSanitariaLocal,
+  ): Promise<void> {
+    if (operacion.tipoOperacion === 'CREAR_ANIMAL') {
+      await this.almacen.finalizarSincronizacion(
+        ambito,
+        operacion.dato.operationId,
+        this.leaseId,
+        confirmacion as ResultadoRegistroAnimal,
+      )
+      return
+    }
+    await this.almacenSanidad.finalizarSincronizacion(
+      ambito,
+      operacion.dato.operationId,
+      this.leaseId,
+      confirmacion as ConfirmacionSanitariaLocal,
+    )
+  }
+
+  private async fallar(
+    ambito: AmbitoOperacionLocal,
+    operacion: OperacionSincronizable,
+    clasificacion: ReturnType<typeof clasificarFallo>,
+  ): Promise<void> {
+    if (operacion.tipoOperacion === 'CREAR_ANIMAL') {
+      await this.almacen.fallarSincronizacion(
+        ambito,
+        operacion.dato.operationId,
+        this.leaseId,
+        clasificacion.estadoLocal,
+        clasificacion.errorSeguro,
+      )
+      return
+    }
+    await this.almacenSanidad.fallarSincronizacion(
+      ambito,
+      operacion.dato.operationId,
+      this.leaseId,
+      clasificacion.estadoLocal,
+      clasificacion.errorSeguro,
+    )
+  }
+
+  private async actualizarEstado(
+    ambito: AmbitoOperacionLocal,
+    operacion: OperacionSincronizable,
+    estado: EstadoOperacionLocal,
+    error: CodigoErrorSeguroOperacion,
+  ): Promise<void> {
+    if (operacion.tipoOperacion === 'CREAR_ANIMAL') {
+      await this.almacen.actualizarEstado(
+        ambito, operacion.dato.operationId, estado, error,
+      )
+      return
+    }
+    await this.almacenSanidad.actualizarEstado(
+      ambito, operacion.dato.operationId, estado, error,
+    )
+  }
+
+  private async listar(ambito: AmbitoOperacionLocal): Promise<OperacionSincronizable[]> {
     try {
-      return await this.almacen.listarPendientes(ambito)
+      const [animales, sanitarias] = await Promise.all([
+        this.almacen.listarPendientes(ambito),
+        this.almacenSanidad.listarPendientes(ambito),
+      ])
+      return [
+        ...animales.map(dato => ({
+          tipoOperacion: 'CREAR_ANIMAL' as const,
+          dato,
+        })),
+        ...sanitarias.map(dato => ({
+          tipoOperacion: dato.clase === 'VACUNACION'
+            ? 'REGISTRAR_VACUNACION' as const
+            : 'REGISTRAR_EVENTO_SANITARIO' as const,
+          dato,
+        })),
+      ].sort((a, b) => a.dato.creadoEnLocal.localeCompare(b.dato.creadoEnLocal))
     } catch {
       throw new ErrorSincronizacion('almacenamiento')
     }
@@ -306,22 +480,19 @@ export class ServicioSincronizacionAnimales {
     estado: EstadoOperacionLocal,
     error: CodigoErrorSeguroOperacion,
   ): Promise<void> {
-    let pendientes: OperacionPendienteLocal[]
+    let pendientes: OperacionSincronizable[]
     try {
-      pendientes = await this.almacen.listarPendientes(ambito)
+      pendientes = await this.listar(ambito)
     } catch {
       throw new ErrorSincronizacion('almacenamiento')
     }
     try {
       await Promise.all(pendientes
-        .filter(operacion => operacion.estado !== 'CONFLICTO'
-          && !(operacion.estado === 'RECHAZADO'
-            && operacion.ultimoError === 'VALIDACION'))
-        .map(operacion => this.almacen.actualizarEstado(
-          ambito,
-          operacion.operationId,
-          estado,
-          error,
+        .filter(operacion => operacion.dato.estado !== 'CONFLICTO'
+          && !(operacion.dato.estado === 'RECHAZADO'
+            && operacion.dato.ultimoError === 'VALIDACION'))
+        .map(operacion => this.actualizarEstado(
+          ambito, operacion, estado, error,
         )))
     } catch {
       throw new ErrorSincronizacion('almacenamiento')
@@ -345,7 +516,9 @@ export class ServicioSincronizacionAnimales {
   }
 }
 
-function esCandidata(operacion: OperacionPendienteLocal): boolean {
+function esCandidata(
+  operacion: OperacionPendienteLocal | EventoSanitarioPendienteLocal,
+): boolean {
   return operacion.estado === 'PENDIENTE'
     || operacion.estado === 'ERROR_REINTENTABLE'
     || operacion.estado === 'REQUIERE_SESION'
@@ -361,7 +534,8 @@ function clasificarFallo(error: unknown): {
   detenerLote: boolean
   reintentoDespuesMs?: number
 } {
-  const fallo = error instanceof ErrorAnimal ? error : new ErrorAnimal('conexion')
+  const fallo = error instanceof ErrorAnimal || error instanceof ErrorSanidad
+    ? error : new ErrorAnimal('conexion')
   if (fallo.tipo === 'sesion') {
     return {
       estadoLocal: 'REQUIERE_SESION',
@@ -407,19 +581,20 @@ function clasificarFallo(error: unknown): {
     errorSeguro: fallo.tipo === 'conexion' ? 'RED' : 'SERVIDOR',
     estadoResultado: 'ERROR_REINTENTABLE',
     detenerLote: false,
-    reintentoDespuesMs: fallo.retryAfterMs,
+    reintentoDespuesMs: fallo instanceof ErrorAnimal ? fallo.retryAfterMs : undefined,
   }
 }
 
 function resultadoLocal(
-  operacion: Pick<OperacionPendienteLocal, 'operationId' | 'animalId'>,
+  operacion: OperacionSincronizable,
   estado: EstadoResultadoOperacion,
   reintentoDespuesMs?: number,
   codigoError?: CodigoErrorSeguroOperacion,
 ): ResultadoOperacionSincronizacion {
   return {
-    operationId: operacion.operationId,
-    animalId: operacion.animalId,
+    operationId: operacion.dato.operationId,
+    animalId: operacion.dato.animalId,
+    tipoOperacion: operacion.tipoOperacion,
     estado,
     confirmadaRemotamente: false,
     ...(reintentoDespuesMs !== undefined && { reintentoDespuesMs }),
@@ -468,6 +643,8 @@ async function bloqueoNavegador<T>(
 }
 
 const servicio = new ServicioSincronizacionAnimales()
+
+export { ServicioSincronizacionAnimales as ServicioSincronizacionPendientes }
 
 export function sincronizarPendientesManualmente(
   sesion: Pick<SesionActiva, 'usuarioId' | 'accessToken' | 'expiresAt'>,

@@ -1,4 +1,4 @@
-import { codigoError, leerJson, obtenerTokenCsrf, esObjeto } from './authApi'
+import { codigoError, ErrorRegistro, leerJson, obtenerTokenCsrf, esObjeto } from './authApi'
 
 export type DatosVacunacion = {
   nombreVacuna: string
@@ -12,6 +12,12 @@ export type SolicitudVacunacion = DatosVacunacion & {
   operationId: string; eventId: string; schemaVersion: 1
 }
 export type Vacunacion = DatosVacunacion & { eventId: string; creadoEn: string }
+export type ResultadoVacunacion = {
+  operationId: string
+  eventId: string
+  resultado: 'APLICADO' | 'REPROCESADO'
+  confirmadoEn: string
+}
 export class ErrorSanidad extends Error {
   constructor(public readonly tipo: 'sesion' | 'permiso' | 'seguridad' | 'validacion' | 'conflicto' | 'conexion' | 'temporal') {
     super(tipo)
@@ -36,18 +42,32 @@ export async function listarVacunaciones(g: string, a: string, token: string): P
   if (r.ok && Array.isArray(body) && body.every(esVacunacion)) return body
   comprobarError(r, body)
 }
-export async function registrarVacunacion(g: string, a: string, token: string, solicitud: SolicitudVacunacion): Promise<void> {
-  for (let intento = 0; intento < 2; intento++) {
-    const csrf = await obtenerTokenCsrf()
-    const r = await fetch(ruta(g, a), {
-      method: 'POST', credentials: 'same-origin', cache: 'no-store',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
-      body: JSON.stringify(solicitud),
-    })
-    const body = await leerJson(r)
-    if (r.status === 403 && codigoError(body) === 'CSRF_INVALIDO' && intento === 0) continue
-    if ([200, 201].includes(r.status) && esObjeto(body) && body.eventId === solicitud.eventId
-        && body.operationId === solicitud.operationId && ['APLICADO', 'REPROCESADO'].includes(String(body.resultado))) return
-    comprobarError(r, body)
+export async function registrarVacunacion(g: string, a: string, token: string, solicitud: SolicitudVacunacion, signal?: AbortSignal): Promise<ResultadoVacunacion> {
+  try {
+    for (let intento = 0; intento < 2; intento++) {
+      const csrf = await obtenerTokenCsrf(signal)
+      const r = await fetch(ruta(g, a), {
+        method: 'POST', credentials: 'same-origin', cache: 'no-store',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+        body: JSON.stringify(solicitud), signal,
+      })
+      const body = await leerJson(r)
+      if (r.status === 403 && codigoError(body) === 'CSRF_INVALIDO' && intento === 0) continue
+      if ([200, 201].includes(r.status) && esObjeto(body) && body.eventId === solicitud.eventId
+          && body.operationId === solicitud.operationId
+          && ['APLICADO', 'REPROCESADO'].includes(String(body.resultado))
+          && typeof body.confirmadoEn === 'string'
+          && Number.isFinite(Date.parse(body.confirmadoEn))) return body as ResultadoVacunacion
+      comprobarError(r, body)
+    }
+  } catch (fallo) {
+    if (fallo instanceof ErrorSanidad) throw fallo
+    if (fallo instanceof ErrorRegistro) {
+      if (fallo.tipo === 'conexion') throw new ErrorSanidad('conexion')
+      if (fallo.tipo === 'seguridad') throw new ErrorSanidad('seguridad')
+      throw new ErrorSanidad('temporal')
+    }
+    throw new ErrorSanidad('conexion')
   }
+  throw new ErrorSanidad('temporal')
 }

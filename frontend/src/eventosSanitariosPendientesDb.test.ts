@@ -6,6 +6,7 @@ import {
 import { AlmacenOperacionesPendientesIndexedDb } from './operacionesPendientesDb'
 import { FabricaIndexedDbFalsa } from './test/indexedDbFalso'
 import type { SolicitudEventoSanitario } from './historialSanitarioApi'
+import { abrirBaseOffline, ALMACEN_EVENTOS_SANITARIOS } from './indexedDbOffline'
 
 const usuario1 = '11111111-1111-4111-8111-111111111111'
 const usuario2 = '22222222-2222-4222-8222-222222222222'
@@ -121,5 +122,90 @@ describe('eventos sanitarios pendientes en IndexedDB', () => {
     await expect(almacen.guardarPendiente(ambito1, animal1, payload()))
       .rejects.toMatchObject({ codigo: 'TRANSACCION_FALLIDA' })
     await expect(almacen.listarPendientes(ambito1)).resolves.toEqual([])
+  })
+
+  it('normaliza registros creados por IndexedDB V3 sin borrar el payload anterior', async () => {
+    const fabrica = new FabricaIndexedDbFalsa()
+    const db = await abrirBaseOffline(fabrica.factory, 'prueba-sanidad-offline')
+    const tx = db.transaction(ALMACEN_EVENTOS_SANITARIOS, 'readwrite')
+    tx.objectStore(ALMACEN_EVENTOS_SANITARIOS).add({
+      ...ambito1,
+      animalId: animal1,
+      operationId: operacion1,
+      eventId: evento1,
+      payload: payload(),
+      estado: 'PENDIENTE',
+      creadoEnLocal: '2026-11-19T12:00:00Z',
+      actualizadoEnLocal: '2026-11-19T12:00:00Z',
+      clave: `${usuario1}:${ganaderia1}:${operacion1}`,
+      contextoClave: `${usuario1}:${ganaderia1}`,
+    })
+    await new Promise<void>((resolve, reject) => {
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+    db.close()
+
+    await expect(crearAlmacen(fabrica).listarPendientes(ambito1)).resolves
+      .toEqual([expect.objectContaining({
+        clase: 'EVENTO_SANITARIO',
+        payload: payload(),
+        estado: 'PENDIENTE',
+        intentos: 0,
+        leaseId: null,
+        confirmacion: null,
+      })])
+  })
+
+  it('guarda vacunaciones y conserva lease y comprobante idempotente', async () => {
+    const almacen = crearAlmacen(new FabricaIndexedDbFalsa())
+    const vacunacion = {
+      operationId: operacion1,
+      eventId: evento1,
+      schemaVersion: 1 as const,
+      nombreVacuna: 'Aplicación informada',
+      fechaAplicacion: '2026-11-20',
+    }
+    await almacen.guardarPendiente(ambito1, animal1, vacunacion)
+    const lease = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+    await expect(almacen.reclamarParaSincronizar(
+      ambito1, operacion1, lease,
+    )).resolves.toMatchObject({
+      clase: 'VACUNACION', estado: 'SINCRONIZANDO', intentos: 1, leaseId: lease,
+    })
+    const confirmacion = {
+      operationId: operacion1,
+      eventId: evento1,
+      resultado: 'REPROCESADO' as const,
+      confirmadoEn: '2026-11-20T12:00:01Z',
+    }
+    await almacen.finalizarSincronizacion(ambito1, operacion1, lease, confirmacion)
+
+    await expect(almacen.listarPendientes(ambito1)).resolves.toEqual([])
+    await expect(almacen.obtener(ambito1, operacion1)).resolves.toMatchObject({
+      estado: 'SINCRONIZADO', payload: vacunacion, confirmacion,
+    })
+  })
+
+  it('recupera un lease vencido sin cambiar UUID ni payload', async () => {
+    const fabrica = new FabricaIndexedDbFalsa()
+    let ahora = new Date('2026-11-20T12:00:00Z')
+    const almacen = new AlmacenEventosSanitariosPendientesIndexedDb({
+      indexedDB: fabrica.factory,
+      nombreBase: 'prueba-sanidad-offline',
+      ahora: () => ahora,
+    })
+    await almacen.guardarPendiente(ambito1, animal1, payload())
+    const lease1 = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+    const lease2 = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'
+    await almacen.reclamarParaSincronizar(ambito1, operacion1, lease1)
+    await expect(almacen.reclamarParaSincronizar(ambito1, operacion1, lease2))
+      .resolves.toBeNull()
+    ahora = new Date('2026-11-20T12:01:01Z')
+    await expect(almacen.reclamarParaSincronizar(ambito1, operacion1, lease2))
+      .resolves.toMatchObject({
+        operationId: operacion1, eventId: evento1, payload: payload(),
+        leaseId: lease2, intentos: 2,
+      })
   })
 })

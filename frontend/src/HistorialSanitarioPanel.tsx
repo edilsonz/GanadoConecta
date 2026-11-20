@@ -20,6 +20,8 @@ type Props = {
   animalId: string
   accessToken: string
   puedeEscribir: boolean
+  revisionLocal?: number
+  onPendientesLocalesChange?: () => void
   onSesionInvalida: () => void
 }
 
@@ -77,14 +79,15 @@ export function HistorialSanitarioPanel(p: Props) {
   async function cargarPendientesLocales() {
     try {
       const resultado = await listarEventosSanitariosPendientesAutorizados(ambito)
-      setPendientesLocales(resultado.operaciones.filter(item => item.animalId === p.animalId))
+      setPendientesLocales(resultado.operaciones.filter(item =>
+        item.animalId === p.animalId && item.clase === 'EVENTO_SANITARIO'))
     } catch {
       setMensaje('No se pudieron consultar los eventos pendientes de este dispositivo.')
     }
   }
 
-  useEffect(() => { void cargar(filtro) }, [p.ganaderiaId, p.animalId, p.accessToken, filtro])
-  useEffect(() => { void cargarPendientesLocales() }, [p.usuarioId, p.ganaderiaId, p.animalId])
+  useEffect(() => { void cargar(filtro) }, [p.ganaderiaId, p.animalId, p.accessToken, filtro, p.revisionLocal])
+  useEffect(() => { void cargarPendientesLocales() }, [p.usuarioId, p.ganaderiaId, p.animalId, p.revisionLocal])
 
   async function guardarLocal(solicitud: SolicitudEventoSanitario): Promise<boolean> {
     try {
@@ -104,6 +107,7 @@ export function HistorialSanitarioPanel(p: Props) {
       setPendiente(null)
       setForm(inicial)
       setMensaje('Evento guardado en este dispositivo. Pendiente de sincronización.')
+      p.onPendientesLocalesChange?.()
       return true
     } catch {
       setMensaje('No se pudo guardar en este dispositivo. Conservamos el formulario para reintentar.')
@@ -188,9 +192,9 @@ export function HistorialSanitarioPanel(p: Props) {
       <h5>Eventos sanitarios pendientes</h5>
       <p>Se conservan en este dispositivo y todavía no forman parte del historial confirmado.</p>
       <ol>{pendientesLocales.map(item => <li key={item.operationId}>
-        <strong>{etiquetas[item.payload.tipo]} · {item.payload.fecha}</strong>
-        <p>{item.payload.descripcion}</p>
-        <small>Pendiente de sincronización</small>
+        <strong>{etiquetas[(item.payload as SolicitudEventoSanitario).tipo]} · {(item.payload as SolicitudEventoSanitario).fecha}</strong>
+        <p>{(item.payload as SolicitudEventoSanitario).descripcion}</p>
+        <small>{estadoLocal(item)}</small>
       </li>)}</ol>
     </section>}
 
@@ -266,4 +270,14 @@ function mensajeAutorizacion(estado: string): string {
   if (estado === 'REQUIERE_SESION') return 'Recupera tu sesión antes de guardar sin conexión.'
   if (estado === 'BLOQUEADA') return 'El acceso local a esta ganadería está bloqueado.'
   return 'Prepara nuevamente el trabajo sin conexión antes de guardar.'
+}
+
+function estadoLocal(item: EventoSanitarioPendienteLocal): string {
+  if (item.estado === 'ERROR_REINTENTABLE') return 'Error temporal · pendiente de reintento'
+  if (item.estado === 'REQUIERE_SESION') return 'Requiere una sesión vigente'
+  if (item.estado === 'RECHAZADO') return item.ultimoError === 'AUTORIZACION'
+    ? 'Permiso no vigente' : 'Datos rechazados · requiere revisión'
+  if (item.estado === 'CONFLICTO') return 'Conflicto · requiere revisión'
+  if (item.estado === 'SINCRONIZANDO') return 'Sincronización en curso'
+  return 'Pendiente de sincronización'
 }

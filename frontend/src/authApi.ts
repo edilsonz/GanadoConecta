@@ -62,7 +62,12 @@ export async function obtenerTokenCsrf(signal?: AbortSignal): Promise<string> {
     signal,
   })
   const body = await leerJson(response)
-  if (!response.ok || !esObjeto(body) || typeof body.token !== 'string' || body.token.length === 0) {
+  if (!response.ok) {
+    if (response.status === 429) throw new ErrorRegistro('limite')
+    if (response.status >= 500) throw new ErrorRegistro('servicio')
+    throw new ErrorRegistro('seguridad')
+  }
+  if (!esObjeto(body) || typeof body.token !== 'string' || body.token.length === 0) {
     throw new ErrorRegistro('seguridad')
   }
   return body.token

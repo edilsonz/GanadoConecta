@@ -25,6 +25,7 @@ import {
 } from './sincronizacionAnimales'
 import { useEstadoActividadPwa } from './pwaActividad'
 import type { OperacionPendienteLocal } from './operacionesPendientesDb'
+import { listarEventosSanitariosPendientesAutorizados } from './registroSanidadOffline'
 
 vi.mock('./animalesApi', async importOriginal => {
   const original = await importOriginal<typeof import('./animalesApi')>()
@@ -47,6 +48,10 @@ vi.mock('./registroAnimalesOffline', () => ({
   listarPendientesAutorizados: vi.fn(),
   prepararAccesoOfflineConfirmado: vi.fn(),
   requerirRevalidacionOffline: vi.fn(),
+}))
+
+vi.mock('./registroSanidadOffline', () => ({
+  listarEventosSanitariosPendientesAutorizados: vi.fn(),
 }))
 
 vi.mock('./sincronizacionAnimales', () => ({
@@ -145,6 +150,9 @@ describe('Panel de animales', () => {
     })
     vi.mocked(listarPendientesAutorizados).mockReset().mockResolvedValue({
       autorizacion: 'AUTORIZADA_ESCRITURA', contexto: null, operaciones: [],
+    })
+    vi.mocked(listarEventosSanitariosPendientesAutorizados).mockReset().mockResolvedValue({
+      autorizacion: 'AUTORIZADA_ESCRITURA', operaciones: [],
     })
     vi.mocked(guardarRegistroPendienteAutorizado).mockReset()
     vi.mocked(sincronizarPendientesManualmente).mockReset()
@@ -649,6 +657,52 @@ describe('Panel de animales', () => {
       .toBeInTheDocument()
     expect(await screen.findByRole('button', { name: /Luna/ })).toBeInTheDocument()
     expect(screen.queryByText('Offline local')).not.toBeInTheDocument()
+  })
+
+  it('usa el mismo control manual cuando solo existe un evento sanitario pendiente', async () => {
+    const sanitario = {
+      usuarioId: sesion.usuarioId,
+      ganaderiaId: ganaderia.id,
+      clase: 'EVENTO_SANITARIO' as const,
+      operationId: operacionUuid,
+      eventId: '423e4567-e89b-42d3-a456-426614174000',
+      animalId: animalUuid,
+      payload: {
+        operationId: operacionUuid,
+        eventId: '423e4567-e89b-42d3-a456-426614174000',
+        schemaVersion: 1 as const,
+        tipo: 'REVISION_VETERINARIA' as const,
+        fecha: '2026-11-20',
+        descripcion: 'Control pendiente',
+      },
+      estado: 'PENDIENTE' as const,
+      ultimoError: null,
+      creadoEnLocal: '2026-11-20T10:00:00Z',
+      actualizadoEnLocal: '2026-11-20T10:00:00Z',
+      intentos: 0,
+      leaseId: null,
+      leaseHasta: null,
+      confirmacion: null,
+    }
+    vi.mocked(listarEventosSanitariosPendientesAutorizados)
+      .mockResolvedValueOnce({ autorizacion: 'AUTORIZADA_ESCRITURA', operaciones: [sanitario] })
+      .mockResolvedValue({ autorizacion: 'AUTORIZADA_ESCRITURA', operaciones: [] })
+    vi.mocked(sincronizarPendientesManualmente).mockResolvedValue({
+      total: 1, sincronizadas: 1, confirmadasRemotamente: 1, fallidas: 0, ocupadas: 0,
+      operaciones: [{
+        operationId: operacionUuid, animalId: animalUuid,
+        tipoOperacion: 'REGISTRAR_EVENTO_SANITARIO', estado: 'SINCRONIZADA',
+        confirmadaRemotamente: true, resultadoRemoto: 'APLICADO',
+      }],
+    })
+
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+    expect(await screen.findByText(/Revisión veterinaria: Control pendiente/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Sincronizar pendientes' }))
+
+    await waitFor(() => expect(sincronizarPendientesManualmente).toHaveBeenCalledOnce())
+    expect(await screen.findByText('1 registro pendiente sincronizado correctamente.'))
+      .toBeInTheDocument()
   })
 
   it('mantiene la sincronización automática desactivada hasta la aceptación explícita', async () => {

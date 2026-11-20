@@ -33,6 +33,10 @@ import {
 } from './registroAnimalesOffline'
 import type { OperacionPendienteLocal } from './operacionesPendientesDb'
 import {
+  listarEventosSanitariosPendientesAutorizados,
+} from './registroSanidadOffline'
+import type { EventoSanitarioPendienteLocal } from './eventosSanitariosPendientesDb'
+import {
   ErrorSincronizacion,
   sincronizarPendientesManualmente,
   type ResultadoSincronizacionManual,
@@ -140,7 +144,9 @@ const etiquetasEstadoPendiente = {
   SINCRONIZADO: 'Sincronizado',
 } as const
 
-function esOperacionRecuperable(operacion: OperacionPendienteLocal) {
+type EstadoPendienteVisible = Pick<OperacionPendienteLocal, 'estado' | 'ultimoError'>
+
+function esOperacionRecuperable(operacion: EstadoPendienteVisible) {
   return operacion.estado === 'PENDIENTE'
     || operacion.estado === 'ERROR_REINTENTABLE'
     || operacion.estado === 'REQUIERE_SESION'
@@ -149,7 +155,7 @@ function esOperacionRecuperable(operacion: OperacionPendienteLocal) {
       && operacion.ultimoError === 'AUTORIZACION')
 }
 
-function detalleEstadoPendiente(operacion: OperacionPendienteLocal) {
+function detalleEstadoPendiente(operacion: EstadoPendienteVisible) {
   if (operacion.estado === 'PENDIENTE') {
     return 'Todavía no se confirmó en PostgreSQL. Puedes enviarlo manualmente o con la sincronización automática.'
   }
@@ -174,6 +180,18 @@ function detalleEstadoPendiente(operacion: OperacionPendienteLocal) {
     return 'El servidor rechazó los datos. Requiere revisión y no se reintentará automáticamente.'
   }
   return 'La solicitud fue rechazada de forma definitiva por seguridad o protocolo. Requiere revisión.'
+}
+
+function tituloPendienteSanitario(operacion: EventoSanitarioPendienteLocal) {
+  if ('nombreVacuna' in operacion.payload) {
+    return `Vacunación: ${operacion.payload.nombreVacuna}`
+  }
+  const etiquetas = {
+    DESPARASITACION: 'Desparasitación',
+    TRATAMIENTO_SANITARIO: 'Tratamiento sanitario',
+    REVISION_VETERINARIA: 'Revisión veterinaria',
+  }
+  return `${etiquetas[operacion.payload.tipo]}: ${operacion.payload.descripcion}`
 }
 
 const estadoAutomaticoInicial: EstadoSincronizacionAutomatica = { tipo: 'DESACTIVADA' }
@@ -299,6 +317,9 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
   const [ficha, setFicha] = useState<Animal | null>(null)
   const [cargandoFicha, setCargandoFicha] = useState(false)
   const [pendientesLocales, setPendientesLocales] = useState<OperacionPendienteLocal[]>([])
+  const [pendientesSanitarios, setPendientesSanitarios] =
+    useState<EventoSanitarioPendienteLocal[]>([])
+  const [revisionSanidadLocal, setRevisionSanidadLocal] = useState(0)
   const [modoSinConexion, setModoSinConexion] = useState(false)
   const [offlinePreparado, setOfflinePreparado] = useState(false)
   const [sincronizando, setSincronizando] = useState(false)
@@ -335,6 +356,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
           setAnimales([])
           setEstadoListado('ERROR')
           setPendientesLocales([])
+          setPendientesSanitarios([])
           setCursor(null)
           setFicha(null)
         }
@@ -356,7 +378,9 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
 
   const ambitoLocal = { usuarioId: sesion.usuarioId, ganaderiaId: ganaderia.id }
   const operacionesRecuperables = pendientesLocales.filter(esOperacionRecuperable)
-  const hayPendientesAutomaticos = operacionesRecuperables.length > 0
+  const sanitariasRecuperables = pendientesSanitarios.filter(esOperacionRecuperable)
+  const hayPendientesAutomaticos = operacionesRecuperables.length
+    + sanitariasRecuperables.length > 0
 
   useEffect(() => {
     const marcarOnline = () => setNavegadorSinConexion(false)
@@ -416,6 +440,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
       setAnimales([])
       setEstadoListado('ERROR')
       setPendientesLocales([])
+      setPendientesSanitarios([])
       setCursor(null)
       setFicha(null)
     }
@@ -434,9 +459,13 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
   }
 
   async function cargarPendientesLocales() {
-    const resultado = await listarPendientesAutorizados(ambitoLocal)
+    const [resultado, sanidad] = await Promise.all([
+      listarPendientesAutorizados(ambitoLocal),
+      listarEventosSanitariosPendientesAutorizados(ambitoLocal),
+    ])
     setPendientesLocales(resultado.operaciones)
-    return resultado
+    setPendientesSanitarios(sanidad.operaciones)
+    return { ...resultado, sanitarias: sanidad.operaciones }
   }
 
   async function prepararOffline() {
@@ -469,6 +498,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
       return
     }
     const pendientes = await cargarPendientesLocales()
+    setRevisionSanidadLocal(actual => actual + 1)
     if (resultado.confirmadasRemotamente > 0) {
       try {
         await cargarPrimeraPagina()
@@ -492,7 +522,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
           ? 'operación requiere' : 'operaciones requieren'} atención. Revisa el estado antes de reintentar.`)
       } else if (resultado.ocupadas > 0) {
         setMensaje('Otra pestaña ya está procesando estas operaciones. Actualiza el listado en unos segundos.')
-      } else if (pendientes.operaciones.length === 0) {
+      } else if (pendientes.operaciones.length + pendientes.sanitarias.length === 0) {
         setMensaje('No hay operaciones pendientes para sincronizar.')
       }
     }
@@ -503,7 +533,8 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
 
   async function sincronizarPendientes() {
     if (!acceso || acceso.rol === 'LECTOR' || sincronizacionEnCurso.current
-        || navegadorSinConexion || operacionesRecuperables.length === 0) return
+        || navegadorSinConexion
+        || operacionesRecuperables.length + sanitariasRecuperables.length === 0) return
 
     sincronizacionEnCurso.current = true
     setSincronizando(true)
@@ -550,6 +581,8 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
     setCursor(null)
     setFicha(null)
     setPendientesLocales([])
+    setPendientesSanitarios([])
+    setRevisionSanidadLocal(0)
     setModoSinConexion(false)
     setOfflinePreparado(false)
     setSincronizando(false)
@@ -821,6 +854,11 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
   // visible aunque el animal ya aparezca en GET: puede faltar guardar el recibo.
   const pendientesVisibles = pendientesLocales
   const recuperablesVisibles = pendientesVisibles.filter(esOperacionRecuperable)
+  const sanitariasVisibles = pendientesSanitarios
+  const sanitariasRecuperablesVisibles = sanitariasVisibles.filter(esOperacionRecuperable)
+  const totalPendientesVisibles = pendientesVisibles.length + sanitariasVisibles.length
+  const totalRecuperablesVisibles = recuperablesVisibles.length
+    + sanitariasRecuperablesVisibles.length
 
   return (
     <section className="animals-panel" id="mis-animales" aria-labelledby="animals-title">
@@ -893,27 +931,27 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                   : 'No disponible para el rol lector.'}
               </p>
             </section>
-            {pendientesVisibles.length > 0 && (
+            {totalPendientesVisibles > 0 && (
               <section className="local-pending" aria-labelledby="local-pending-title">
                 <div className="local-pending-heading">
                   <div>
                     <h4 id="local-pending-title">Pendientes en este dispositivo</h4>
-                    <span>{pendientesVisibles.length}</span>
+                    <span>{totalPendientesVisibles}</span>
                   </div>
                   {puedeRegistrar && (
                     <button className="button button-primary sync-pending-button" type="button"
                       onClick={() => void sincronizarPendientes()}
                       disabled={sincronizando || sincronizandoAutomaticamente
-                        || navegadorSinConexion || recuperablesVisibles.length === 0}
+                        || navegadorSinConexion || totalRecuperablesVisibles === 0}
                       aria-describedby="local-pending-help">
                       {sincronizando ? 'Sincronizando…'
-                        : recuperablesVisibles.length > 0
+                        : totalRecuperablesVisibles > 0
                           ? 'Sincronizar pendientes'
                           : 'Sin operaciones recuperables'}
                     </button>
                   )}
                 </div>
-                <p id="local-pending-help">Los datos e identificadores originales permanecen en este dispositivo. {recuperablesVisibles.length} {recuperablesVisibles.length === 1 ? 'operación recuperable puede' : 'operaciones recuperables pueden'} reenviarse con el botón o mediante sincronización automática.</p>
+                <p id="local-pending-help">Los datos e identificadores originales permanecen en este dispositivo. {totalRecuperablesVisibles} {totalRecuperablesVisibles === 1 ? 'operación recuperable puede' : 'operaciones recuperables pueden'} reenviarse con el botón o mediante sincronización automática.</p>
                 <div className="local-pending-list">
                   {pendientesVisibles.map(operacion => (
                     <article className="local-pending-item" key={operacion.operationId}>
@@ -922,6 +960,19 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                           || operacion.payload.areteFrente
                           || (operacion.payload.sexo === 'HEMBRA' ? 'Hembra sin nombre' : 'Macho sin nombre')}</strong>
                         <small>{operacion.payload.sexo === 'HEMBRA' ? 'Hembra' : 'Macho'}</small>
+                        <small className="local-pending-reason">{detalleEstadoPendiente(operacion)}</small>
+                      </span>
+                      <footer>
+                        <b>{etiquetasEstadoPendiente[operacion.estado]}</b>
+                        <small>{operacion.intentos} {operacion.intentos === 1 ? 'intento' : 'intentos'}</small>
+                      </footer>
+                    </article>
+                  ))}
+                  {sanitariasVisibles.map(operacion => (
+                    <article className="local-pending-item" key={operacion.operationId}>
+                      <span>
+                        <strong>{tituloPendienteSanitario(operacion)}</strong>
+                        <small>Registro sanitario · ficha del animal</small>
                         <small className="local-pending-reason">{detalleEstadoPendiente(operacion)}</small>
                       </span>
                       <footer>
@@ -1107,10 +1158,15 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
               </dl>
               {ficha.observaciones && <p className="animal-observations"><strong>Observaciones</strong>{ficha.observaciones}</p>}
               <VacunacionesPanel key={`${ganaderia.id}-${ficha.animalId}`} ganaderiaId={ganaderia.id}
-                animalId={ficha.animalId} accessToken={sesion.accessToken}
-                puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
+                usuarioId={sesion.usuarioId} animalId={ficha.animalId}
+                accessToken={sesion.accessToken} puedeEscribir={puedeRegistrar}
+                revisionLocal={revisionSanidadLocal}
+                onPendientesLocalesChange={() => void cargarPendientesLocales()}
+                onSesionInvalida={onSesionInvalida} />
               <HistorialSanitarioPanel ganaderiaId={ganaderia.id} animalId={ficha.animalId}
                 usuarioId={sesion.usuarioId} accessToken={sesion.accessToken} puedeEscribir={puedeRegistrar}
+                revisionLocal={revisionSanidadLocal}
+                onPendientesLocalesChange={() => void cargarPendientesLocales()}
                 onSesionInvalida={onSesionInvalida} />
             </>
           )}

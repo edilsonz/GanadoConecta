@@ -6,8 +6,8 @@ import {
   AlmacenEventosSanitariosPendientesIndexedDb,
   type AmbitoSanitarioLocal,
   type EventoSanitarioPendienteLocal,
+  type SolicitudSanitariaLocal,
 } from './eventosSanitariosPendientesDb'
-import type { SolicitudEventoSanitario } from './historialSanitarioApi'
 
 type Autorizador = Pick<ServicioAutorizacionOffline, 'evaluarEscrituraLocal'>
 type Almacen = Pick<AlmacenEventosSanitariosPendientesIndexedDb,
@@ -22,7 +22,7 @@ export class ServicioRegistroSanidadOffline {
   async guardar(
     ambito: AmbitoSanitarioLocal,
     animalId: string,
-    payload: SolicitudEventoSanitario,
+    payload: SolicitudSanitariaLocal,
   ): Promise<{
     autorizacion: ResultadoAutorizacionOffline['estado']
     operacion: EventoSanitarioPendienteLocal | null
@@ -63,7 +63,7 @@ const servicio = new ServicioRegistroSanidadOffline()
 export const guardarEventoSanitarioPendienteAutorizado = (
   ambito: AmbitoSanitarioLocal,
   animalId: string,
-  payload: SolicitudEventoSanitario,
+  payload: SolicitudSanitariaLocal,
 ) => servicio.guardar(ambito, animalId, payload)
 
 export const listarEventosSanitariosPendientesAutorizados = (
