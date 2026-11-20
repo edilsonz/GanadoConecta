@@ -172,6 +172,49 @@ describe('Panel de animales', () => {
     expect(registrarAnimal).not.toHaveBeenCalled()
   })
 
+  it('no presenta un vacío confirmado mientras la carga inicial falla', async () => {
+    vi.mocked(listarAnimales).mockRejectedValue(new ErrorAnimal('conexion'))
+
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+
+    expect(screen.getByText('Verificando acceso y consultando animales…')).toBeInTheDocument()
+    expect(await screen.findByText('No se pudo cargar el listado de animales')).toBeInTheDocument()
+    expect(screen.getByText(/No se confirmó si existen animales/)).toBeInTheDocument()
+    expect(screen.queryByText(/Aún no hay animales registrados/)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Actualizar' })).toBeEnabled()
+  })
+
+  it('conserva animales cargados si una actualización temporal falla', async () => {
+    vi.mocked(listarAnimales)
+      .mockResolvedValueOnce(pagina([animal]))
+      .mockRejectedValueOnce(new ErrorAnimal('servicio'))
+
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+    expect(await screen.findByRole('button', { name: /Luna/ })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Actualizar' }))
+
+    expect(await screen.findByText('No se pudo cargar el listado de animales')).toBeInTheDocument()
+    expect(screen.getByText(/podrían estar desactualizados/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Luna/ })).toBeInTheDocument()
+    expect(screen.queryByText(/Aún no hay animales registrados/)).not.toBeInTheDocument()
+  })
+
+  it('se recupera de un error inicial y solo entonces confirma el listado vacío', async () => {
+    vi.mocked(listarAnimales)
+      .mockRejectedValueOnce(new ErrorAnimal('conexion'))
+      .mockResolvedValueOnce(pagina([]))
+
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+    expect(await screen.findByText('No se pudo cargar el listado de animales')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Actualizar' }))
+
+    expect(await screen.findByText(/Aún no hay animales registrados/)).toBeInTheDocument()
+    expect(screen.queryByText('No se pudo cargar el listado de animales')).not.toBeInTheDocument()
+    expect(listarAnimales).toHaveBeenCalledTimes(2)
+  })
+
   it('protege una actualización mientras el formulario de animal tiene cambios', async () => {
     vi.mocked(listarAnimales).mockResolvedValue(pagina([]))
     render(<>

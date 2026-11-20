@@ -59,6 +59,8 @@ type FormularioAnimal = {
   observaciones: string
 }
 
+type EstadoListadoAnimales = 'CARGANDO' | 'LISTO' | 'ERROR'
+
 const formularioInicial: FormularioAnimal = {
   sexo: '',
   nombre: '',
@@ -285,6 +287,8 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
   const [errores, setErrores] = useState<Record<string, string>>({})
   const [mensaje, setMensaje] = useState<string | null>(null)
   const [cargando, setCargando] = useState(true)
+  const [estadoListado, setEstadoListado] = useState<EstadoListadoAnimales>('CARGANDO')
+  const [actualizandoLista, setActualizandoLista] = useState(false)
   const [cargandoMas, setCargandoMas] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [pendienteIncierto, setPendienteIncierto] = useState<SolicitudRegistroAnimal | null>(null)
@@ -326,6 +330,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
           void bloquearAccesoOffline(ambitoActual.current).catch(() => undefined)
           setAcceso(null)
           setAnimales([])
+          setEstadoListado('ERROR')
           setPendientesLocales([])
           setCursor(null)
           setFicha(null)
@@ -406,6 +411,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
       void bloquearAccesoOffline(ambitoLocal).catch(() => undefined)
       setAcceso(null)
       setAnimales([])
+      setEstadoListado('ERROR')
       setPendientesLocales([])
       setCursor(null)
       setFicha(null)
@@ -413,9 +419,15 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
   }
 
   async function cargarPrimeraPagina() {
-    const pagina = await listarAnimales(ganaderia.id, sesion.accessToken)
-    setAnimales(pagina.items)
-    setCursor(pagina.siguienteCursor)
+    try {
+      const pagina = await listarAnimales(ganaderia.id, sesion.accessToken)
+      setAnimales(pagina.items)
+      setCursor(pagina.siguienteCursor)
+      setEstadoListado('LISTO')
+    } catch (error) {
+      setEstadoListado('ERROR')
+      throw error
+    }
   }
 
   async function cargarPendientesLocales() {
@@ -531,12 +543,14 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
     let activo = true
     setAcceso(null)
     setAnimales([])
+    setEstadoListado('CARGANDO')
     setCursor(null)
     setFicha(null)
     setPendientesLocales([])
     setModoSinConexion(false)
     setOfflinePreparado(false)
     setSincronizando(false)
+    setActualizandoLista(false)
     controladorAutomatico.current?.desactivar()
     setSincronizacionAutomaticaActiva(false)
     setEstadoSincronizacionAutomatica(estadoAutomaticoInicial)
@@ -567,10 +581,12 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
           if (!activo) return
           setAnimales(pagina.items)
           setCursor(pagina.siguienteCursor)
+          setEstadoListado('LISTO')
         } catch (error) {
           if (!activo) return
           const errorAnimal = fallo(error)
           if (errorAnimal.tipo !== 'conexion') throw errorAnimal
+          setEstadoListado('ERROR')
           setModoSinConexion(true)
           setMensaje('Sin conexión. Los animales confirmados no se actualizaron; puedes ver tus pendientes locales autorizados.')
         }
@@ -589,6 +605,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                   validadoEn: local.contexto.validadoEnServidor,
                 })
                 setModoSinConexion(true)
+                setEstadoListado('ERROR')
                 setOfflinePreparado(true)
                 setMensaje('Sin conexión. Trabajas con la autorización local vigente; los registros quedarán pendientes de sincronización.')
               } else {
@@ -603,7 +620,9 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
             aplicarFallo(new ErrorAnimal(tipo))
           }
         } else {
-          aplicarFallo(fallo(error))
+          const errorAnimal = fallo(error)
+          setEstadoListado('ERROR')
+          aplicarFallo(errorAnimal)
         }
       } finally {
         if (activo) setCargando(false)
@@ -721,7 +740,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
   }
 
   async function actualizarLista() {
-    setCargando(true)
+    setActualizandoLista(true)
     setMensaje(null)
     try {
       const contexto = await consultarAccesoGanaderia(ganaderia.id, sesion.accessToken)
@@ -739,15 +758,25 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
       }
       await cargarPrimeraPagina()
     } catch (error) {
+      setEstadoListado('ERROR')
       if (error instanceof ErrorGanaderia) {
-        const tipo = error.tipo === 'sesion' ? 'sesion'
-          : error.tipo === 'seguridad' ? 'permiso' : 'servicio'
-        aplicarFallo(new ErrorAnimal(tipo))
+        if (error.tipo === 'conexion') {
+          setModoSinConexion(true)
+        } else {
+          const tipo = error.tipo === 'sesion' ? 'sesion'
+            : error.tipo === 'seguridad' ? 'permiso' : 'servicio'
+          aplicarFallo(new ErrorAnimal(tipo))
+        }
       } else {
-        aplicarFallo(fallo(error))
+        const errorAnimal = fallo(error)
+        if (errorAnimal.tipo === 'sesion' || errorAnimal.tipo === 'permiso') {
+          aplicarFallo(errorAnimal)
+        } else if (errorAnimal.tipo === 'conexion') {
+          setModoSinConexion(true)
+        }
       }
     } finally {
-      setCargando(false)
+      setActualizandoLista(false)
     }
   }
 
@@ -808,16 +837,25 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
         <div className="animals-empty"><p>No hay acceso vigente para mostrar esta ganadería.</p></div>
       ) : (
         <div className="animals-layout">
-          <div className="animals-list-column">
+          <div className="animals-list-column" aria-busy={actualizandoLista}>
             <div className="animals-list-heading">
               <h4>Animales registrados</h4>
-              <button className="button button-outline" type="button" onClick={() => void actualizarLista()}>
-                Actualizar
+              <button className="button button-outline" type="button"
+                onClick={() => void actualizarLista()} disabled={actualizandoLista}>
+                {actualizandoLista ? 'Actualizando…' : 'Actualizar'}
               </button>
             </div>
-            {animales.length === 0 ? (
+            {estadoListado === 'ERROR' && (
+              <div className="animals-list-error" role="alert">
+                <strong>No se pudo cargar el listado de animales</strong>
+                <p>{animales.length > 0
+                  ? 'Conservamos los últimos datos cargados, pero podrían estar desactualizados.'
+                  : 'No se confirmó si existen animales. Pulsa «Actualizar» para volver a intentarlo.'}</p>
+              </div>
+            )}
+            {estadoListado === 'LISTO' && animales.length === 0 ? (
               <div className="animals-empty"><p>Aún no hay animales registrados en esta ganadería.</p></div>
-            ) : (
+            ) : animales.length > 0 && (
               <div className="animal-list" aria-label="Animales de la ganadería">
                 {animales.map(animal => (
                   <button className="animal-option" type="button" key={animal.animalId}
