@@ -37,6 +37,9 @@
 > mantiene visibles los fallos y bloquea reintentos permanentes; los
 > [estados del listado](27-estados-listado-animales.md) distinguen carga, vacío
 > confirmado, error inicial y datos conservados potencialmente desactualizados.
+> La [preparación sanitaria offline](31-sanidad-offline-local.md) amplía
+> IndexedDB con eventos pendientes aislados y documenta por qué su transmisión
+> sigue bloqueada hasta generalizar de forma segura el motor existente.
 > Background Sync, caché privada autorizada y E2E offline integral
 > continúan pendientes. Los estados de propuesta siguientes describen la
 > preparación arquitectónica original, no acreditan implementación de SPEC-01.

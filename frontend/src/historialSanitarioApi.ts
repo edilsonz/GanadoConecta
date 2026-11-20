@@ -1,4 +1,4 @@
-import { codigoError, esObjeto, leerJson, obtenerTokenCsrf } from './authApi'
+import { codigoError, ErrorRegistro, esObjeto, leerJson, obtenerTokenCsrf } from './authApi'
 import { ErrorSanidad } from './vacunacionesApi'
 
 export type TipoEventoSanitario='VACUNACION'|'DESPARASITACION'|'TRATAMIENTO_SANITARIO'|'REVISION_VETERINARIA'
@@ -24,9 +24,19 @@ export async function listarHistorialSanitario(g:string,a:string,token:string,ti
   const b=await leerJson(r);if(r.ok&&Array.isArray(b)&&b.every(esEvento))return b as EventoSanitario[];error(r,b)
 }
 export async function registrarEventoSanitario(g:string,a:string,token:string,s:SolicitudEventoSanitario){
-  for(let i=0;i<2;i++){const csrf=await obtenerTokenCsrf();const r=await fetch(ruta(g,a),{method:'POST',credentials:'same-origin',cache:'no-store',
-    headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json','X-CSRF-TOKEN':csrf},body:JSON.stringify(s)})
-    const b=await leerJson(r);if(r.status===403&&codigoError(b)==='CSRF_INVALIDO'&&i===0)continue
-    if([200,201].includes(r.status)&&esObjeto(b)&&b.eventId===s.eventId&&b.operationId===s.operationId)return
-    error(r,b)}
+  try {
+    for(let i=0;i<2;i++){const csrf=await obtenerTokenCsrf();const r=await fetch(ruta(g,a),{method:'POST',credentials:'same-origin',cache:'no-store',
+      headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json','X-CSRF-TOKEN':csrf},body:JSON.stringify(s)})
+      const b=await leerJson(r);if(r.status===403&&codigoError(b)==='CSRF_INVALIDO'&&i===0)continue
+      if([200,201].includes(r.status)&&esObjeto(b)&&b.eventId===s.eventId&&b.operationId===s.operationId)return
+      error(r,b)}
+  } catch (fallo) {
+    if (fallo instanceof ErrorSanidad) throw fallo
+    if (fallo instanceof ErrorRegistro) {
+      if (fallo.tipo === 'conexion') throw new ErrorSanidad('conexion')
+      if (fallo.tipo === 'seguridad') throw new ErrorSanidad('seguridad')
+      throw new ErrorSanidad('temporal')
+    }
+    throw new ErrorSanidad('conexion')
+  }
 }

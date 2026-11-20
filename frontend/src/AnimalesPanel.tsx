@@ -1110,7 +1110,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                 animalId={ficha.animalId} accessToken={sesion.accessToken}
                 puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
               <HistorialSanitarioPanel ganaderiaId={ganaderia.id} animalId={ficha.animalId}
-                accessToken={sesion.accessToken} puedeEscribir={puedeRegistrar}
+                usuarioId={sesion.usuarioId} accessToken={sesion.accessToken} puedeEscribir={puedeRegistrar}
                 onSesionInvalida={onSesionInvalida} />
             </>
           )}

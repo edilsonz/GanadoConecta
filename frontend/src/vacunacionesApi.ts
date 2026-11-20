@@ -13,7 +13,7 @@ export type SolicitudVacunacion = DatosVacunacion & {
 }
 export type Vacunacion = DatosVacunacion & { eventId: string; creadoEn: string }
 export class ErrorSanidad extends Error {
-  constructor(public readonly tipo: 'sesion' | 'permiso' | 'seguridad' | 'validacion' | 'conflicto' | 'temporal') {
+  constructor(public readonly tipo: 'sesion' | 'permiso' | 'seguridad' | 'validacion' | 'conflicto' | 'conexion' | 'temporal') {
     super(tipo)
   }
 }

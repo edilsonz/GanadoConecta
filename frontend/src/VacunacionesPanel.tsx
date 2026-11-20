@@ -10,6 +10,7 @@ const mensajes = {
   seguridad: 'No se pudo validar la seguridad de la solicitud. Actualiza la página.',
   validacion: 'Revisa el nombre, las fechas y los datos enviados.',
   conflicto: 'El registro presenta un conflicto. Conserva los datos y solicita revisión.',
+  conexion: 'No hay conexión. Conserva los datos y vuelve a intentarlo al recuperar la red.',
   temporal: 'No recibimos confirmación. Reintenta el mismo registro para evitar duplicados.',
 }
 export function VacunacionesPanel({ ganaderiaId, animalId, accessToken, puedeEscribir, onSesionInvalida }: Props) {
