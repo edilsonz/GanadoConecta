@@ -1810,3 +1810,10 @@ footer p {
 .hero-description,.feature-card p {
   overflow-wrap:break-word
 }
+
+.vaccinations-panel { margin-top:24px; padding-top:20px; border-top:1px solid #c4d6bb; min-width:0 }
+.vaccinations-panel fieldset { border:0; padding:0; margin:0; min-width:0 }
+.vaccinations-panel ul { padding-left:20px; overflow-wrap:anywhere }
+.vaccinations-panel li { margin:12px 0 }
+.vaccinations-panel input,.vaccinations-panel textarea { box-sizing:border-box; width:100%; min-width:0 }
+.vaccinations-panel .animals-list-heading { flex-wrap:wrap; gap:12px }

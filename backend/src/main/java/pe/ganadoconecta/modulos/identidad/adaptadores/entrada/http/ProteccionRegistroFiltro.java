@@ -55,7 +55,10 @@ public final class ProteccionRegistroFiltro extends OncePerRequestFilter {
         boolean revocacionProtegida = "DELETE".equals(request.getMethod())
                 && request.getRequestURI().matches(
                         "^/api/v1/ganaderias/[^/]+/membresias/[^/]+$");
-        return !postProtegido && !altaAnimalProtegida && !revocacionProtegida;
+        boolean vacunacionProtegida = "POST".equals(request.getMethod())
+                && request.getRequestURI().matches(
+                        "^/api/v1/ganaderias/[^/]+/animales/[^/]+/vacunaciones$");
+        return !postProtegido && !altaAnimalProtegida && !revocacionProtegida && !vacunacionProtegida;
     }
 
     @Override

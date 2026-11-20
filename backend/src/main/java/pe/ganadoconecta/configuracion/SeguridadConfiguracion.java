@@ -75,6 +75,10 @@ public class SeguridadConfiguracion {
                                 "/api/v1/ganaderias/*/animales").authenticated()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/ganaderias/*/animales/*").authenticated()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/ganaderias/*/animales/*/vacunaciones").authenticated()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/ganaderias/*/animales/*/vacunaciones").authenticated()
                         .anyRequest().denyAll())
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfRepository)
