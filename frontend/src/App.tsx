@@ -39,7 +39,7 @@ export default function App() {
           <a href="#crear-cuenta">Crear cuenta</a>
           <a href="#mis-ganaderias">Ganaderías</a>
           <a href="#mis-animales">Mi ganado</a>
-          <button disabled>Calendario</button>
+          <a href="#agenda-sanitaria">Agenda sanitaria</a>
         </nav>
         <span className="edition"><span aria-hidden="true">◌</span> En preparación</span>
       </header>

@@ -18,10 +18,11 @@ import pe.ganadoconecta.modulos.ganado.aplicacion.AnimalNoEncontradoException;
 import pe.ganadoconecta.modulos.identidad.aplicacion.AccesoGanaderiaDenegadoException;
 import pe.ganadoconecta.modulos.sanidad.aplicacion.ConflictoSanitarioException;
 import pe.ganadoconecta.modulos.sanidad.aplicacion.PersistenciaSanitariaException;
+import pe.ganadoconecta.modulos.sanidad.aplicacion.ActividadAgendaNoEncontradaException;
 import pe.ganadoconecta.modulos.sanidad.dominio.DatoSanitarioInvalidoException;
 
 @RestControllerAdvice(assignableTypes = {VacunacionesControlador.class,
-        HistorialSanitarioControlador.class})
+        HistorialSanitarioControlador.class, AgendaSanitariaControlador.class})
 @Profile("postgres")
 public class ErroresSanidadControlador {
     private static final Logger LOGGER = LoggerFactory.getLogger(ErroresSanidadControlador.class);
@@ -49,6 +50,12 @@ public class ErroresSanidadControlador {
     ResponseEntity<ErrorSanitario> animal() {
         return respuesta(HttpStatus.NOT_FOUND, "ANIMAL_NO_ENCONTRADO",
                 "No se encontró el animal solicitado.", Map.of());
+    }
+
+    @ExceptionHandler(ActividadAgendaNoEncontradaException.class)
+    ResponseEntity<ErrorSanitario> actividad() {
+        return respuesta(HttpStatus.NOT_FOUND, "ACTIVIDAD_NO_ENCONTRADA",
+                "No se encontró la actividad sanitaria solicitada.", Map.of());
     }
 
     @ExceptionHandler({SolicitudSanitariaInvalidaException.class,

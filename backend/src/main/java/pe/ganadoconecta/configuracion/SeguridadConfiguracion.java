@@ -83,6 +83,12 @@ public class SeguridadConfiguracion {
                                 "/api/v1/ganaderias/*/animales/*/eventos-sanitarios").authenticated()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/ganaderias/*/animales/*/eventos-sanitarios").authenticated()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/ganaderias/*/agenda-sanitaria").authenticated()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/ganaderias/*/agenda-sanitaria").authenticated()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/ganaderias/*/agenda-sanitaria/*/completar").authenticated()
                         .anyRequest().denyAll())
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfRepository)

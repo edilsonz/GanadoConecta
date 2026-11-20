@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AnimalesPanel } from './AnimalesPanel'
 vi.mock('./VacunacionesPanel', () => ({ VacunacionesPanel: () => null }))
 vi.mock('./HistorialSanitarioPanel', () => ({ HistorialSanitarioPanel: () => null }))
+vi.mock('./AgendaSanitariaPanel', () => ({ AgendaSanitariaPanel: () => null }))
 import {
   consultarAnimal,
   ErrorAnimal,
