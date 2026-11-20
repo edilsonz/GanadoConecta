@@ -1048,6 +1048,67 @@ h1 span {
   margin-top:14px
 }
 
+.automatic-sync {
+  margin-top:18px;
+  padding:16px;
+  border:1px solid #c8d7c3;
+  border-radius:8px;
+  background:#f4f7ef;
+  display:grid;
+  gap:11px
+}
+
+.automatic-sync h4,.automatic-sync p {
+  margin:0
+}
+
+.automatic-sync>div p {
+  margin-top:5px;
+  color:#607364;
+  font-size:11px;
+  line-height:1.5
+}
+
+.automatic-sync-toggle {
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:#183c30;
+  font-size:13px;
+  font-weight:650;
+  cursor:pointer
+}
+
+.automatic-sync-toggle input {
+  width:20px;
+  height:20px;
+  flex:0 0 auto;
+  accent-color:#28513f
+}
+
+.automatic-sync-toggle:has(input:disabled) {
+  cursor:not-allowed;
+  opacity:.65
+}
+
+.automatic-sync-state {
+  padding:9px 10px;
+  border-radius:6px;
+  background:#e4ecdf;
+  color:#375744;
+  font-size:11px;
+  line-height:1.45;
+  overflow-wrap:anywhere
+}
+
+.automatic-sync-state.state-accion_requerida,
+.automatic-sync-state.state-sesion_expirada,
+.automatic-sync-state.state-permiso_insuficiente {
+  background:#fff0df;
+  color:#744918
+}
+
 .local-pending {
   margin-top:18px;
   padding:16px;

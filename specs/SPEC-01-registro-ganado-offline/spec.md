@@ -16,7 +16,14 @@
 **Base aprobada:** React PWA/IndexedDB, Spring Boot monolito modular/Clean
 Architecture, PostgreSQL principal, identidad interna única, datos opcionales,
 acceso familiar autorizado, permisos/versiones/duplicados al sincronizar.
+**Corte de evidencia previo al incremento del 20 de noviembre:**
 **Decisiones adoptadas por el responsable en esta revisión:** DP02–DP08 según la sección 13, incluidas identidad UUIDv4, sexo obligatorio, alcance individual, conflictos conservadores, máximo offline 168 h sin borrado de pendientes, pruebas y zona America/Lima con instantes UTC. DP01 y SPEC-01 se aprobaron documentalmente el 16 de noviembre de 2026. Desde el 17 de noviembre existe implementación incremental de Identidad y ganaderías; el 18 de noviembre se verificaron T04–T10 para alta, listado y ficha backend y su cliente React online. El 19 de noviembre de 2026 el responsable autorizó y se verificó el cambio controlado T19-ID para identificar opcionalmente mediante lana/cinta en las orejas; también se implementaron el almacenamiento T11, la barrera local inicial T12/T15, el primer envío manual T13/T14 por cuenta y ganadería y un app shell PWA instalable. La instalación y una recarga F5 offline se observaron en Chrome. La sincronización manual revalida sesión, membresía y rol online, conserva IDs y recibos y nunca usa el contexto local como autorización del servidor. La PWA no cachea respuestas privadas ni sincroniza automáticamente; las actualizaciones explícitas respetan formularios y sincronización en curso. Cierre/reapertura completa, actualización A→B, caché privada autorizada, automatización, backoff programado y E2E integral siguen pendientes. No se modifican los RF/ADR aprobados ni se declara completo CA03.
+
+**Estado actual del incremento:** T13/T14 añade opt-in efímero para sincronización
+automática en primer plano y el backoff aprobado, reutilizando el mismo motor
+seguro. La PWA no cachea respuestas privadas ni envía desde el Service Worker.
+Background Sync, caché privada autorizada, conflictos asistidos y E2E integral
+continúan pendientes; CA03 no se declara completo.
 
 Fuentes locales: [RF](../../docs/01-analisis-de-sistema/03-requisitos-funcionales.md),
 [HU](../../docs/01-analisis-de-sistema/02-historias-de-usuario.md),

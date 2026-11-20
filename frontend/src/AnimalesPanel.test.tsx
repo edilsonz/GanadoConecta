@@ -519,6 +519,9 @@ describe('Panel de animales', () => {
     expect(await screen.findByText('Acceso de lectura')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Luna/ })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Registrar animal' })).not.toBeInTheDocument()
+    expect(screen.getByRole('checkbox', {
+      name: 'Sincronización automática al recuperar conexión',
+    })).toBeDisabled()
   })
 
   it('permite registrar a EDITOR tras revalidar su acceso', async () => {
@@ -595,6 +598,79 @@ describe('Panel de animales', () => {
       .toBeInTheDocument()
     expect(await screen.findByRole('button', { name: /Luna/ })).toBeInTheDocument()
     expect(screen.queryByText('Offline local')).not.toBeInTheDocument()
+  })
+
+  it('mantiene la sincronización automática desactivada hasta la aceptación explícita', async () => {
+    const payload = {
+      operationId: operacionUuid,
+      animalId: animalUuid,
+      tipo: 'CREAR_ANIMAL' as const,
+      schemaVersion: 2 as const,
+      baseVersion: 0 as const,
+      sexo: 'HEMBRA' as const,
+      nombre: 'Pendiente automático',
+    }
+    vi.mocked(listarAnimales).mockResolvedValue(pagina([]))
+    vi.mocked(listarPendientesAutorizados).mockResolvedValue({
+      autorizacion: 'AUTORIZADA_ESCRITURA', contexto: null,
+      operaciones: [operacionLocal(payload)],
+    })
+    vi.mocked(sincronizarPendientesManualmente).mockResolvedValue({
+      total: 1, sincronizadas: 1, confirmadasRemotamente: 1, fallidas: 0, ocupadas: 0,
+      operaciones: [{
+        operationId: operacionUuid, animalId: animalUuid,
+        estado: 'SINCRONIZADA', confirmadaRemotamente: true,
+      }],
+    })
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+
+    const opcion = await screen.findByRole('checkbox', {
+      name: 'Sincronización automática al recuperar conexión',
+    })
+    expect(opcion).not.toBeChecked()
+    expect(screen.getByText('Desactivada.')).toBeInTheDocument()
+    expect(sincronizarPendientesManualmente).not.toHaveBeenCalled()
+
+    fireEvent.click(opcion)
+    await waitFor(() => expect(sincronizarPendientesManualmente).toHaveBeenCalledOnce())
+  })
+
+  it('espera offline y usa el mismo motor al recibir una reconexión en primer plano', async () => {
+    const descriptor = Object.getOwnPropertyDescriptor(navigator, 'onLine')
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: false })
+    const payload = {
+      operationId: operacionUuid,
+      animalId: animalUuid,
+      tipo: 'CREAR_ANIMAL' as const,
+      schemaVersion: 2 as const,
+      baseVersion: 0 as const,
+      sexo: 'MACHO' as const,
+    }
+    vi.mocked(listarAnimales).mockResolvedValue(pagina([]))
+    vi.mocked(listarPendientesAutorizados).mockResolvedValue({
+      autorizacion: 'AUTORIZADA_ESCRITURA', contexto: null,
+      operaciones: [operacionLocal(payload)],
+    })
+    vi.mocked(sincronizarPendientesManualmente).mockResolvedValue({
+      total: 0, sincronizadas: 0, confirmadasRemotamente: 0, fallidas: 0, ocupadas: 1,
+      operaciones: [{
+        operationId: operacionUuid, animalId: animalUuid,
+        estado: 'OCUPADA', confirmadaRemotamente: false,
+      }],
+    })
+    render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
+    fireEvent.click(await screen.findByRole('checkbox', {
+      name: 'Sincronización automática al recuperar conexión',
+    }))
+    expect(await screen.findByText('Sin conexión. Esperando reconexión.')).toBeInTheDocument()
+    expect(sincronizarPendientesManualmente).not.toHaveBeenCalled()
+
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: true })
+    fireEvent(window, new Event('online'))
+    await waitFor(() => expect(sincronizarPendientesManualmente).toHaveBeenCalledOnce())
+
+    if (descriptor) Object.defineProperty(navigator, 'onLine', descriptor)
+    else Reflect.deleteProperty(navigator, 'onLine')
   })
 
   it('conserva visible un pendiente ante un fallo de red y permite reintento manual', async () => {

@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import {
+  ejecutarConProteccionActualizacionPwa,
   ejecutarActualizacionSeguraPwa,
   type GestorBloqueosPwa,
   type TipoActividadPwa,
@@ -93,5 +94,19 @@ describe('coordinación segura de actualizaciones PWA', () => {
       sincronizacionEnCurso: false,
     }, gestor)).resolves.toBe('APLICADA')
     await waitFor(() => expect(actualizar).toHaveBeenCalledOnce())
+  })
+
+  it('protege trabajo en primer plano con el mismo bloqueo compartido', async () => {
+    const accion = vi.fn().mockResolvedValue('confirmada')
+    const gestor: GestorBloqueosPwa = {
+      request: vi.fn(async (_nombre, opciones, ejecutar) => {
+        expect(opciones).toMatchObject({ mode: 'shared' })
+        return ejecutar({ name: 'pwa', mode: 'shared' } as Lock)
+      }),
+    }
+
+    await expect(ejecutarConProteccionActualizacionPwa(accion, gestor))
+      .resolves.toBe('confirmada')
+    expect(accion).toHaveBeenCalledOnce()
   })
 })

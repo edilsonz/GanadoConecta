@@ -78,6 +78,7 @@ export type ResultadoOperacionSincronizacion = {
   estado: EstadoResultadoOperacion
   confirmadaRemotamente: boolean
   resultadoRemoto?: ResultadoRegistroAnimal['resultado']
+  reintentoDespuesMs?: number
 }
 
 export type ResultadoSincronizacionManual = {
@@ -278,7 +279,11 @@ export class ServicioSincronizacionAnimales {
         await this.bloquearSinOcultar(ambito)
       }
       return {
-        ...resultadoLocal(reclamada, clasificacion.estadoResultado),
+        ...resultadoLocal(
+          reclamada,
+          clasificacion.estadoResultado,
+          clasificacion.reintentoDespuesMs,
+        ),
         detenerLote: clasificacion.detenerLote,
       }
     } finally {
@@ -352,6 +357,7 @@ function clasificarFallo(error: unknown): {
   errorSeguro: CodigoErrorSeguroOperacion
   estadoResultado: EstadoResultadoOperacion
   detenerLote: boolean
+  reintentoDespuesMs?: number
 } {
   const fallo = error instanceof ErrorAnimal ? error : new ErrorAnimal('conexion')
   if (fallo.tipo === 'sesion') {
@@ -392,18 +398,21 @@ function clasificarFallo(error: unknown): {
       : fallo.tipo === 'seguridad' ? 'PROTOCOLO' : 'SERVIDOR',
     estadoResultado: 'ERROR_REINTENTABLE',
     detenerLote: false,
+    reintentoDespuesMs: fallo.retryAfterMs,
   }
 }
 
 function resultadoLocal(
   operacion: Pick<OperacionPendienteLocal, 'operationId' | 'animalId'>,
   estado: EstadoResultadoOperacion,
+  reintentoDespuesMs?: number,
 ): ResultadoOperacionSincronizacion {
   return {
     operationId: operacion.operationId,
     animalId: operacion.animalId,
     estado,
     confirmadaRemotamente: false,
+    ...(reintentoDespuesMs !== undefined && { reintentoDespuesMs }),
   }
 }
 

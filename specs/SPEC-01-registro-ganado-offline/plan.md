@@ -505,13 +505,17 @@ Red/5xx/429 y protocolo inválido usan el backoff de SPEC; 401 pausa; solo 403 p
 contexto. Un 403 CSRF_INVALIDO conserva copias/cola: recuperar CSRF y reintentar una sola vez el sobre de animal con mismos IDs, luego pausar si persiste. 409 requiere revisión; 400/413/422 permiten corregir únicamente después del
 rechazo definitivo, creando nuevo operationId para el mismo animalId.
 
-El primer orquestador implementado se ejecuta solo al pulsar «Sincronizar
-pendientes». Antes del lote consulta de nuevo `/acceso`; solo PROPIETARIO o EDITOR
-pueden enviar. Conserva el sobre original, usa timeout de 20 s, detiene el lote
-ante 401/403 de autorización y registra APLICADO/REPROCESADO como recibo local.
-No existe efecto de montaje, evento `online` ni tarea de fondo que envíe la cola.
-Los reintentos automáticos con backoff/Retry-After y la sincronización PWA siguen
-pendientes; los fallos temporales requieren una nueva acción manual informada.
+El orquestador conserva el botón «Sincronizar pendientes» y ofrece un opt-in
+adicional, desactivado por defecto, para sincronización automática en primer
+plano de la cuenta y ganadería actuales. Un evento `online` solo dispara la
+verificación: antes del lote consulta de nuevo `/acceso`; solo PROPIETARIO o
+EDITOR pueden enviar. Conserva el sobre original, usa timeout de 20 s, detiene
+el lote ante 401/403 de autorización y registra APLICADO/REPROCESADO como recibo
+local. Red/429/5xx usan intento inicial y cuatro esperas de 2/5/15/30 s más
+jitter 0–1 s, respetando `Retry-After`; los errores permanentes no se reintentan.
+La preferencia no se persiste y se detiene al cerrar sesión o cambiar contexto.
+No existe tarea de fondo ni Service Worker que envíe la cola con la aplicación
+cerrada; Background Sync sigue pendiente.
 
 baseVersion=0 comprueba inexistencia en esta SPEC de creación. version=1 es la
 primera versión remota; no hay endpoint PUT/PATCH ni edición offline de datos

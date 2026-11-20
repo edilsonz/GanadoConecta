@@ -83,10 +83,24 @@ export class ErrorAnimal extends Error {
   constructor(
     public readonly tipo: TipoErrorAnimal,
     public readonly erroresPorCampo: Record<string, string> = {},
+    public readonly retryAfterMs?: number,
   ) {
     super(tipo)
     this.name = 'ErrorAnimal'
   }
+}
+
+const MAXIMO_RETRY_AFTER_MS = 5 * 60_000
+
+function leerRetryAfter(response: Response): number | undefined {
+  const valor = response.headers?.get('Retry-After')?.trim()
+  if (!valor) return undefined
+  if (/^\d+$/.test(valor)) {
+    return Math.min(Number(valor) * 1_000, MAXIMO_RETRY_AFTER_MS)
+  }
+  const fecha = Date.parse(valor)
+  if (!Number.isFinite(fecha)) return undefined
+  return Math.min(Math.max(0, fecha - Date.now()), MAXIMO_RETRY_AFTER_MS)
 }
 
 function esSexo(valor: unknown): valor is SexoAnimal {
@@ -153,7 +167,9 @@ function interpretarError(response: Response, body: unknown): never {
     throw new ErrorAnimal('validacion', erroresPorCampo(body))
   }
   if (response.status === 409) throw new ErrorAnimal('conflicto')
-  if (response.status === 429) throw new ErrorAnimal('limite')
+  if (response.status === 429) {
+    throw new ErrorAnimal('limite', {}, leerRetryAfter(response))
+  }
   if (response.status === 401) throw new ErrorAnimal('sesion')
   if (response.status === 403) {
     const codigo = codigoError(body)
@@ -163,7 +179,7 @@ function interpretarError(response: Response, body: unknown): never {
     throw new ErrorAnimal('permiso')
   }
   if (response.status === 404) throw new ErrorAnimal('noEncontrado')
-  throw new ErrorAnimal('servicio')
+  throw new ErrorAnimal('servicio', {}, leerRetryAfter(response))
 }
 
 function esPagina(valor: unknown, ganaderiaId: string): valor is PaginaAnimales {

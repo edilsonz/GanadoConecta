@@ -7,11 +7,12 @@ import {
   type SolicitudRegistroAnimal,
 } from './animalesApi'
 
-function respuesta(status: number, body: unknown): Response {
+function respuesta(status: number, body: unknown, headers: Record<string, string> = {}): Response {
   return {
     ok: status >= 200 && status < 300,
     status,
     json: vi.fn().mockResolvedValue(body),
+    headers: new Headers(headers),
   } as unknown as Response
 }
 
@@ -129,6 +130,15 @@ describe('API de animales', () => {
     await expect(listarAnimales(ganaderiaId, 'jwt')).rejects.toEqual(expect.objectContaining({ tipo: 'validacion' }))
     await expect(consultarAnimal(ganaderiaId, animalId, 'jwt')).rejects.toEqual(expect.objectContaining({ tipo: 'sesion' }))
     await expect(consultarAnimal(ganaderiaId, animalId, 'jwt')).rejects.toEqual(expect.objectContaining({ tipo: 'permiso' }))
+  })
+
+  it('conserva Retry-After para reintentos transitorios sin exponer el cuerpo', async () => {
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce(respuesta(429, {}, { 'Retry-After': '7' })))
+
+    await expect(listarAnimales(ganaderiaId, 'jwt')).rejects.toMatchObject({
+      tipo: 'limite', retryAfterMs: 7_000,
+    })
   })
 
   it('clasifica como conexión una caída real de fetch durante el registro', async () => {

@@ -1,5 +1,8 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
-import { useProteccionActualizacionPwa } from './pwaActividad'
+import {
+  ejecutarConProteccionActualizacionPwa,
+  useProteccionActualizacionPwa,
+} from './pwaActividad'
 import {
   consultarAnimal,
   ErrorAnimal,
@@ -29,7 +32,12 @@ import type { OperacionPendienteLocal } from './operacionesPendientesDb'
 import {
   ErrorSincronizacion,
   sincronizarPendientesManualmente,
+  type ResultadoSincronizacionManual,
 } from './sincronizacionAnimales'
+import {
+  ControladorSincronizacionAutomatica,
+  type EstadoSincronizacionAutomatica,
+} from './sincronizacionAutomatica'
 
 type AnimalesPanelProps = {
   ganaderia: Ganaderia
@@ -126,6 +134,22 @@ const etiquetasEstadoPendiente = {
   CONFLICTO: 'Conflicto · requiere revisión',
   SINCRONIZADO: 'Sincronizado',
 } as const
+
+const estadoAutomaticoInicial: EstadoSincronizacionAutomatica = { tipo: 'DESACTIVADA' }
+
+function textoEstadoAutomatico(estado: EstadoSincronizacionAutomatica) {
+  switch (estado.tipo) {
+    case 'ACTIVADA': return 'Activada. Esperando operaciones pendientes.'
+    case 'ESPERANDO_RECONEXION': return 'Sin conexión. Esperando reconexión.'
+    case 'SINCRONIZANDO': return `Sincronizando en primer plano (intento ${estado.intento ?? 1}).`
+    case 'REINTENTO_PROGRAMADO': return `Fallo temporal. Próximo intento en ${Math.ceil((estado.reintentoEnMs ?? 0) / 1_000)} s.`
+    case 'SINCRONIZADA': return `${estado.sincronizadas ?? 0} ${estado.sincronizadas === 1 ? 'registro sincronizado' : 'registros sincronizados'}.`
+    case 'ACCION_REQUERIDA': return 'Acción requerida. Revisa los pendientes o usa la sincronización manual.'
+    case 'SESION_EXPIRADA': return 'Sesión expirada. Inicia sesión para continuar.'
+    case 'PERMISO_INSUFICIENTE': return 'Permisos insuficientes. El servidor no autorizó la sincronización.'
+    default: return 'Desactivada.'
+  }
+}
 
 const controlesNoAdmitidos = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]|\p{Cf}/u
 
@@ -235,12 +259,43 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
   const [modoSinConexion, setModoSinConexion] = useState(false)
   const [offlinePreparado, setOfflinePreparado] = useState(false)
   const [sincronizando, setSincronizando] = useState(false)
+  const [sincronizacionAutomaticaActiva, setSincronizacionAutomaticaActiva] = useState(false)
+  const [estadoSincronizacionAutomatica, setEstadoSincronizacionAutomatica] =
+    useState<EstadoSincronizacionAutomatica>(estadoAutomaticoInicial)
   const [navegadorSinConexion, setNavegadorSinConexion] = useState(
     () => typeof navigator !== 'undefined' && navigator.onLine === false,
   )
   const envioEnCurso = useRef(false)
   const sincronizacionEnCurso = useRef(false)
   const controlSincronizacion = useRef<AbortController | null>(null)
+  const procesarResultadoAutomatico = useRef<(
+    resultado: ResultadoSincronizacionManual,
+  ) => Promise<void>>(async () => undefined)
+  const ambitoActual = useRef({ usuarioId: sesion.usuarioId, ganaderiaId: ganaderia.id })
+  const invalidarSesionActual = useRef(onSesionInvalida)
+  ambitoActual.current = { usuarioId: sesion.usuarioId, ganaderiaId: ganaderia.id }
+  invalidarSesionActual.current = onSesionInvalida
+  const controladorAutomatico = useRef<ControladorSincronizacionAutomatica | null>(null)
+  if (!controladorAutomatico.current) {
+    controladorAutomatico.current = new ControladorSincronizacionAutomatica({
+      alCambiarEstado: estado => {
+        setEstadoSincronizacionAutomatica(estado)
+        if (estado.tipo === 'SESION_EXPIRADA') {
+          void requerirRevalidacionOffline(ambitoActual.current).catch(() => undefined)
+          invalidarSesionActual.current()
+        }
+        if (estado.tipo === 'PERMISO_INSUFICIENTE') {
+          void bloquearAccesoOffline(ambitoActual.current).catch(() => undefined)
+          setAcceso(null)
+          setAnimales([])
+          setPendientesLocales([])
+          setCursor(null)
+          setFicha(null)
+        }
+      },
+      alObtenerResultado: resultado => procesarResultadoAutomatico.current(resultado),
+    })
+  }
 
   useProteccionActualizacionPwa(
     `formulario-animal:${ganaderia.id}`,
@@ -250,10 +305,13 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
   useProteccionActualizacionPwa(
     `sincronizacion-animal:${ganaderia.id}`,
     'SINCRONIZACION',
-    sincronizando,
+    sincronizando || estadoSincronizacionAutomatica.tipo === 'SINCRONIZANDO',
   )
 
   const ambitoLocal = { usuarioId: sesion.usuarioId, ganaderiaId: ganaderia.id }
+  const hayPendientesAutomaticos = pendientesLocales.some(
+    operacion => operacion.estado !== 'SINCRONIZADO',
+  )
 
   useEffect(() => {
     const marcarOnline = () => setNavegadorSinConexion(false)
@@ -265,6 +323,36 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
       window.removeEventListener('offline', marcarOffline)
     }
   }, [])
+
+  useEffect(() => {
+    controladorAutomatico.current?.actualizarContexto({
+      sesion,
+      ganaderiaId: ganaderia.id,
+      conectado: !navegadorSinConexion,
+      hayPendientes: hayPendientesAutomaticos,
+      puedeEscribir: acceso?.rol === 'PROPIETARIO' || acceso?.rol === 'EDITOR',
+      sincronizacionManualEnCurso: sincronizando,
+    })
+  }, [acceso?.rol, ganaderia.id, hayPendientesAutomaticos, navegadorSinConexion,
+    sesion, sincronizando])
+
+  useEffect(() => () => controladorAutomatico.current?.destruir(), [])
+
+  function cambiarSincronizacionAutomatica(activa: boolean) {
+    setSincronizacionAutomaticaActiva(activa)
+    if (!activa) {
+      controladorAutomatico.current?.desactivar()
+      return
+    }
+    controladorAutomatico.current?.activar({
+      sesion,
+      ganaderiaId: ganaderia.id,
+      conectado: !navegadorSinConexion,
+      hayPendientes: hayPendientesAutomaticos,
+      puedeEscribir: acceso?.rol === 'PROPIETARIO' || acceso?.rol === 'EDITOR',
+      sincronizacionManualEnCurso: sincronizando,
+    })
+  }
 
   function fallo(error: unknown) {
     return error instanceof ErrorAnimal ? error : new ErrorAnimal('servicio')
@@ -312,34 +400,24 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
     }
   }
 
-  async function sincronizarPendientes() {
-    if (!acceso || acceso.rol === 'LECTOR' || sincronizacionEnCurso.current
-        || navegadorSinConexion || pendientesLocales.length === 0) return
-
-    sincronizacionEnCurso.current = true
-    setSincronizando(true)
-    setMensaje(null)
-    const control = new AbortController()
-    controlSincronizacion.current = control
-    try {
-      const resultado = await sincronizarPendientesManualmente(
-        sesion,
-        ganaderia.id,
-        control.signal,
-      )
-      const pendientes = await cargarPendientesLocales()
-      if (resultado.confirmadasRemotamente > 0) {
-        try {
-          await cargarPrimeraPagina()
-        } catch (error) {
-          const errorAnimal = fallo(error)
-          if (errorAnimal.tipo === 'sesion' || errorAnimal.tipo === 'permiso') {
-            aplicarFallo(errorAnimal)
-            return
-          }
+  async function procesarResultadoSincronizacion(
+    resultado: ResultadoSincronizacionManual,
+    automatica: boolean,
+  ) {
+    const pendientes = await cargarPendientesLocales()
+    if (resultado.confirmadasRemotamente > 0) {
+      try {
+        await cargarPrimeraPagina()
+      } catch (error) {
+        const errorAnimal = fallo(error)
+        if (errorAnimal.tipo === 'sesion' || errorAnimal.tipo === 'permiso') {
+          aplicarFallo(errorAnimal)
+          return
         }
       }
-      setModoSinConexion(false)
+    }
+    setModoSinConexion(false)
+    if (!automatica) {
       if (resultado.sincronizadas === resultado.total && resultado.total > 0) {
         setMensaje(`${resultado.sincronizadas} ${resultado.sincronizadas === 1
           ? 'registro pendiente sincronizado' : 'registros pendientes sincronizados'} correctamente.`)
@@ -353,6 +431,25 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
       } else if (pendientes.operaciones.length === 0) {
         setMensaje('No hay operaciones pendientes para sincronizar.')
       }
+    }
+  }
+
+  procesarResultadoAutomatico.current = resultado =>
+    procesarResultadoSincronizacion(resultado, true)
+
+  async function sincronizarPendientes() {
+    if (!acceso || acceso.rol === 'LECTOR' || sincronizacionEnCurso.current
+        || navegadorSinConexion || pendientesLocales.length === 0) return
+
+    sincronizacionEnCurso.current = true
+    setSincronizando(true)
+    setMensaje(null)
+    const control = new AbortController()
+    controlSincronizacion.current = control
+    try {
+      const resultado = await ejecutarConProteccionActualizacionPwa(() =>
+        sincronizarPendientesManualmente(sesion, ganaderia.id, control.signal))
+      await procesarResultadoSincronizacion(resultado, false)
     } catch (error) {
       if (control.signal.aborted) return
       const tipo = error instanceof ErrorSincronizacion ? error.tipo : 'servicio'
@@ -391,6 +488,9 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
     setModoSinConexion(false)
     setOfflinePreparado(false)
     setSincronizando(false)
+    controladorAutomatico.current?.desactivar()
+    setSincronizacionAutomaticaActiva(false)
+    setEstadoSincronizacionAutomatica(estadoAutomaticoInicial)
     setMensaje(null)
     setErrores({})
     setFormulario(formularioInicial)
@@ -634,6 +734,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
   }
 
   const puedeRegistrar = acceso?.rol === 'PROPIETARIO' || acceso?.rol === 'EDITOR'
+  const sincronizandoAutomaticamente = estadoSincronizacionAutomatica.tipo === 'SINCRONIZANDO'
   const camposBloqueados = enviando || Boolean(pendienteIncierto)
   const animalesConfirmados = new Set(animales.map(item => item.animalId))
   const pendientesVisibles = pendientesLocales.filter(
@@ -684,6 +785,24 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                 {cargandoMas ? 'Cargando…' : 'Cargar más'}
               </button>
             )}
+            <section className="automatic-sync" aria-labelledby="automatic-sync-title">
+              <div>
+                <h4 id="automatic-sync-title">Sincronización automática</h4>
+                <p>En primer plano, al recuperar conexión. El servidor vuelve a validar sesión y permisos.</p>
+              </div>
+              <label className="automatic-sync-toggle">
+                <input type="checkbox" checked={sincronizacionAutomaticaActiva}
+                  disabled={!puedeRegistrar}
+                  onChange={event => cambiarSincronizacionAutomatica(event.target.checked)} />
+                Sincronización automática al recuperar conexión
+              </label>
+              <p className={`automatic-sync-state state-${estadoSincronizacionAutomatica.tipo.toLowerCase()}`}
+                role="status">
+                {puedeRegistrar
+                  ? textoEstadoAutomatico(estadoSincronizacionAutomatica)
+                  : 'No disponible para el rol lector.'}
+              </p>
+            </section>
             {pendientesVisibles.length > 0 && (
               <section className="local-pending" aria-labelledby="local-pending-title">
                 <div className="local-pending-heading">
@@ -694,13 +813,13 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                   {puedeRegistrar && (
                     <button className="button button-primary sync-pending-button" type="button"
                       onClick={() => void sincronizarPendientes()}
-                      disabled={sincronizando || navegadorSinConexion}
+                      disabled={sincronizando || sincronizandoAutomaticamente || navegadorSinConexion}
                       aria-describedby="local-pending-help">
                       {sincronizando ? 'Sincronizando…' : 'Sincronizar pendientes'}
                     </button>
                   )}
                 </div>
-                <p id="local-pending-help">No están guardados en PostgreSQL y solo se enviarán cuando pulses el botón.</p>
+                <p id="local-pending-help">No están guardados en PostgreSQL. Se enviarán al pulsar el botón o, si la activas, mediante sincronización automática en primer plano.</p>
                 <div className="local-pending-list">
                   {pendientesVisibles.map(operacion => (
                     <article className="local-pending-item" key={operacion.operationId}>

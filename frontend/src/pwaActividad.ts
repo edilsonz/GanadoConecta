@@ -114,3 +114,18 @@ export async function ejecutarActualizacionSeguraPwa(
     },
   )
 }
+
+export async function ejecutarConProteccionActualizacionPwa<T>(
+  accion: () => Promise<T>,
+  gestor: GestorBloqueosPwa | undefined = gestorBloqueosNavegador(),
+): Promise<T> {
+  if (!gestor) return accion()
+  return gestor.request(
+    NOMBRE_BLOQUEO_ACTUALIZACION,
+    { mode: 'shared' },
+    bloqueo => {
+      if (!bloqueo) throw new Error('BLOQUEO_PWA_NO_DISPONIBLE')
+      return accion()
+    },
+  )
+}

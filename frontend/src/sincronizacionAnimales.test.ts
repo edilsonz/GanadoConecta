@@ -262,6 +262,21 @@ describe('sincronización manual de animales pendientes', () => {
       .resolves.toMatchObject({ estado, ultimoError: codigo, payload })
   })
 
+  it('propaga Retry-After solo como demora segura de un error reintentable', async () => {
+    const almacen = crearAlmacen()
+    await preparar(almacen)
+    const servicio = new ServicioSincronizacionAnimales({
+      almacen,
+      registrar: vi.fn().mockRejectedValue(new ErrorAnimal('limite', {}, 9_000)),
+      consultarAcceso: vi.fn().mockResolvedValue(acceso()),
+      crearLeaseId: () => lease1,
+    })
+
+    await expect(servicio.sincronizar(sesion, ganaderia)).resolves.toMatchObject({
+      operaciones: [{ estado: 'ERROR_REINTENTABLE', reintentoDespuesMs: 9_000 }],
+    })
+  })
+
   it.each([
     ['sesion', 'REQUIERE_SESION', 'AUTENTICACION'],
     ['permiso', 'RECHAZADO', 'AUTORIZACION'],
