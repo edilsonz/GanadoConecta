@@ -4,6 +4,7 @@ import { AccesoCuenta } from './AccesoCuenta'
 import { GanaderiasPanel } from './GanaderiasPanel'
 import { RegistroCuenta } from './RegistroCuenta'
 import { CatalogoPanel } from './CatalogoPanel'
+import { ModeracionPanel } from './ModeracionPanel'
 import type { SesionActiva } from './sesionApi'
 import { bloquearContextosOfflineUsuario } from './registroAnimalesOffline'
 import {
@@ -89,7 +90,10 @@ export default function App() {
           </>
         )}
 
-        {conectado && <CatalogoPanel />}
+        {conectado && <CatalogoPanel token={sesion?.accessToken} />}
+        {conectado && sesion && <section className="project-section">
+          <ModeracionPanel key={sesion.usuarioId} token={sesion.accessToken} onSesionInvalida={invalidarSesion} />
+        </section>}
         <section className="project-section" id="proyecto" aria-labelledby="project-title">
           <div className="section-heading">
             <div><p className="eyebrow">LO QUE ESTAMOS PREPARANDO</p><h2 id="project-title">Más claridad, cada día.</h2></div>

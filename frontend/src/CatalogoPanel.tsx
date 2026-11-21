@@ -1,13 +1,15 @@
 import { useRef, useState } from 'react'
 import { buscarCatalogo, categoriasCatalogo, sol, urlFoto, type AnuncioPublico } from './catalogoApi'
+import { ReportarAnuncio } from './ReportarAnuncio'
 
-export function CatalogoPanel() {
+export function CatalogoPanel({ token }: { token?: string }) {
   const [items, setItems] = useState<AnuncioPublico[]>([])
   const [estado, setEstado] = useState<'inicial'|'carga'|'listo'|'error'>('inicial')
   const [filtros, setFiltros] = useState<Record<string,string>>({})
   const [aplicados, setAplicados] = useState<Record<string,string>>({})
   const [pagina, setPagina] = useState(1)
   const [siguiente, setSiguiente] = useState<number>()
+  const [reportes, setReportes] = useState(false)
   const revision = useRef(0)
   async function buscar(p: number, consulta = filtros) {
     const turno = ++revision.current
@@ -22,7 +24,13 @@ export function CatalogoPanel() {
   const cambiar = (campo: string, valor: string) => setFiltros(f => ({ ...f, [campo]: valor }))
   return <section id="catalogo" className="project-section catalog-section" aria-labelledby="catalogo-titulo">
     <h2 id="catalogo-titulo">Catálogo público</h2>
-    <details onToggle={e => { if (e.currentTarget.open) void buscar(1) }}>
+    <details onToggle={e => {
+      if (!e.currentTarget.open) return
+      void buscar(1)
+      if (token) void fetch('/api/v1/catalogo/reportes-disponibles', { cache:'no-store',credentials:'omit' })
+        .then(r => r.ok ? r.json() : null).then(d => setReportes(d?.recepcionExperimental === true))
+        .catch(() => setReportes(false))
+    }}>
       <summary>Ver anuncios de ganado</summary>
       <form className="animal-form" onSubmit={e => { e.preventDefault(); void buscar(1) }}>
         <div className="catalog-grid">
@@ -50,6 +58,7 @@ export function CatalogoPanel() {
           {a.contacto && <p>Contacto autorizado: {a.contacto}</p>}
           {a.genealogia.length > 0 && <p>Genealogía autorizada: {a.genealogia.map(
             g => [g.relacion === 'MADRE' ? 'Madre' : 'Padre',g.categoria,g.raza].filter(Boolean).join(' ')).join(' · ')}</p>}
+          {reportes && token && <ReportarAnuncio id={a.id} token={token} />}
         </article>)}</div>
       </> : <p>No se encontraron anuncios para estos filtros.</p>)}
       {estado === 'listo' && (pagina > 1 || siguiente) && <nav className="catalog-actions" aria-label="Páginas del catálogo">

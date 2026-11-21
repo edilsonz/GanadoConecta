@@ -14,7 +14,7 @@ import pe.ganadoconecta.modulos.identidad.aplicacion.AutorizarAccesoGanaderiaTra
 import pe.ganadoconecta.modulos.identidad.aplicacion.PermisoGanaderia;
 
 public final class CatalogoAnuncios {
-    public enum Estado { BORRADOR, PUBLICADO, PAUSADO, RETIRADO }
+    public enum Estado { BORRADOR, PUBLICADO, PAUSADO, RETIRADO, CERRADO_VENTA }
     public enum Accion { PUBLICAR, PAUSAR, RETIRAR }
     public enum Error { INVALIDO, AUSENTE, CONFLICTO, ALMACEN_NO_DISPONIBLE }
     public static final class Fallo extends RuntimeException {
@@ -85,6 +85,7 @@ public final class CatalogoAnuncios {
 
     public Privado editar(Ambito a, UUID id, long version, Datos datos) {
         return propietario(a, () -> {
+            repo.exigirAnimalActivo(a.ganaderia(), a.animal());
             var actual = exigirAnuncio(a, id);
             editable(actual, version);
             repo.editar(id, datos, reloj.instant());
@@ -117,6 +118,7 @@ public final class CatalogoAnuncios {
 
     public Privado agregarFoto(Ambito a, UUID id, long version, byte[] archivo, String formato) {
         return propietario(a, () -> {
+            repo.exigirAnimalActivo(a.ganaderia(), a.animal());
             var actual = exigirAnuncio(a, id);
             editable(actual, version);
             if (actual.fotos().size() >= 5) throw new Fallo(Error.INVALIDO);
@@ -180,6 +182,7 @@ public final class CatalogoAnuncios {
         return actual;
     }
     private static void editable(Privado actual, long version) {
-        if (actual.estado() == Estado.RETIRADO || actual.version() != version) throw new Fallo(Error.CONFLICTO);
+        if (actual.estado() == Estado.RETIRADO || actual.estado() == Estado.CERRADO_VENTA
+                || actual.version() != version) throw new Fallo(Error.CONFLICTO);
     }
 }

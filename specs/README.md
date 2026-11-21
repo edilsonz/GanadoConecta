@@ -21,6 +21,7 @@ nuevas especificaciones. Reorganizar un borrador no implica aprobarlo.
 | SPEC-06 | [Alta masiva](SPEC-06-alta-masiva/spec.md) | [Plan](SPEC-06-alta-masiva/plan.md) | [Tareas](SPEC-06-alta-masiva/tasks.md) | Alta online por tabla. Validación manual pendiente. |
 | SPEC-07 | [Calendario y campañas](SPEC-07-calendario-campanas/spec.md) | [Plan](SPEC-07-calendario-campanas/plan.md) | [Tareas](SPEC-07-calendario-campanas/tasks.md) | Calendario online, campañas y avisos internos. Entrega externa pendiente. |
 | SPEC-08 | [Anuncios y catálogo](SPEC-08-catalogo-anuncios/spec.md) | [Plan](SPEC-08-catalogo-anuncios/plan.md) | [Tareas](SPEC-08-catalogo-anuncios/tasks.md) | Proyección pública, gestión y fotos con adaptador local. Redis y proveedor definitivo pendientes. |
+| SPEC-09 | [Ventas y moderación](SPEC-09-ventas-moderacion/spec.md) | [Plan](SPEC-09-ventas-moderacion/plan.md) | [Tareas](SPEC-09-ventas-moderacion/tasks.md) | Venta y revisión auditada. Recepción de reportes desactivada por defecto. |
 
 RF17–RF22 y AC09 forman parte de la documentación base. La SPEC-01 fue
 aprobada el 16 de noviembre de 2026, incluida la rotación de renovación.

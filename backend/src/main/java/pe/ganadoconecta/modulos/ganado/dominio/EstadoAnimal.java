@@ -1,5 +1,5 @@
 package pe.ganadoconecta.modulos.ganado.dominio;
 
 public enum EstadoAnimal {
-    ACTIVO
+    ACTIVO, VENDIDO
 }

@@ -3,7 +3,7 @@ import { rutaAnuncios, sol, type AnuncioPrivado, type DatosAnuncio } from './cat
 import { ErrorSolicitudPrivada, solicitudPrivada } from './solicitudPrivada'
 import { useProteccionActualizacionPwa } from './pwaActividad'
 
-type Props = { ganaderiaId: string; animalId: string; token: string; onSesionInvalida: () => void }
+type Props = { ganaderiaId: string; animalId: string; token: string; onSesionInvalida: () => void; vendido?: boolean }
 const inicial: DatosAnuncio = { titulo:'', caracteristicas:'', ubicacionGeneral:'', precioPen:'',
   contacto:null, genealogiaAutorizada:false }
 const etiquetas = { BORRADOR:'Borrador', PUBLICADO:'Publicado', PAUSADO:'Pausado', RETIRADO:'Retirado',
@@ -65,7 +65,7 @@ export function AnunciosPanel(p: Props) {
     {items?.length === 0 && <p>Aún no hay anuncios para este animal.</p>}
     <div className="catalog-grid">{items?.map(a => <article className="reader-note" key={a.id}>
       <strong>{a.datos.titulo}</strong><p>{etiquetas[a.estado]} · {sol.format(Number(a.datos.precioPen))} · {a.fotos.length} fotos</p>
-      {a.estado !== 'RETIRADO' && a.estado !== 'CERRADO_VENTA' && <>
+      {!p.vendido && a.estado !== 'RETIRADO' && a.estado !== 'CERRADO_VENTA' && <>
         <div className="catalog-actions">
           <button className="button button-outline" type="button" disabled={ocupado} onClick={() => {
             setEditar(a); setForm(a.datos); setAutorizaContacto(Boolean(a.datos.contacto))
@@ -95,7 +95,7 @@ export function AnunciosPanel(p: Props) {
           }} /></label>}
       </>}
     </article>)}</div>
-    <form className="animal-form" onSubmit={guardar}>
+    {!p.vendido && <form className="animal-form" onSubmit={guardar}>
       <h4>{editar ? 'Editar anuncio' : 'Preparar un anuncio'}</h4>
       <p>Los datos del anuncio y sus fotos serán públicos al publicarlo. Indica solo una ubicación general.</p>
       <fieldset disabled={ocupado}>
@@ -117,6 +117,6 @@ export function AnunciosPanel(p: Props) {
       </fieldset>
       <button className="button button-primary" disabled={ocupado}>Guardar anuncio</button>
       {editar && <button className="button button-outline" type="button" onClick={limpiar}>Cancelar edición</button>}
-    </form>
+    </form>}
   </details>
 }

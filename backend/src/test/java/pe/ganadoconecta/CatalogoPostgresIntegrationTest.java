@@ -26,7 +26,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.transaction.annotation.Transactional;
 import pe.ganadoconecta.modulos.identidad.aplicacion.TokensAcceso;
 
-@SpringBootTest(properties="ganadoconecta.seguridad.origen-permitido=https://127.0.0.1:5173")
+@SpringBootTest(properties={"ganadoconecta.seguridad.origen-permitido=https://127.0.0.1:5173",
+        "GANADOCONECTA_REPORTES_PRUEBA_AUTENTICADA=true"})
 @AutoConfigureMockMvc(print=MockMvcPrint.NONE)
 @ActiveProfiles("postgres")
 @EnabledIfSystemProperty(named="ganadoconecta.postgres.integration-test",matches="true")
@@ -106,6 +107,49 @@ class CatalogoPostgresIntegrationTest extends SoporteJwtPostgres {
         assertThat(respuesta.getResponse().getContentAsByteArray()).startsWith((byte)0xff,(byte)0xd8);
         estado(id,3,"RETIRAR").andExpect(status().isOk());
         mvc.perform(get(publica)).andExpect(status().isNotFound());
+    }
+
+    @Test void ventaCierraAnuncioConservaLaFichaYReprocesa() throws Exception {
+        UUID id=UUID.randomUUID(), op=UUID.randomUUID();
+        enviar(post(ruta()),datos(id,0L,false)).andExpect(status().isCreated());
+        estado(id,1,"PUBLICAR").andExpect(status().isOk());
+        String ficha=ruta().replace("/anuncios",""), venta=ficha+"/venta";
+        enviar(post(venta),Map.of("operationId",op)).andExpectAll(status().isCreated(),
+                jsonPath("$.anunciosCerrados").value(1));
+        enviar(post(venta),Map.of("operationId",op)).andExpectAll(status().isOk(),
+                jsonPath("$.reprocesada").value(true));
+        enviar(post(venta),Map.of("operationId",UUID.randomUUID())).andExpect(status().isConflict());
+        mvc.perform(get(PUBLICO)).andExpect(jsonPath("$.items.length()").value(0));
+        mvc.perform(get(ficha).header("Authorization",jwt)).andExpectAll(status().isOk(),
+                jsonPath("$.estado").value("VENDIDO"),jsonPath("$.animalId").value(animal.toString()),
+                jsonPath("$.areteFrente").value("PRIVADO"));
+        assertThat(jdbc.queryForObject("SELECT estado FROM catalogo.anuncio WHERE id=?",String.class,id))
+                .isEqualTo("CERRADO_VENTA");
+        estado(id,3,"PUBLICAR").andExpect(status().isConflict());
+    }
+
+    @Test void moderacionIndependienteAutorizaAuditaYRetira() throws Exception {
+        UUID id=UUID.randomUUID();
+        enviar(post(ruta()),datos(id,0L,false)).andExpect(status().isCreated());
+        estado(id,1,"PUBLICAR").andExpect(status().isOk());
+        enviar(post(PUBLICO+"/"+id+"/reportes"),Map.of("motivo","a")).andExpect(status().isUnprocessableEntity());
+        var alta=enviar(post(PUBLICO+"/"+id+"/reportes"),Map.of("motivo","Reporte sintético de prueba"))
+                .andExpect(status().isCreated()).andReturn();
+        UUID reporte=UUID.fromString(json.readTree(alta.getResponse().getContentAsByteArray()).required("reporteId").asText());
+        String bandeja="/api/v1/moderacion/reportes";
+        mvc.perform(get(bandeja).header("Authorization",jwt)).andExpect(status().isForbidden());
+        jdbc.update("INSERT INTO identidad.permiso_moderacion(usuario_id) VALUES (?)",usuario);
+        jdbc.update("UPDATE identidad.membresia SET estado='REVOCADA',revocado_en=now() WHERE usuario_id=?",usuario);
+        mvc.perform(get(ruta().replace("/anuncios","")).header("Authorization",jwt)).andExpect(status().isForbidden());
+        mvc.perform(get(bandeja).header("Authorization",jwt)).andExpectAll(status().isOk(),
+                jsonPath("$[0].motivo").value("Reporte sintético de prueba"),
+                jsonPath("$[0].animalId").doesNotExist(),jsonPath("$[0].reportadoPor").doesNotExist());
+        enviar(post(bandeja+"/"+reporte+"/revision"),Map.of("decision","RETIRADO")).andExpect(status().isNoContent());
+        mvc.perform(get(PUBLICO)).andExpect(jsonPath("$.items.length()").value(0));
+        assertThat(jdbc.queryForObject("SELECT revisado_por FROM catalogo.reporte WHERE id=?",UUID.class,reporte))
+                .isEqualTo(usuario);
+        jdbc.update("UPDATE identidad.permiso_moderacion SET habilitado=false WHERE usuario_id=?",usuario);
+        mvc.perform(get(bandeja).header("Authorization",jwt)).andExpect(status().isForbidden());
     }
 
     String ruta() { return "/api/v1/ganaderias/"+g+"/animales/"+animal+"/anuncios"; }

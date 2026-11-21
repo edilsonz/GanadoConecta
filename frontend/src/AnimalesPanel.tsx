@@ -8,6 +8,7 @@ import { GenealogiaPanel } from './GenealogiaPanel'
 import { PesosPanel } from './PesosPanel'
 import { AltaMasivaPanel } from './AltaMasivaPanel'
 import { AnunciosPanel } from './AnunciosPanel'
+import { VentaAnimal } from './VentaAnimal'
 import {
   ejecutarConProteccionActualizacionPwa,
   useProteccionActualizacionPwa,
@@ -1164,7 +1165,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                       : 'Ambas orejas'
                   : 'No indicada'}</dd></div>
                 <div><dt>Nacimiento</dt><dd>{ficha.fechaNacimiento || 'No indicado'}{ficha.nacimientoEstimado ? ' (aproximado)' : ''}</dd></div>
-                <div><dt>Estado</dt><dd>Activo</dd></div>
+                <div><dt>Estado</dt><dd>{ficha.estado === 'VENDIDO' ? 'Vendido' : 'Activo'}</dd></div>
                 <div><dt>Versión</dt><dd>{ficha.version}</dd></div>
               </dl>
               {ficha.observaciones && <p className="animal-observations"><strong>Observaciones</strong>{ficha.observaciones}</p>}
@@ -1188,8 +1189,15 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
               <PesosPanel key={ficha.animalId} ganaderiaId={ganaderia.id} animalId={ficha.animalId}
                 token={sesion.accessToken} puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
               {acceso?.rol === 'PROPIETARIO' && !navegadorSinConexion &&
-                <AnunciosPanel key={`anuncios-${ficha.animalId}`} ganaderiaId={ganaderia.id}
-                  animalId={ficha.animalId} token={sesion.accessToken} onSesionInvalida={onSesionInvalida} />}
+                <AnunciosPanel key={`anuncios-${ficha.animalId}-${ficha.estado}`} ganaderiaId={ganaderia.id}
+                  animalId={ficha.animalId} token={sesion.accessToken} vendido={ficha.estado === 'VENDIDO'}
+                  onSesionInvalida={onSesionInvalida} />}
+              {ficha.estado === 'ACTIVO' && acceso?.rol === 'PROPIETARIO' && !navegadorSinConexion &&
+                <VentaAnimal key={`venta-${ficha.animalId}`} ganaderiaId={ganaderia.id} animalId={ficha.animalId}
+                  token={sesion.accessToken} onSesionInvalida={onSesionInvalida} onVenta={() => {
+                    setFicha(actual => actual?.animalId === ficha.animalId ? { ...actual, estado:'VENDIDO' } : actual)
+                    void cargarPrimeraPagina().catch(() => undefined)
+                  }} />}
               <GenealogiaPanel ganaderiaId={ganaderia.id} animal={ficha}
                 animales={animales} accessToken={sesion.accessToken}
                 puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />

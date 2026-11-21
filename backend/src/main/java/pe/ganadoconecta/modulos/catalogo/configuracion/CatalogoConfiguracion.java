@@ -6,12 +6,17 @@ import org.springframework.context.annotation.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import pe.ganadoconecta.modulos.catalogo.adaptadores.salida.*;
 import pe.ganadoconecta.modulos.catalogo.aplicacion.CatalogoAnuncios;
+import pe.ganadoconecta.modulos.catalogo.aplicacion.ModeracionCatalogo;
 import pe.ganadoconecta.modulos.ganado.aplicacion.UnidadDeTrabajo;
 import pe.ganadoconecta.modulos.identidad.aplicacion.AutorizarAccesoGanaderiaTransaccional;
 
 @Configuration(proxyBeanMethods=false)
 @Profile("postgres")
 class CatalogoConfiguracion {
+    @Bean ModeracionCatalogo moderacionCatalogo(UnidadDeTrabajo unidad,JdbcTemplate jdbc,Clock reloj,
+            @Value("${GANADOCONECTA_REPORTES_PRUEBA_AUTENTICADA:false}") boolean recepcion) {
+        return new ModeracionCatalogo(unidad,new ModeracionPostgres(jdbc),reloj,recepcion);
+    }
     @Bean CatalogoAnuncios catalogoAnuncios(UnidadDeTrabajo unidad, AutorizarAccesoGanaderiaTransaccional auth,
             JdbcTemplate jdbc, Clock reloj, @Value("${GANADOCONECTA_FOTOS_DIRECTORIO:}") String ruta) {
         return new CatalogoAnuncios(unidad, auth, new AnunciosPostgres(jdbc),

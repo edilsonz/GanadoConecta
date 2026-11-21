@@ -18,7 +18,7 @@ export type Animal = {
   nacimientoEstimado: boolean | null
   categoria: CategoriaAnimal | null
   observaciones: string | null
-  estado: 'ACTIVO'
+  estado: 'ACTIVO' | 'VENDIDO'
   version: number
   creadoEn: string
 }
@@ -139,7 +139,7 @@ function esAnimal(valor: unknown): valor is Animal {
     && esNullable(valor.nacimientoEstimado, dato => typeof dato === 'boolean')
     && esNullable(valor.categoria, esCategoria)
     && esNullable(valor.observaciones, dato => typeof dato === 'string')
-    && valor.estado === 'ACTIVO'
+    && (valor.estado === 'ACTIVO' || valor.estado === 'VENDIDO')
     && typeof valor.version === 'number'
     && Number.isInteger(valor.version)
     && typeof valor.creadoEn === 'string'
