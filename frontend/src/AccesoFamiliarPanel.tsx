@@ -71,7 +71,7 @@ export function AccesoFamiliarPanel({ ganaderiaId, token, onSesionInvalida }: Se
     } finally { enCurso.current = false; setOcupado(false) }
   }
 
-  return <details onToggle={e => {
+  return <details className="farm-family-panel" onToggle={e => {
     if (e.currentTarget.open) void ejecutar()
     else { setResumen(undefined); setCodigo(''); setMensaje('') }
   }}>

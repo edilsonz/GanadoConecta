@@ -173,7 +173,7 @@ export function GanaderiasPanel({ sesion, onSesionInvalida }: GanaderiasPanelPro
       {sesion && seleccionada && (() => {
         const ganaderia = ganaderias.find(item => item.id === seleccionada)
         return ganaderia
-          ? <div key={`${sesion.usuarioId}-${ganaderia.id}`}>
+          ? <div className="farm-selected-workspace" key={`${sesion.usuarioId}-${ganaderia.id}`}>
               {ganaderia.rol === 'PROPIETARIO' && <AccesoFamiliarPanel ganaderiaId={ganaderia.id}
                 token={sesion.accessToken} onSesionInvalida={onSesionInvalida} />}
               <AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={onSesionInvalida} />

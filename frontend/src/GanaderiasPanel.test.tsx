@@ -60,6 +60,9 @@ describe('Panel de ganaderías', () => {
     fireEvent.click(opcion)
 
     expect(opcion).toHaveAttribute('aria-pressed', 'true')
+    const espacio = screen.getByLabelText('Mis animales').closest('.farm-selected-workspace')
+    expect(espacio?.parentElement).toHaveClass('farms-section')
+    expect(espacio).toContainElement(screen.getByText('Acceso familiar'))
     expect(screen.getByText(/volverá a verificar tu membresía/)).toBeInTheDocument()
     expect(localStorage.length).toBe(0)
     expect(sessionStorage.length).toBe(0)

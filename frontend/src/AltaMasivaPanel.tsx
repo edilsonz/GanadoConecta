@@ -109,7 +109,7 @@ export function AltaMasivaPanel(p: Props) {
     <p>Hasta {LIMITE} animales por lote. Revisa las filas antes de confirmar.</p>
     {!p.conectado && <p role="status">Recupera la conexión para enviar el lote.</p>}
     <fieldset disabled={ocupado} style={{ minWidth: 0 }}>
-      <div style={{ overflowX: 'auto' }}>
+      <div className="bulk-table-scroll" role="region" aria-label="Tabla editable del lote" tabIndex={0}>
         <table>
           <caption>Animales del lote</caption>
           <thead><tr><th scope="col">Fila</th><th scope="col">Datos del animal</th><th scope="col">Resultado</th></tr></thead>
