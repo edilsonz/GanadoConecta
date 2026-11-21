@@ -1,12 +1,12 @@
 import { codigoError, ErrorRegistro, esObjeto, leerJson, obtenerTokenCsrf } from './authApi'
 import { ErrorSanidad } from './vacunacionesApi'
 
-export type TipoEventoSanitario='VACUNACION'|'DESPARASITACION'|'TRATAMIENTO_SANITARIO'|'REVISION_VETERINARIA'
+export type TipoEventoSanitario='VACUNACION'|'DESPARASITACION'|'TRATAMIENTO_SANITARIO'|'REVISION_VETERINARIA'|'BANO_ANTIPARASITARIO'
 export type EventoSanitario={eventId:string;tipo:TipoEventoSanitario;fecha:string;titulo:string;
   descripcion:string|null;responsable:string|null;lote:string|null;producto:string|null;
   indicaciones:string|null;observaciones:string|null;proximaFecha:string|null;creadoEn:string}
 export type SolicitudEventoSanitario={operationId:string;eventId:string;schemaVersion:1;
-  tipo:Exclude<TipoEventoSanitario,'VACUNACION'>;fecha:string;descripcion:string;
+  tipo:Exclude<TipoEventoSanitario,'VACUNACION'|'BANO_ANTIPARASITARIO'>;fecha:string;descripcion:string;
   responsable?:string;producto?:string;indicaciones?:string;observaciones?:string}
 export type ResultadoEventoSanitario={operationId:string;eventId:string;
   resultado:'APLICADO'|'REPROCESADO';confirmadoEn:string}
@@ -19,7 +19,7 @@ function error(r:Response,b:unknown):never{
   throw new ErrorSanidad('temporal')
 }
 function esEvento(v:unknown):v is EventoSanitario{return esObjeto(v)&&typeof v.eventId==='string'
-  &&['VACUNACION','DESPARASITACION','TRATAMIENTO_SANITARIO','REVISION_VETERINARIA'].includes(String(v.tipo))
+  &&['VACUNACION','DESPARASITACION','TRATAMIENTO_SANITARIO','REVISION_VETERINARIA','BANO_ANTIPARASITARIO'].includes(String(v.tipo))
   &&typeof v.fecha==='string'&&typeof v.titulo==='string'&&typeof v.creadoEn==='string'}
 export async function listarHistorialSanitario(g:string,a:string,token:string,tipo?:TipoEventoSanitario){
   const q=tipo?`?tipo=${tipo}`:'';const r=await fetch(ruta(g,a)+q,{credentials:'same-origin',cache:'no-store',headers:{Authorization:`Bearer ${token}`}})

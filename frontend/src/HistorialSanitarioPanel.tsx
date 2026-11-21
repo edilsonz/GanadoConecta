@@ -30,6 +30,7 @@ const etiquetas: Record<TipoEventoSanitario, string> = {
   DESPARASITACION: 'Desparasitación',
   TRATAMIENTO_SANITARIO: 'Tratamiento sanitario',
   REVISION_VETERINARIA: 'Revisión veterinaria',
+  BANO_ANTIPARASITARIO: 'Baño antiparasitario',
 }
 const inicial = {
   tipo: 'DESPARASITACION' as SolicitudEventoSanitario['tipo'],
@@ -210,7 +211,7 @@ export function HistorialSanitarioPanel(p: Props) {
                 ...actual,
                 tipo: evento.target.value as typeof actual.tipo,
               }))}>
-              {Object.entries(etiquetas).filter(([valor]) => valor !== 'VACUNACION')
+              {Object.entries(etiquetas).filter(([valor]) => valor !== 'VACUNACION' && valor !== 'BANO_ANTIPARASITARIO')
                 .map(([valor, etiqueta]) =>
                   <option key={valor} value={valor}>{etiqueta}</option>)}
             </select>

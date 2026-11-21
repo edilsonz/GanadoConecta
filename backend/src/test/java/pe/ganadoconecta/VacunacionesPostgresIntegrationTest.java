@@ -135,6 +135,38 @@ class VacunacionesPostgresIntegrationTest extends SoporteJwtPostgres {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.estadoVisible").value("COMPLETADA"));
         assertThat(jdbc.queryForObject("SELECT count(*) FROM sanidad.evento_sanitario WHERE animal_id=?",Integer.class,animal)).isZero();
     }
+    @Test void campanaConfirmaSoloElSubconjuntoYEsIdempotente() throws Exception {
+        UUID otro = UUID.randomUUID(), actividad = UUID.randomUUID();
+        jdbc.update("INSERT INTO ganado.animal(id,ganaderia_id,sexo,creado_por,creado_en) VALUES(?,?,'MACHO',?,now())",
+                otro, ganaderia, usuario);
+        var fecha = java.time.LocalDate.now(java.time.ZoneId.of("America/Lima")).toString();
+        String alta = json.writeValueAsString(Map.of("actividadId", actividad, "participantes",
+                java.util.List.of(animal, otro), "tipo", "CAMPANA_BANO", "fechaPrevista", fecha,
+                "descripcion", "Campaña sintética"));
+        programar(alta).andExpect(status().isCreated()).andExpect(jsonPath("$.estadoVisible").value("PENDIENTE"));
+        programar(alta).andExpect(status().isCreated()).andExpect(jsonPath("$.participantes.length()").value(2));
+        mvc.perform(get(rutaAgenda()+"?animalId="+otro).header("Authorization","Bearer "+jwt))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1));
+        confirmarCampana(actividad, UUID.randomUUID(), fecha).andExpect(status().isUnprocessableEntity());
+        confirmarCampana(actividad, animal, fecha).andExpect(status().isOk())
+                .andExpect(jsonPath("$.atendidos[0]").value(animal.toString()));
+        confirmarCampana(actividad, animal, fecha).andExpect(status().isOk());
+        confirmarCampana(actividad, otro, fecha).andExpect(status().isConflict());
+        mvc.perform(get(rutaHistorial()).header("Authorization","Bearer "+jwt))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].tipo").value("BANO_ANTIPARASITARIO"));
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM sanidad.evento_sanitario WHERE animal_id=?",
+                Integer.class, otro)).isZero();
+    }
+
+    private org.springframework.test.web.servlet.ResultActions confirmarCampana(UUID actividad, UUID atendido, String fecha)
+            throws Exception {
+        return mvc.perform(post(rutaAgenda()+"/"+actividad+"/completar").header("Authorization","Bearer "+jwt)
+                .header("Origin","https://127.0.0.1:5173").with(csrf().asHeader())
+                .contentType("application/json").content(json.writeValueAsString(Map.of(
+                        "atendidos", java.util.List.of(atendido), "fechaAtencion", fecha))));
+    }
+
     @Test void agendaValidaRolesAislamientoYVencimientoVisible()throws Exception{
         programar(cuerpoAgenda(UUID.randomUUID(),animal,"VACUNACION","2020-01-01")).andExpect(status().isUnprocessableEntity());
         UUID vencida=UUID.randomUUID();jdbc.update("INSERT INTO sanidad.actividad_agenda(id,ganaderia_id,animal_id,tipo,fecha_prevista,descripcion,estado,version,creado_por,creado_en) VALUES(?,?,?,'REVISION_VETERINARIA','2020-01-01','Revisión pendiente','PENDIENTE',1,?,CURRENT_TIMESTAMP)",vencida,ganaderia,animal,usuario);

@@ -1195,7 +1195,8 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
       )}
       {acceso && <AgendaSanitariaPanel ganaderiaId={ganaderia.id} animales={animales}
         accessToken={sesion.accessToken} puedeEscribir={puedeRegistrar}
-        animalInicialId={ficha?.animalId} onSesionInvalida={onSesionInvalida} />}
+        animalInicialId={ficha?.animalId} onSesionInvalida={onSesionInvalida}
+        onAtencionesConfirmadas={() => setRevisionSanidadLocal(n => n + 1)} />}
     </section>
   )
 }
