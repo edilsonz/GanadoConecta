@@ -9,10 +9,11 @@ export async function solicitudPrivada<T>(ruta: string, token: string,
   for (let intento = 0; intento < 2; intento++) {
     const headers = new Headers({ Authorization: `Bearer ${token}` })
     if (metodo !== 'GET') headers.set('X-CSRF-TOKEN', await obtenerTokenCsrf())
-    if (datos !== undefined) headers.set('Content-Type', 'application/json')
+    const binario = datos instanceof Blob
+    if (datos !== undefined) headers.set('Content-Type', binario ? datos.type : 'application/json')
     const respuesta = await fetch(ruta, {
       method: metodo, headers, credentials: 'same-origin', cache: 'no-store',
-      body: datos === undefined ? undefined : JSON.stringify(datos),
+      body: binario ? datos : datos === undefined ? undefined : JSON.stringify(datos),
     })
     if (respuesta.status === 204) return undefined as T
     const cuerpo = await leerJson(respuesta)

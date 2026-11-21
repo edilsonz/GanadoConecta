@@ -7,6 +7,7 @@ import { PartosPanel } from './PartosPanel'
 import { GenealogiaPanel } from './GenealogiaPanel'
 import { PesosPanel } from './PesosPanel'
 import { AltaMasivaPanel } from './AltaMasivaPanel'
+import { AnunciosPanel } from './AnunciosPanel'
 import {
   ejecutarConProteccionActualizacionPwa,
   useProteccionActualizacionPwa,
@@ -1186,6 +1187,9 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                 puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
               <PesosPanel key={ficha.animalId} ganaderiaId={ganaderia.id} animalId={ficha.animalId}
                 token={sesion.accessToken} puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
+              {acceso?.rol === 'PROPIETARIO' && !navegadorSinConexion &&
+                <AnunciosPanel key={`anuncios-${ficha.animalId}`} ganaderiaId={ganaderia.id}
+                  animalId={ficha.animalId} token={sesion.accessToken} onSesionInvalida={onSesionInvalida} />}
               <GenealogiaPanel ganaderiaId={ganaderia.id} animal={ficha}
                 animales={animales} accessToken={sesion.accessToken}
                 puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />

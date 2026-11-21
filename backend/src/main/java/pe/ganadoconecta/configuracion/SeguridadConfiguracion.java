@@ -57,6 +57,12 @@ public class SeguridadConfiguracion {
 
         http.authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/catalogo", "/api/v1/catalogo/*/fotos/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/ganaderias/*/animales/*/anuncios").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/ganaderias/*/animales/*/anuncios",
+                                "/api/v1/ganaderias/*/animales/*/anuncios/*/estado",
+                                "/api/v1/ganaderias/*/animales/*/anuncios/*/fotos").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/ganaderias/*/animales/*/anuncios/*").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/registro").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()

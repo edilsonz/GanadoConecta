@@ -3,6 +3,7 @@ import { ApiStatus } from './ApiStatus'
 import { AccesoCuenta } from './AccesoCuenta'
 import { GanaderiasPanel } from './GanaderiasPanel'
 import { RegistroCuenta } from './RegistroCuenta'
+import { CatalogoPanel } from './CatalogoPanel'
 import type { SesionActiva } from './sesionApi'
 import { bloquearContextosOfflineUsuario } from './registroAnimalesOffline'
 import {
@@ -40,6 +41,7 @@ export default function App() {
           <a href="#mis-ganaderias">Ganaderías</a>
           <a href="#mis-animales">Mi ganado</a>
           <a href="#agenda-sanitaria">Agenda sanitaria</a>
+          <a href="#catalogo">Catálogo</a>
         </nav>
         <span className="edition"><span aria-hidden="true">◌</span> En preparación</span>
       </header>
@@ -87,6 +89,7 @@ export default function App() {
           </>
         )}
 
+        {conectado && <CatalogoPanel />}
         <section className="project-section" id="proyecto" aria-labelledby="project-title">
           <div className="section-heading">
             <div><p className="eyebrow">LO QUE ESTAMOS PREPARANDO</p><h2 id="project-title">Más claridad, cada día.</h2></div>

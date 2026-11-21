@@ -82,7 +82,11 @@ public final class ProteccionRegistroFiltro extends OncePerRequestFilter {
         };
         boolean pesoProtegido = "POST".equals(request.getMethod())
                 && ruta.matches("^/api/v1/ganaderias/[^/]+/animales/[^/]+/pesos$");
-        return !pesoProtegido && !familiaProtegida && !postProtegido && !altaAnimalProtegida && !revocacionProtegida
+        boolean anuncioProtegido = ("POST".equals(request.getMethod())
+                    && ruta.matches("^/api/v1/ganaderias/[^/]+/animales/[^/]+/anuncios(?:/[^/]+/(?:estado|fotos))?$"))
+                || ("PUT".equals(request.getMethod())
+                    && ruta.matches("^/api/v1/ganaderias/[^/]+/animales/[^/]+/anuncios/[^/]+$"));
+        return !anuncioProtegido && !pesoProtegido && !familiaProtegida && !postProtegido && !altaAnimalProtegida && !revocacionProtegida
                 && !vacunacionProtegida && !eventoSanitarioProtegido
                 && !eventoReproductivoProtegido && !partoProtegido
                 && !genealogiaProtegida && !agendaProtegida;
@@ -97,6 +101,11 @@ public final class ProteccionRegistroFiltro extends OncePerRequestFilter {
             return;
         }
 
+        if (request.getRequestURI().matches("^/api/v1/ganaderias/[^/]+/animales/[^/]+/anuncios/[^/]+/fotos$")) {
+            // El controlador aplica el límite binario después de autenticación y CSRF.
+            filterChain.doFilter(request, response);
+            return;
+        }
         byte[] cuerpo = request.getInputStream().readNBytes(MAXIMO_CUERPO_BYTES + 1);
         if (cuerpo.length > MAXIMO_CUERPO_BYTES) {
             escribirError(response, 413, "CUERPO_DEMASIADO_GRANDE",
