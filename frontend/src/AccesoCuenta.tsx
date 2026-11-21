@@ -173,11 +173,11 @@ export function AccesoCuenta({ sesion, onSesionChange }: AccesoCuentaProps) {
   }
 
   return (
-    <section className="login-section" id="iniciar-sesion" aria-labelledby="login-title">
+    <section className={sesion ? 'login-section login-section-active' : 'login-section'}
+      id="iniciar-sesion" aria-labelledby="login-title">
       <div className="login-intro">
-        <p className="eyebrow"><span className="small-rule" /> ACCESO SEGURO</p>
-        <h2 id="login-title">Vuelve a tu cuenta.</h2>
-        <p>Tu sesión permite identificarte y administrar tus ganaderías autorizadas.</p>
+        <h2 id="login-title">{sesion ? 'Mi cuenta' : 'Vuelve a tu cuenta.'}</h2>
+        {!sesion && <p>Administra las ganaderías a las que tienes acceso.</p>}
       </div>
 
       <div className="login-card">
@@ -187,13 +187,9 @@ export function AccesoCuenta({ sesion, onSesionChange }: AccesoCuentaProps) {
           </div>
         ) : sesion ? (
           <div className="authenticated-view" aria-live="polite">
-            <span className="session-icon" aria-hidden="true">✓</span>
-            <p className="eyebrow">SESIÓN ACTIVA</p>
-            <h3>Hola de nuevo.</h3>
             {sesion.correo
               ? <p className="session-email">{sesion.correo}</p>
               : <p className="session-email">Cuenta verificada</p>}
-            <p className="session-note">Ya puedes crear y seleccionar una ganadería. Mi ganado sigue en preparación.</p>
             <button className="button button-outline logout-button" type="button" onClick={cerrar} disabled={enviando}>
               {enviando ? 'Cerrando sesión…' : 'Cerrar sesión'}
             </button>

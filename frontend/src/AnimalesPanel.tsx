@@ -1,4 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
+import type { VistaGanaderia } from './EspacioGanaderia'
+import { FichaAnimalTabs, type SeccionFicha } from './FichaAnimalTabs'
 import { categoriasPorSexo, crearSolicitud, etiquetasCategoria, fechaHoyLima, formularioAnimalModificado,
   formularioInicial, validarFormulario, type FormularioAnimal } from './formularioAnimal'
 import { VacunacionesPanel } from './VacunacionesPanel'
@@ -31,6 +33,7 @@ import {
   ErrorGanaderia,
   type AccesoGanaderia,
   type Ganaderia,
+  type RolGanaderia,
 } from './ganaderiasApi'
 import type { SesionActiva } from './sesionApi'
 import {
@@ -59,6 +62,16 @@ type AnimalesPanelProps = {
   ganaderia: Ganaderia
   sesion: SesionActiva
   onSesionInvalida: () => void
+  vista?: VistaGanaderia
+  onRolEnLineaChange?: (rol: RolGanaderia | null) => void
+}
+
+const vistasDeFicha: Partial<Record<VistaGanaderia, SeccionFicha>> = {
+  sanidad: 'sanidad', reproduccion: 'reproduccion', produccion: 'peso', anuncios: 'anuncios',
+}
+const titulosDeVista: Partial<Record<VistaGanaderia, string>> = {
+  sanidad: 'Sanidad', reproduccion: 'Reproducción', produccion: 'Producción',
+  calendario: 'Calendario', anuncios: 'Anuncios',
 }
 
 type EstadoListadoAnimales = 'CARGANDO' | 'LISTO' | 'ERROR'
@@ -175,7 +188,8 @@ function descripcionAnimal(animal: Animal) {
     .filter(Boolean).join(' · ') || 'Sin datos descriptivos adicionales'
 }
 
-export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesPanelProps) {
+export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida,
+  vista = 'ganado', onRolEnLineaChange }: AnimalesPanelProps) {
   const [acceso, setAcceso] = useState<AccesoGanaderia | null>(null)
   const [animales, setAnimales] = useState<Animal[]>([])
   const [cursor, setCursor] = useState<string | null>(null)
@@ -190,6 +204,8 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
   const [pendienteIncierto, setPendienteIncierto] = useState<SolicitudRegistroAnimal | null>(null)
   const [animalIdActual, setAnimalIdActual] = useState<string | null>(null)
   const [ficha, setFicha] = useState<Animal | null>(null)
+  const [buscar, setBuscar] = useState('')
+  const [calendarioVisitado, setCalendarioVisitado] = useState(false)
   const [cargandoFicha, setCargandoFicha] = useState(false)
   const [pendientesLocales, setPendientesLocales] = useState<OperacionPendienteLocal[]>([])
   const [pendientesSanitarios, setPendientesSanitarios] =
@@ -734,13 +750,30 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
   const totalPendientesVisibles = pendientesVisibles.length + sanitariasVisibles.length
   const totalRecuperablesVisibles = recuperablesVisibles.length
     + sanitariasRecuperablesVisibles.length
+  const enGanado = vista === 'ganado'
+  const enCalendario = vista === 'calendario'
+  const seccionFicha = vistasDeFicha[vista]
+  const verListado = enGanado || Boolean(seccionFicha && !ficha && !cargandoFicha)
+  const puedeAdministrarAnuncios = acceso?.rol === 'PROPIETARIO' && !navegadorSinConexion
+  const termino = buscar.trim().toLocaleLowerCase('es')
+  const animalesVisibles = termino ? animales.filter(animal =>
+    [tituloAnimal(animal), animal.areteFrente, animal.areteReverso]
+      .some(texto => texto?.toLocaleLowerCase('es').includes(termino))) : animales
+
+  useEffect(() => {
+    if (enCalendario) setCalendarioVisitado(true)
+  }, [enCalendario])
+  const rolEnLinea = navegadorSinConexion || modoSinConexion ? null : (acceso?.rol ?? null)
+  useEffect(() => {
+    onRolEnLineaChange?.(rolEnLinea)
+  }, [onRolEnLineaChange, rolEnLinea])
 
   return (
     <section className="animals-panel" id="mis-animales" aria-labelledby="animals-title">
       <div className="animals-heading">
         <div>
           <p className="eyebrow"><span className="small-rule" /> MI GANADO</p>
-          <h3 id="animals-title">Mis animales</h3>
+          <h3 id="animals-title">{titulosDeVista[vista] ?? 'Mis animales'}</h3>
           <p>{ganaderia.nombre}</p>
         </div>
         {acceso && <span className="access-badge">Acceso: {acceso.rol.toLowerCase()}{modoSinConexion ? ' · offline' : ''}</span>}
@@ -752,7 +785,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
       ) : !acceso ? (
         <div className="animals-empty"><p>No hay acceso vigente para mostrar esta ganadería.</p></div>
       ) : (
-        <div className="animals-layout">
+        <div className={enGanado ? 'animals-layout' : 'animals-browser'} hidden={!verListado}>
           <div className="animals-list-column" aria-busy={actualizandoLista}>
             <div className="animals-list-heading">
               <h4>Animales registrados</h4>
@@ -769,11 +802,15 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                   : 'No se confirmó si existen animales. Pulsa «Actualizar» para volver a intentarlo.'}</p>
               </div>
             )}
+            {animales.length > 0 && <label className="form-field animal-search">Buscar en los animales cargados
+              <input type="search" value={buscar} onChange={event => setBuscar(event.target.value)} />
+            </label>}
             {estadoListado === 'LISTO' && animales.length === 0 ? (
               <div className="animals-empty"><p>Aún no hay animales registrados en esta ganadería.</p></div>
             ) : animales.length > 0 && (
               <div className="animal-list" aria-label="Animales de la ganadería">
-                {animales.map(animal => (
+                {animalesVisibles.length === 0 && <p>No hay coincidencias entre los animales cargados.</p>}
+                {animalesVisibles.map(animal => (
                   <button className="animal-option" type="button" key={animal.animalId}
                     onClick={() => void abrirFicha(animal.animalId)}>
                     <span><strong>{tituloAnimal(animal)}</strong><small>{descripcionAnimal(animal)}</small></span>
@@ -788,7 +825,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                 {cargandoMas ? 'Cargando…' : 'Cargar más'}
               </button>
             )}
-            <section className="automatic-sync" aria-labelledby="automatic-sync-title">
+            <section className="automatic-sync" aria-labelledby="automatic-sync-title" hidden={!enGanado}>
               <div>
                 <h4 id="automatic-sync-title">Sincronización automática</h4>
                 <p>En primer plano, al recuperar conexión. El servidor vuelve a validar sesión y permisos.</p>
@@ -807,7 +844,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
               </p>
             </section>
             {totalPendientesVisibles > 0 && (
-              <section className="local-pending" aria-labelledby="local-pending-title">
+              <section className="local-pending" aria-labelledby="local-pending-title" hidden={!enGanado}>
                 <div className="local-pending-heading">
                   <div>
                     <h4 id="local-pending-title">Pendientes en este dispositivo</h4>
@@ -861,6 +898,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
             )}
           </div>
 
+          <div hidden={!enGanado}>
           {puedeRegistrar ? (
             <form className="animal-form" onSubmit={registrar} noValidate aria-busy={enviando}>
               <div className="animal-form-heading">
@@ -1004,79 +1042,94 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
               <p>Puedes consultar las fichas, pero este rol no permite registrar animales.</p>
             </div>
           )}
+          </div>
         </div>
       )}
 
-      {puedeRegistrar && <AltaMasivaPanel ganaderiaId={ganaderia.id} token={sesion.accessToken}
+      {puedeRegistrar && <div hidden={!enGanado}><AltaMasivaPanel ganaderiaId={ganaderia.id} token={sesion.accessToken}
         conectado={!navegadorSinConexion} inicial={formularioInicial} validar={validarFormulario}
         preparar={crearSolicitud} categorias={etiquetasCategoria} onSesionInvalida={onSesionInvalida}
-        alConfirmar={() => { void cargarPrimeraPagina().catch(() => undefined) }} />}
+        alConfirmar={() => { void cargarPrimeraPagina().catch(() => undefined) }} /></div>}
 
       {(cargandoFicha || ficha) && (
-        <div className="animal-detail" aria-live="polite">
+        <div className="animal-detail" hidden={!enGanado && !seccionFicha}>
           {cargandoFicha ? <p role="status">Consultando ficha…</p> : ficha && (
             <>
               <div className="animal-detail-heading">
                 <div><p className="eyebrow">FICHA INDIVIDUAL</p><h4>{tituloAnimal(ficha)}</h4></div>
                 <button className="button button-outline" type="button" onClick={() => setFicha(null)}>Cerrar</button>
               </div>
-              <dl>
-                <div><dt>Sexo</dt><dd>{ficha.sexo === 'HEMBRA' ? 'Hembra' : 'Macho'}</dd></div>
-                <div><dt>Categoría</dt><dd>{ficha.categoria ? etiquetasCategoria[ficha.categoria] : 'No indicada'}</dd></div>
-                <div><dt>Raza</dt><dd>{ficha.raza || 'No indicada'}</dd></div>
-                <div><dt>Arete frontal</dt><dd>{ficha.areteFrente || 'No indicado'}</dd></div>
-                <div><dt>Arete reverso</dt><dd>{ficha.areteReverso || 'No indicado'}</dd></div>
-                <div><dt>Lana o cinta</dt><dd>{ficha.coloresIdentificacionTextil || 'No indicada'}</dd></div>
-                <div><dt>Ubicación textil</dt><dd>{ficha.ubicacionIdentificacionTextil
-                  ? ficha.ubicacionIdentificacionTextil === 'IZQUIERDA' ? 'Oreja izquierda'
-                    : ficha.ubicacionIdentificacionTextil === 'DERECHA' ? 'Oreja derecha'
-                      : 'Ambas orejas'
-                  : 'No indicada'}</dd></div>
-                <div><dt>Nacimiento</dt><dd>{ficha.fechaNacimiento || 'No indicado'}{ficha.nacimientoEstimado ? ' (aproximado)' : ''}</dd></div>
-                <div><dt>Estado</dt><dd>{ficha.estado === 'VENDIDO' ? 'Vendido' : 'Activo'}</dd></div>
-                <div><dt>Versión</dt><dd>{ficha.version}</dd></div>
-              </dl>
-              {ficha.observaciones && <p className="animal-observations"><strong>Observaciones</strong>{ficha.observaciones}</p>}
-              <VacunacionesPanel key={`${ganaderia.id}-${ficha.animalId}`} ganaderiaId={ganaderia.id}
-                usuarioId={sesion.usuarioId} animalId={ficha.animalId}
-                accessToken={sesion.accessToken} puedeEscribir={puedeRegistrar}
-                revisionLocal={revisionSanidadLocal}
-                onPendientesLocalesChange={() => void cargarPendientesLocales()}
-                onSesionInvalida={onSesionInvalida} />
-              <HistorialSanitarioPanel ganaderiaId={ganaderia.id} animalId={ficha.animalId}
-                usuarioId={sesion.usuarioId} accessToken={sesion.accessToken} puedeEscribir={puedeRegistrar}
-                revisionLocal={revisionSanidadLocal}
-                onPendientesLocalesChange={() => void cargarPendientesLocales()}
-                onSesionInvalida={onSesionInvalida} />
-              <ReproduccionPanel ganaderiaId={ganaderia.id} animal={ficha}
-                animales={animales} accessToken={sesion.accessToken}
-                puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
-              <PartosPanel ganaderiaId={ganaderia.id} madre={ficha}
-                animales={animales} accessToken={sesion.accessToken}
-                puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
-              <PesosPanel key={ficha.animalId} ganaderiaId={ganaderia.id} animalId={ficha.animalId}
-                token={sesion.accessToken} puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
-              {acceso?.rol === 'PROPIETARIO' && !navegadorSinConexion &&
-                <AnunciosPanel key={`anuncios-${ficha.animalId}-${ficha.estado}`} ganaderiaId={ganaderia.id}
-                  animalId={ficha.animalId} token={sesion.accessToken} vendido={ficha.estado === 'VENDIDO'}
-                  onSesionInvalida={onSesionInvalida} />}
-              {ficha.estado === 'ACTIVO' && acceso?.rol === 'PROPIETARIO' && !navegadorSinConexion &&
-                <VentaAnimal key={`venta-${ficha.animalId}`} ganaderiaId={ganaderia.id} animalId={ficha.animalId}
-                  token={sesion.accessToken} onSesionInvalida={onSesionInvalida} onVenta={() => {
-                    setFicha(actual => actual?.animalId === ficha.animalId ? { ...actual, estado:'VENDIDO' } : actual)
-                    void cargarPrimeraPagina().catch(() => undefined)
-                  }} />}
-              <GenealogiaPanel ganaderiaId={ganaderia.id} animal={ficha}
-                animales={animales} accessToken={sesion.accessToken}
-                puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
+              <FichaAnimalTabs key={ficha.animalId} sugerida={seccionFicha ?? 'general'} contenido={{
+                general: <>
+                  <dl>
+                    <div><dt>Sexo</dt><dd>{ficha.sexo === 'HEMBRA' ? 'Hembra' : 'Macho'}</dd></div>
+                    <div><dt>Categoría</dt><dd>{ficha.categoria ? etiquetasCategoria[ficha.categoria] : 'No indicada'}</dd></div>
+                    <div><dt>Raza</dt><dd>{ficha.raza || 'No indicada'}</dd></div>
+                    <div><dt>Arete frontal</dt><dd>{ficha.areteFrente || 'No indicado'}</dd></div>
+                    <div><dt>Arete reverso</dt><dd>{ficha.areteReverso || 'No indicado'}</dd></div>
+                    <div><dt>Lana o cinta</dt><dd>{ficha.coloresIdentificacionTextil || 'No indicada'}</dd></div>
+                    <div><dt>Ubicación textil</dt><dd>{ficha.ubicacionIdentificacionTextil
+                      ? ficha.ubicacionIdentificacionTextil === 'IZQUIERDA' ? 'Oreja izquierda'
+                        : ficha.ubicacionIdentificacionTextil === 'DERECHA' ? 'Oreja derecha'
+                          : 'Ambas orejas'
+                      : 'No indicada'}</dd></div>
+                    <div><dt>Nacimiento</dt><dd>{ficha.fechaNacimiento || 'No indicado'}{ficha.nacimientoEstimado ? ' (aproximado)' : ''}</dd></div>
+                    <div><dt>Estado</dt><dd>{ficha.estado === 'VENDIDO' ? 'Vendido' : 'Activo'}</dd></div>
+                    <div><dt>Versión</dt><dd>{ficha.version}</dd></div>
+                  </dl>
+                  {ficha.observaciones && <p className="animal-observations"><strong>Observaciones</strong>{ficha.observaciones}</p>}
+                </>,
+                sanidad: <>
+                  <VacunacionesPanel key={`${ganaderia.id}-${ficha.animalId}`} ganaderiaId={ganaderia.id}
+                    usuarioId={sesion.usuarioId} animalId={ficha.animalId}
+                    accessToken={sesion.accessToken} puedeEscribir={puedeRegistrar}
+                    revisionLocal={revisionSanidadLocal}
+                    onPendientesLocalesChange={() => void cargarPendientesLocales()}
+                    onSesionInvalida={onSesionInvalida} />
+                  <HistorialSanitarioPanel ganaderiaId={ganaderia.id} animalId={ficha.animalId}
+                    usuarioId={sesion.usuarioId} accessToken={sesion.accessToken} puedeEscribir={puedeRegistrar}
+                    revisionLocal={revisionSanidadLocal}
+                    onPendientesLocalesChange={() => void cargarPendientesLocales()}
+                    onSesionInvalida={onSesionInvalida} />
+                </>,
+                reproduccion: <>
+                  <ReproduccionPanel ganaderiaId={ganaderia.id} animal={ficha}
+                    animales={animales} accessToken={sesion.accessToken}
+                    puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
+                  <PartosPanel ganaderiaId={ganaderia.id} madre={ficha}
+                    animales={animales} accessToken={sesion.accessToken}
+                    puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
+                </>,
+                peso: <>
+                  <PesosPanel key={ficha.animalId} ganaderiaId={ganaderia.id} animalId={ficha.animalId}
+                    token={sesion.accessToken} puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
+                </>,
+                anuncios: puedeAdministrarAnuncios ? <>
+                  <AnunciosPanel key={`anuncios-${ficha.animalId}-${ficha.estado}`} ganaderiaId={ganaderia.id}
+                      animalId={ficha.animalId} token={sesion.accessToken} vendido={ficha.estado === 'VENDIDO'}
+                      onSesionInvalida={onSesionInvalida} />
+                  {ficha.estado === 'ACTIVO' &&
+                    <VentaAnimal key={`venta-${ficha.animalId}`} ganaderiaId={ganaderia.id} animalId={ficha.animalId}
+                      token={sesion.accessToken} onSesionInvalida={onSesionInvalida} onVenta={() => {
+                        setFicha(actual => actual?.animalId === ficha.animalId ? { ...actual, estado:'VENDIDO' } : actual)
+                        void cargarPrimeraPagina().catch(() => undefined)
+                      }} />}
+                </> : undefined,
+                genealogia: <>
+                  <GenealogiaPanel ganaderiaId={ganaderia.id} animal={ficha}
+                    animales={animales} accessToken={sesion.accessToken}
+                    puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
+                </>,
+              }} />
             </>
           )}
         </div>
       )}
-      {acceso && <AgendaSanitariaPanel ganaderiaId={ganaderia.id} animales={animales}
+      {acceso && (enCalendario || calendarioVisitado) && <div hidden={!enCalendario}>
+        <AgendaSanitariaPanel ganaderiaId={ganaderia.id} animales={animales}
         accessToken={sesion.accessToken} puedeEscribir={puedeRegistrar}
         animalInicialId={ficha?.animalId} onSesionInvalida={onSesionInvalida}
-        onAtencionesConfirmadas={() => setRevisionSanidadLocal(n => n + 1)} />}
+        onAtencionesConfirmadas={() => setRevisionSanidadLocal(n => n + 1)} /></div>}
     </section>
   )
 }

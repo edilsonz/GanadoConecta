@@ -90,7 +90,7 @@ describe('Acceso de cuenta', () => {
 
     expect(await screen.findByText('productora@ejemplo.com')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument()
-    expect(screen.getByText(/Mi ganado sigue en preparación/)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Mi cuenta' })).toBeInTheDocument()
     expect(localStorage.length).toBe(0)
     expect(sessionStorage.length).toBe(0)
   })

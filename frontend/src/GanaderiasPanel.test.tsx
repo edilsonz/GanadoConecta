@@ -1,10 +1,17 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { useEffect } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { GanaderiasPanel } from './GanaderiasPanel'
-import { crearGanaderia, ErrorGanaderia, listarGanaderias } from './ganaderiasApi'
+import { crearGanaderia, ErrorGanaderia, listarGanaderias, type RolGanaderia } from './ganaderiasApi'
 
 vi.mock('./AnimalesPanel', () => ({
-  AnimalesPanel: () => <section aria-label="Mis animales" />,
+  AnimalesPanel: ({ ganaderia, onRolEnLineaChange }: {
+    ganaderia: { rol: RolGanaderia }
+    onRolEnLineaChange: (rol: RolGanaderia) => void
+  }) => {
+    useEffect(() => onRolEnLineaChange(ganaderia.rol), [ganaderia.rol, onRolEnLineaChange])
+    return <section aria-label="Mis animales" />
+  },
 }))
 
 vi.mock('./ganaderiasApi', async importOriginal => {
@@ -59,11 +66,11 @@ describe('Panel de ganaderías', () => {
     const opcion = await screen.findByRole('button', { name: /Los Pinos/ })
     fireEvent.click(opcion)
 
-    expect(opcion).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByLabelText('Ganadería activa')).toHaveValue(propia.id)
+    fireEvent.click(screen.getByRole('button', { name: 'Mi ganado' }))
     const espacio = screen.getByLabelText('Mis animales').closest('.farm-selected-workspace')
     expect(espacio?.parentElement).toHaveClass('farms-section')
-    expect(espacio).toContainElement(screen.getByText('Acceso familiar'))
-    expect(screen.getByText(/volverá a verificar tu membresía/)).toBeInTheDocument()
+    expect(espacio).toContainElement(screen.getByRole('button', { name: 'Acceso familiar' }))
     expect(localStorage.length).toBe(0)
     expect(sessionStorage.length).toBe(0)
   })
@@ -83,8 +90,7 @@ describe('Panel de ganaderías', () => {
     expect(crearGanaderia).toHaveBeenCalledWith('Los Pinos', 'jwt-solo-memoria')
 
     resolver?.(propia)
-    const opcion = await screen.findByRole('button', { name: /Los Pinos/ })
-    expect(opcion).toHaveAttribute('aria-pressed', 'true')
+    expect(await screen.findByLabelText('Ganadería activa')).toHaveValue(propia.id)
     expect(screen.getByText(/creada y seleccionada correctamente/)).toBeInTheDocument()
   })
 
@@ -95,6 +101,18 @@ describe('Panel de ganaderías', () => {
 
     await waitFor(() => expect(invalidar).toHaveBeenCalledOnce())
     expect(screen.getByText(/Tu sesión terminó/)).toBeInTheDocument()
+  })
+
+  it('cambia de ganadería y reserva anuncios y acceso familiar al propietario', async () => {
+    const lectura = { ...propia, id: 'otra-ganaderia', nombre: 'La Quebrada', rol: 'LECTOR' as const }
+    vi.mocked(listarGanaderias).mockResolvedValue([propia, lectura])
+    render(<GanaderiasPanel sesion={sesion} onSesionInvalida={vi.fn()} />)
+    fireEvent.click(await screen.findByRole('button', { name: /Los Pinos/ }))
+    expect(screen.getByRole('button', { name: 'Anuncios' })).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Ganadería activa'), { target: { value: lectura.id } })
+    expect(screen.getByRole('heading', { name: 'La Quebrada' })).toBeVisible()
+    expect(screen.queryByRole('button', { name: 'Acceso familiar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Anuncios' })).not.toBeInTheDocument()
   })
 
   it('muestra un conflicto seguro de creación', async () => {

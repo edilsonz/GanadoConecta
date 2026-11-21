@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useSyncExternalStore } from 'react'
 import { ApiStatus } from './ApiStatus'
 import { AccesoCuenta } from './AccesoCuenta'
 import { GanaderiasPanel } from './GanaderiasPanel'
@@ -13,15 +13,17 @@ import {
   useEstadoConexion,
 } from './PwaEstado'
 
-const futureSections = [
-  { number: '01', title: 'Funcionamiento sin internet', text: 'La estructura básica ya puede abrirse offline; el acceso a datos exige sesión y preparación previa.' },
-  { number: '02', title: 'Cuidado y seguimiento', text: 'Una forma sencilla de consultar actividades e historiales.' },
-  { number: '03', title: 'Calendario', text: 'Un espacio para planificar las próximas actividades de tu ganadería.' },
-]
+function observarNavegacion(cambio: () => void) {
+  window.addEventListener('hashchange', cambio)
+  return () => window.removeEventListener('hashchange', cambio)
+}
+
+const enCatalogo = () => window.location.hash === '#catalogo'
 
 export default function App() {
   const [sesion, setSesion] = useState<SesionActiva | null>(null)
   const conectado = useEstadoConexion()
+  const mostrarCatalogo = useSyncExternalStore(observarNavegacion, enCatalogo)
   const invalidarSesion = useCallback(() => setSesion(actual => {
     if (actual) void bloquearContextosOfflineUsuario(actual.usuarioId).catch(() => undefined)
     return null
@@ -31,26 +33,25 @@ export default function App() {
     <>
       <a className="skip-link" href="#contenido">Ir al contenido</a>
       <header className="site-header">
-        <a className="brand" href="#inicio" aria-label="GanadoConecta, inicio">
+        <a className="brand" href={sesion ? '#mis-ganaderias' : '#inicio'} aria-label="GanadoConecta, inicio">
           <span className="brand-mark" aria-hidden="true">gc<span>·</span></span>
           <span>Ganado<span className="brand-light">Conecta</span></span>
         </a>
         <nav aria-label="Navegación principal">
-          <a className="nav-active" href="#inicio" aria-current="page">Inicio</a>
-          <a href="#iniciar-sesion">Iniciar sesión</a>
-          <a href="#crear-cuenta">Crear cuenta</a>
-          <a href="#mis-ganaderias">Ganaderías</a>
-          <a href="#mis-animales">Mi ganado</a>
-          <a href="#agenda-sanitaria">Agenda sanitaria</a>
-          <a href="#catalogo">Catálogo</a>
+          <a className={mostrarCatalogo ? undefined : 'nav-active'} href={sesion ? '#mis-ganaderias' : '#inicio'}
+            aria-current={mostrarCatalogo ? undefined : 'page'}>{sesion ? 'Mi ganadería' : 'Inicio'}</a>
+          <a href="#iniciar-sesion">{sesion ? 'Mi cuenta' : 'Iniciar sesión'}</a>
+          {!sesion && conectado && <a href="#crear-cuenta">Crear cuenta</a>}
+          <a className={mostrarCatalogo ? 'nav-active' : undefined}
+            aria-current={mostrarCatalogo ? 'page' : undefined} href="#catalogo">Catálogo público</a>
         </nav>
-        <span className="edition"><span aria-hidden="true">◌</span> En preparación</span>
       </header>
 
       <PwaEstado conectado={conectado} sesionActiva={Boolean(sesion)} />
 
       <main id="contenido">
-        <section className="hero" id="inicio" aria-labelledby="hero-title">
+        <div hidden={mostrarCatalogo}>
+        {!sesion && <section className="hero" id="inicio" aria-labelledby="hero-title">
           <div className="hero-copy">
             <p className="eyebrow"><span className="small-rule" /> CERCA DE TU GANADERÍA</p>
             <h1 id="hero-title">Tu ganado.<br />Su cuidado.<br /><span>Todo conectado.</span></h1>
@@ -78,40 +79,28 @@ export default function App() {
             </svg>
             <div className="landscape-bottom"><span>Una mirada al futuro del cuidado ganadero.</span><span>↗</span></div>
           </div>
-        </section>
+        </section>}
 
         {!conectado && !sesion ? (
           <AccesoOfflineSeguro />
         ) : (
           <>
             <AccesoCuenta sesion={sesion} onSesionChange={setSesion} />
-            <GanaderiasPanel sesion={sesion} onSesionInvalida={invalidarSesion} />
-            {conectado && <RegistroCuenta />}
+            {sesion && <GanaderiasPanel key={sesion.usuarioId} sesion={sesion} onSesionInvalida={invalidarSesion} />}
+            {!sesion && conectado && <RegistroCuenta />}
           </>
         )}
 
-        {conectado && <CatalogoPanel token={sesion?.accessToken} />}
-        {conectado && sesion && <section className="project-section">
-          <ModeracionPanel key={sesion.usuarioId} token={sesion.accessToken} onSesionInvalida={invalidarSesion} />
-        </section>}
-        <section className="project-section" id="proyecto" aria-labelledby="project-title">
-          <div className="section-heading">
-            <div><p className="eyebrow">LO QUE ESTAMOS PREPARANDO</p><h2 id="project-title">Más claridad, cada día.</h2></div>
-            <p>Funciones que se incorporarán por etapas.<br />Aún no están disponibles.</p>
-          </div>
-          <div className="feature-grid">
-            {futureSections.map(section => (
-              <article className="feature-card" key={section.number}>
-                <span className="feature-number">{section.number}</span>
-                <h3>{section.title}</h3><p>{section.text}</p>
-                <span className="feature-state">En preparación <span aria-hidden="true">↗</span></span>
-              </article>
-            ))}
-          </div>
-        </section>
-        <ApiStatus />
+        {conectado && sesion &&
+          <ModeracionPanel key={sesion.usuarioId} token={sesion.accessToken} onSesionInvalida={invalidarSesion} />}
+        {!sesion && <ApiStatus />}
+        </div>
+        {mostrarCatalogo && (conectado
+          ? <CatalogoPanel token={sesion?.accessToken} />
+          : <section className="project-section" id="catalogo"><h1>Catálogo público</h1>
+              <p>Conéctate a internet para consultar las publicaciones.</p></section>)}
       </main>
-      <footer><a className="footer-brand" href="#inicio">GanadoConecta</a><p>Información clara. Cuidado cercano.</p><span>Ganado vacuno · Primera etapa</span></footer>
+      <footer><a className="footer-brand" href={sesion ? '#mis-ganaderias' : '#inicio'}>GanadoConecta</a><p>Información clara. Cuidado cercano.</p></footer>
     </>
   )
 }

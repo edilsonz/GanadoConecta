@@ -20,5 +20,5 @@ Los [requisitos originales](01-analisis-de-sistema/03-requisitos-funcionales.md)
 - **Offline.** La cola ya cubre alta individual y eventos sanitarios seleccionados. Quedan por precisar consulta privada offline, edición/versiones, campañas, reproducción, peso, lotes y demás ampliaciones, con pruebas de expiración y sincronización.
 - **Seguridad.** Mantener autorización por ganadería, revisión de exposición pública, permisos administrativos separados y operación de credenciales/secretos fuera de Git.
 - **Infraestructura y despliegue.** Flyway y Docker para reproducción local. Pendientes proveedor de fotos, Redis con invalidación, entrega EXT01, CI/CD, hosting, dominio, DNS y CDN.
-- **Interfaz.** Mantener acceso en español, responsive y verificaciones de tareas en navegador.
+- **Interfaz.** Espacio del productor con navegación por módulo y ficha por pestañas. [Evidencia visual y de regresión](05-preparacion-implementacion/36-consolidacion-ux.md). Pendiente validación integrada con usuarios.
 - **Pruebas.** Conservar evidencia unitaria e integración. Preparar E2E, planes de consulta y k6 sobre datos sintéticos reproducibles antes de afirmar resultados de escala.

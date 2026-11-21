@@ -2,6 +2,8 @@
 
 Esta matriz referencia los catálogos originales de [22 requisitos](01-analisis-de-sistema/03-requisitos-funcionales.md), [23 historias](01-analisis-de-sistema/02-historias-de-usuario.md) y [tres actores humanos](01-analisis-de-sistema/01-actores.md). ACT01 es productor e integrante autorizado según rol; ACT02, visitante o interesado; ACT03, administrador. EXT01 sigue siendo un sistema externo. «Evidencia» enlaza a las tareas de la SPEC, con enlaces al contrato y al plan en el [índice SDD](../specs/README.md).
 
+La [consolidación de la interfaz](05-preparacion-implementacion/36-consolidacion-ux.md) aporta evidencia transversal de navegación para los flujos privados y el catálogo. Los contratos de la matriz conservan su alcance.
+
 | RF | HU asociadas | Actores | Evidencia o alcance pendiente |
 |---|---|---|---|
 | RF01 | HU01, HU22 | ACT01 | [SPEC-01](../specs/SPEC-01-registro-ganado-offline/tasks.md) y [SPEC-04](../specs/SPEC-04-acceso-familiar/tasks.md). Perfil pendiente. |

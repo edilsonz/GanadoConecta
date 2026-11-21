@@ -23,7 +23,7 @@ export function CatalogoPanel({ token }: { token?: string }) {
   }
   const cambiar = (campo: string, valor: string) => setFiltros(f => ({ ...f, [campo]: valor }))
   return <section id="catalogo" className="project-section catalog-section" aria-labelledby="catalogo-titulo">
-    <h2 id="catalogo-titulo">Catálogo público</h2>
+    <h1 id="catalogo-titulo">Catálogo público</h1>
     <details onToggle={e => {
       if (!e.currentTarget.open) return
       void buscar(1)

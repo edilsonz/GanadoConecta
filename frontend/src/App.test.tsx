@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { useEstadoConexion } from './PwaEstado'
@@ -17,6 +17,10 @@ vi.mock('./PwaEstado', () => ({
   AccesoOfflineSeguro: () => <section aria-label="Acceso offline seguro" />,
 }))
 
+vi.mock('./CatalogoPanel', () => ({
+  CatalogoPanel: () => <section aria-label="Catálogo público" />,
+}))
+
 function mockHealth(status = 'UP', ok = true) {
   const fetchMock = vi.fn().mockResolvedValue({ ok, json: async () => ({ status }) })
   vi.stubGlobal('fetch', fetchMock)
@@ -26,17 +30,31 @@ function mockHealth(status = 'UP', ok = true) {
 describe('Inicio de GanadoConecta', () => {
   beforeEach(() => {
     vi.mocked(useEstadoConexion).mockReturnValue(true)
+    window.history.replaceState(null, '', '/')
   })
 
-  it('muestra el inicio y mantiene deshabilitadas las funciones futuras', async () => {
+  it('muestra el inicio público y reserva el espacio de ganadería a una sesión', async () => {
     mockHealth()
     render(<App />)
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Todo conectado.')
-    expect(screen.getByRole('link', { name: 'Mi ganado' })).toHaveAttribute('href', '#mis-animales')
+    expect(screen.queryByRole('link', { name: 'Mi ganadería' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Catálogo público' })).toHaveAttribute('href', '#catalogo')
     expect(screen.getByRole('heading', { name: 'Crea tu cuenta.' })).toBeInTheDocument()
     expect(screen.getByRole('textbox', { name: 'Correo electrónico' })).toBeInTheDocument()
     expect(screen.getByText(/PWA instalable/)).toBeInTheDocument()
     expect(await screen.findByText('Conexión con el servicio disponible')).toBeInTheDocument()
+  })
+
+  it('separa el catálogo del inicio y la cuenta', () => {
+    mockHealth()
+    render(<App />)
+    act(() => {
+      window.history.replaceState(null, '', '#catalogo')
+      window.dispatchEvent(new HashChangeEvent('hashchange'))
+    })
+    expect(screen.getByRole('region', { name: 'Catálogo público' })).toBeVisible()
+    expect(screen.queryByRole('heading', { name: 'Crea tu cuenta.' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Catálogo público' })).toHaveAttribute('aria-current', 'page')
   })
 
   it('representa un fallo de red sin inventar conexión y permite comprobar otra vez', async () => {

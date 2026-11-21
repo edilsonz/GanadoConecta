@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
-import { AnimalesPanel } from './AnimalesPanel'
-import { AccesoFamiliarPanel, AceptarInvitacion } from './AccesoFamiliarPanel'
+import { EspacioGanaderia } from './EspacioGanaderia'
+import { AceptarInvitacion } from './AccesoFamiliarPanel'
 import {
   crearGanaderia,
   ErrorGanaderia,
@@ -32,12 +32,14 @@ export function GanaderiasPanel({ sesion, onSesionInvalida }: GanaderiasPanelPro
   const [ganaderias, setGanaderias] = useState<Ganaderia[]>([])
   const [revision, setRevision] = useState(0)
   const [seleccionada, setSeleccionada] = useState<string | null>(null)
+  const [gestionar, setGestionar] = useState(false)
   const [nombre, setNombre] = useState('')
   const [cargando, setCargando] = useState(false)
   const [creando, setCreando] = useState(false)
   const [mensaje, setMensaje] = useState<string | null>(null)
   const [errorNombre, setErrorNombre] = useState<string | null>(null)
   const envioEnCurso = useRef(false)
+  const ganaderiaActiva = ganaderias.find(item => item.id === seleccionada)
   useProteccionActualizacionPwa(
     'formulario-crear-ganaderia',
     'FORMULARIO',
@@ -94,6 +96,7 @@ export function GanaderiasPanel({ sesion, onSesionInvalida }: GanaderiasPanelPro
         return [...sinDuplicado, creada].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
       })
       setSeleccionada(creada.id)
+      setGestionar(false)
       setNombre('')
       setMensaje('Ganadería creada y seleccionada correctamente.')
     } catch (error) {
@@ -107,8 +110,9 @@ export function GanaderiasPanel({ sesion, onSesionInvalida }: GanaderiasPanelPro
   }
 
   return (
-    <section className="farms-section" id="mis-ganaderias" aria-labelledby="farms-title">
-      <div className="farms-heading">
+    <section className={ganaderiaActiva ? 'farms-section farms-section-active' : 'farms-section'} id="mis-ganaderias"
+      aria-labelledby={ganaderiaActiva ? 'producer-title' : 'farms-title'}>
+      <div className="farms-heading" hidden={Boolean(ganaderiaActiva)}>
         <p className="eyebrow"><span className="small-rule" /> MIS GANADERÍAS</p>
         <h2 id="farms-title">Elige dónde trabajar.</h2>
         <p>Selecciona una ganadería para consultar y registrar sus animales según tu permiso vigente.</p>
@@ -117,7 +121,13 @@ export function GanaderiasPanel({ sesion, onSesionInvalida }: GanaderiasPanelPro
       {!sesion ? (
         <div className="farms-empty"><p>Inicia sesión para crear y consultar tus ganaderías autorizadas.</p></div>
       ) : (
-        <div className="farms-workspace">
+        <>
+        {ganaderiaActiva && <button type="button" className="button button-outline farms-manage"
+          aria-controls="farms-management" aria-expanded={gestionar} onClick={() => setGestionar(!gestionar)}>
+          Gestionar ganaderías
+        </button>}
+        {mensaje && <div className="form-notice farms-manage" role="status">{mensaje}</div>}
+        <div className="farms-workspace" id="farms-management" hidden={Boolean(ganaderiaActiva) && !gestionar}>
           <AceptarInvitacion key={sesion.usuarioId} token={sesion.accessToken}
             onSesionInvalida={onSesionInvalida} actualizar={() => setRevision(a => a + 1)} />
           <form className="farm-create" onSubmit={crear} noValidate aria-busy={creando}>
@@ -142,7 +152,6 @@ export function GanaderiasPanel({ sesion, onSesionInvalida }: GanaderiasPanelPro
             </button>
           </form>
 
-          {mensaje && <div className="form-notice" role="status">{mensaje}</div>}
           {cargando ? (
             <p className="farms-loading" role="status">Consultando tus ganaderías…</p>
           ) : ganaderias.length === 0 ? (
@@ -155,7 +164,7 @@ export function GanaderiasPanel({ sesion, onSesionInvalida }: GanaderiasPanelPro
                   type="button"
                   key={ganaderia.id}
                   aria-pressed={seleccionada === ganaderia.id}
-                  onClick={() => setSeleccionada(ganaderia.id)}
+                  onClick={() => { setSeleccionada(ganaderia.id); setGestionar(false) }}
                 >
                   <span><strong>{ganaderia.nombre}</strong><small>{etiquetaRol(ganaderia.rol)}</small></span>
                   <span aria-hidden="true">{seleccionada === ganaderia.id ? '✓' : '→'}</span>
@@ -163,23 +172,12 @@ export function GanaderiasPanel({ sesion, onSesionInvalida }: GanaderiasPanelPro
               ))}
             </div>
           )}
-          {seleccionada && (
-            <p className="farm-selection" role="status">
-              Ganadería seleccionada. El servidor volverá a verificar tu membresía antes de cada operación.
-            </p>
-          )}
         </div>
+        </>
       )}
-      {sesion && seleccionada && (() => {
-        const ganaderia = ganaderias.find(item => item.id === seleccionada)
-        return ganaderia
-          ? <div className="farm-selected-workspace" key={`${sesion.usuarioId}-${ganaderia.id}`}>
-              {ganaderia.rol === 'PROPIETARIO' && <AccesoFamiliarPanel ganaderiaId={ganaderia.id}
-                token={sesion.accessToken} onSesionInvalida={onSesionInvalida} />}
-              <AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={onSesionInvalida} />
-            </div>
-          : null
-      })()}
+      {sesion && ganaderiaActiva && <EspacioGanaderia key={`${sesion.usuarioId}-${ganaderiaActiva.id}`}
+        ganaderia={ganaderiaActiva} ganaderias={ganaderias} sesion={sesion}
+        onSeleccionar={setSeleccionada} onSesionInvalida={onSesionInvalida} />}
     </section>
   )
 }
