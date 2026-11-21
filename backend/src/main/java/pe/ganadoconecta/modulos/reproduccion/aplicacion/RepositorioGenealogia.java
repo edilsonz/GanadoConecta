@@ -1,0 +1,1 @@
+package pe.ganadoconecta.modulos.reproduccion.aplicacion;import java.util.UUID;public interface RepositorioGenealogia{ResultadoParentesco corregir(SolicitudParentesco s,UUID actor,byte[]huella,java.time.Instant ahora);GenealogiaAnimal consultar(UUID ganaderia,UUID animal);}

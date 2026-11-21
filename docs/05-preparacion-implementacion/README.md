@@ -42,6 +42,8 @@
 > requería generalizar el motor existente; la
 > [sincronización sanitaria offline](32-sincronizacion-sanitaria-offline.md)
 > completa ese contrato con el mismo orquestador, leases y comprobantes.
+> La [evidencia de reproducción, partos y genealogía](33-reproduccion-partos-genealogia.md)
+> documenta los tres incrementos privados, idempotentes y aislados por ganadería.
 > Background Sync, caché privada autorizada y E2E offline integral
 > continúan pendientes. Los estados de propuesta siguientes describen la
 > preparación arquitectónica original, no acreditan implementación de SPEC-01.

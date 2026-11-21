@@ -7,4 +7,7 @@ import java.time.Clock;import org.springframework.context.annotation.*;import or
  @Bean RepositorioPartos repositorioPartos(JdbcTemplate j){return new RepositorioPartosPostgres(j);}
  @Bean RegistrarParto registrarParto(UnidadDeTrabajo u,AutorizarAccesoGanaderiaTransaccional a,RepositorioPartos r,Clock c){return new RegistrarParto(u,a,r,c);}
  @Bean ListarPartos listarPartos(AutorizarLecturaGanaderia a,RepositorioPartos r){return new ListarPartos(a,r);}
+ @Bean RepositorioGenealogia repositorioGenealogia(JdbcTemplate j){return new RepositorioGenealogiaPostgres(j);}
+ @Bean ConsultarGenealogia consultarGenealogia(AutorizarLecturaGanaderia a,RepositorioGenealogia r){return new ConsultarGenealogia(a,r);}
+ @Bean CorregirParentesco corregirParentesco(UnidadDeTrabajo u,AutorizarAccesoGanaderiaTransaccional a,RepositorioGenealogia r,Clock c){return new CorregirParentesco(u,a,r,c);}
 }

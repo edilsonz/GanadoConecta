@@ -1828,3 +1828,10 @@ footer p {
 .agenda-item.state-vencida { border-left-color:#a06145 }
 .agenda-item.state-completada { opacity:.75 }
 @media(max-width:600px){.agenda-item{align-items:stretch;flex-direction:column}.health-agenda{padding:16px}}
+.reproduction-panel,.births-panel,.genealogy-panel { margin-top:24px; padding-top:20px; border-top:1px solid #c4d6bb; min-width:0 }
+.reproduction-panel ol,.births-panel ol,.genealogy-panel ul { padding-left:20px; overflow-wrap:anywhere }
+.reproduction-panel li,.births-panel li,.genealogy-panel li { margin:12px 0 }
+.genealogy-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px }
+.genealogy-grid article { padding:16px; background:#f6f4df; border-radius:12px; min-width:0 }
+.genealogy-grid li { display:flex; flex-direction:column; gap:2px }
+@media(max-width:600px){.genealogy-grid{grid-template-columns:minmax(0,1fr)}}

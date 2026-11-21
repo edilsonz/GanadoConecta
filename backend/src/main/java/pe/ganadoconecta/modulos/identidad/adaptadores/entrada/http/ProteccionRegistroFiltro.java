@@ -67,11 +67,15 @@ public final class ProteccionRegistroFiltro extends OncePerRequestFilter {
         boolean partoProtegido = "POST".equals(request.getMethod())
                 && request.getRequestURI().matches(
                         "^/api/v1/ganaderias/[^/]+/animales/[^/]+/partos$");
+        boolean genealogiaProtegida = "PUT".equals(request.getMethod())
+                && request.getRequestURI().matches(
+                        "^/api/v1/ganaderias/[^/]+/animales/[^/]+/genealogia/(MADRE|PADRE)$");
         boolean agendaProtegida = "POST".equals(request.getMethod())
                 && request.getRequestURI().matches("^/api/v1/ganaderias/[^/]+/agenda-sanitaria(?:/[^/]+/completar)?$");
         return !postProtegido && !altaAnimalProtegida && !revocacionProtegida
                 && !vacunacionProtegida && !eventoSanitarioProtegido
-                && !eventoReproductivoProtegido && !partoProtegido && !agendaProtegida;
+                && !eventoReproductivoProtegido && !partoProtegido
+                && !genealogiaProtegida && !agendaProtegida;
     }
 
     @Override

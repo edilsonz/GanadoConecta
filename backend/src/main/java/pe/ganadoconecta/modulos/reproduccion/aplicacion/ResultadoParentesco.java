@@ -1,0 +1,1 @@
+package pe.ganadoconecta.modulos.reproduccion.aplicacion;import java.time.Instant;import java.util.UUID;public record ResultadoParentesco(UUID operationId,UUID animalId,String resultado,Instant confirmadoEn){}

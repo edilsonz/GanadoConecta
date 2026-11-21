@@ -4,6 +4,7 @@ import { HistorialSanitarioPanel } from './HistorialSanitarioPanel'
 import { AgendaSanitariaPanel } from './AgendaSanitariaPanel'
 import { ReproduccionPanel } from './ReproduccionPanel'
 import { PartosPanel } from './PartosPanel'
+import { GenealogiaPanel } from './GenealogiaPanel'
 import {
   ejecutarConProteccionActualizacionPwa,
   useProteccionActualizacionPwa,
@@ -1174,6 +1175,9 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
                 animales={animales} accessToken={sesion.accessToken}
                 puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
               <PartosPanel ganaderiaId={ganaderia.id} madre={ficha}
+                animales={animales} accessToken={sesion.accessToken}
+                puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
+              <GenealogiaPanel ganaderiaId={ganaderia.id} animal={ficha}
                 animales={animales} accessToken={sesion.accessToken}
                 puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
             </>

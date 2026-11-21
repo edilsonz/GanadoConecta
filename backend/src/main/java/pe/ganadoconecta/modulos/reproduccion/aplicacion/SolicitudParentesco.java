@@ -1,0 +1,1 @@
+package pe.ganadoconecta.modulos.reproduccion.aplicacion;import java.util.UUID;import pe.ganadoconecta.modulos.reproduccion.dominio.TipoParentesco;public record SolicitudParentesco(UUID ganaderiaId,UUID animalId,TipoParentesco tipo,UUID progenitorAnimalId,UUID operationId,int schemaVersion){}
