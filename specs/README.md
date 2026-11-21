@@ -16,16 +16,13 @@ nuevas especificaciones. Reorganizar un borrador no implica aprobarlo.
 | BASE-01 | [Estructura ejecutable](BASE-01-estructura-ejecutable/spec.md) | [Plan](BASE-01-estructura-ejecutable/plan.md) | [Tareas](BASE-01-estructura-ejecutable/tasks.md) | Base y conexión PostgreSQL/JDBC verificadas. No completa SPEC-01 |
 | SPEC-01 | [Registro de ganado y sincronización](SPEC-01-registro-ganado-offline/spec.md) | [Plan](SPEC-01-registro-ganado-offline/plan.md) | [Tareas](SPEC-01-registro-ganado-offline/tasks.md) | Aprobada — Implementación en curso; flujo online, T11 y contexto local inicial T12/T15 verificados; integración, PWA y sincronización pendientes |
 
-RF17–RF22 y AC09 ya están integrados en la documentación base. La SPEC-01
-está aprobada documentalmente por el responsable el 16 de noviembre de 2026,
-incluida la rotación de renovación. La implementación es incremental y no
-completa todavía el alcance offline; el alta real de familiares y las
-invitaciones se detallan en [SPEC-04](SPEC-04-acceso-familiar/spec.md).
-
-| Identificador | Especificación | Plan | Tareas | Estado |
-|---|---|---|---|---|
 | SPEC-04 | [Acceso familiar](SPEC-04-acceso-familiar/spec.md) | [Plan](SPEC-04-acceso-familiar/plan.md) | [Tareas](SPEC-04-acceso-familiar/tasks.md) | Invitaciones manuales y administración de colaboradores. Transferencia de titularidad pendiente. |
 | SPEC-05 | [Control de peso](SPEC-05-historial-peso/spec.md) | [Plan](SPEC-05-historial-peso/plan.md) | [Tareas](SPEC-05-historial-peso/tasks.md) | Registro e historial online con gráfico. Validación manual pendiente. |
+| SPEC-06 | [Alta masiva](SPEC-06-alta-masiva/spec.md) | [Plan](SPEC-06-alta-masiva/plan.md) | [Tareas](SPEC-06-alta-masiva/tasks.md) | Alta online por tabla. Validación manual pendiente. |
+
+RF17–RF22 y AC09 forman parte de la documentación base. La SPEC-01 fue
+aprobada el 16 de noviembre de 2026, incluida la rotación de renovación.
+Su alcance offline sigue en implementación incremental.
 
 Las rutas entre comillas invertidas en documentos y prompts se interpretan
 desde la raíz del repositorio. Los enlaces Markdown se resuelven desde el

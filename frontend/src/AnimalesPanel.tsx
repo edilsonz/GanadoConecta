@@ -6,6 +6,7 @@ import { ReproduccionPanel } from './ReproduccionPanel'
 import { PartosPanel } from './PartosPanel'
 import { GenealogiaPanel } from './GenealogiaPanel'
 import { PesosPanel } from './PesosPanel'
+import { AltaMasivaPanel } from './AltaMasivaPanel'
 import {
   ejecutarConProteccionActualizacionPwa,
   useProteccionActualizacionPwa,
@@ -56,7 +57,7 @@ type AnimalesPanelProps = {
   onSesionInvalida: () => void
 }
 
-type FormularioAnimal = {
+export type FormularioAnimal = {
   sexo: '' | SexoAnimal
   nombre: string
   areteFrente: string
@@ -1135,6 +1136,11 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida }: AnimalesP
           )}
         </div>
       )}
+
+      {puedeRegistrar && <AltaMasivaPanel ganaderiaId={ganaderia.id} token={sesion.accessToken}
+        conectado={!navegadorSinConexion} inicial={formularioInicial} validar={validarFormulario}
+        preparar={crearSolicitud} categorias={etiquetasCategoria} onSesionInvalida={onSesionInvalida}
+        alConfirmar={() => { void cargarPrimeraPagina().catch(() => undefined) }} />}
 
       {(cargandoFicha || ficha) && (
         <div className="animal-detail" aria-live="polite">

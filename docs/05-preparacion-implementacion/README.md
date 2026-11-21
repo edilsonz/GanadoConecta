@@ -48,6 +48,8 @@
 > de acceso familiar, invitaciones y auditoría de membresías.
 > [SPEC-05](../../specs/SPEC-05-historial-peso/tasks.md) registra la evidencia
 > del control de peso y el historial productivo parcial.
+> [SPEC-06](../../specs/SPEC-06-alta-masiva/tasks.md) registra la evidencia
+> de alta masiva online con confirmación por fila.
 > Background Sync, caché privada autorizada y E2E offline integral
 > continúan pendientes. Los estados de propuesta siguientes describen la
 > preparación arquitectónica original, no acreditan implementación de SPEC-01.
