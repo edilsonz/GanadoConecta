@@ -1,0 +1,25 @@
+{
+  "fecha": "2026-11-21",
+  "ejecucion": "Chrome headless por HTTPS con PostgreSQL aislado",
+  "preparacion": "aprobada",
+  "aprobadas": 4,
+  "fallidas": 0,
+  "recorridos": [
+    {
+      "prueba": "SPEC-07",
+      "resultado": "aprobada"
+    },
+    {
+      "prueba": "SPEC-08",
+      "resultado": "aprobada"
+    },
+    {
+      "prueba": "SPEC-09",
+      "resultado": "aprobada"
+    },
+    {
+      "prueba": "UX/UI",
+      "resultado": "aprobada"
+    }
+  ]
+}
