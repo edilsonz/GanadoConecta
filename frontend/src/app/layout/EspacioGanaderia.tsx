@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AccesoFamiliarPanel } from '../../features/ganaderias/AccesoFamiliarPanel'
 import { AnimalesPanel } from '../../features/ganado/AnimalesPanel'
+import { AnalisisPanel } from '../../features/analisis/AnalisisPanel'
 import { ReportesPanel } from '../../features/reportes/ReportesPanel'
 import type { Ganaderia, RolGanaderia } from '../../features/ganaderias/ganaderiasApi'
 import type { SesionActiva } from '../../features/cuenta/sesionApi'
@@ -14,6 +15,7 @@ const vistas = {
   produccion: 'Producción',
   calendario: 'Calendario',
   reportes: 'Reportes',
+  analisis: 'Análisis y alertas',
   anuncios: 'Anuncios',
   familia: 'Acceso familiar',
 } as const
@@ -37,6 +39,7 @@ export function EspacioGanaderia({ ganaderia, ganaderias, sesion, conectado, onS
   const disponibles = (Object.keys(vistas) as VistaGanaderia[]).filter(id =>
     propietario || (id !== 'familia' && id !== 'anuncios'))
   const vistaActual = disponibles.includes(vista) ? vista : 'inicio'
+  const vistaPropia = vistaActual === 'reportes' || vistaActual === 'analisis'
 
   function navegar(destino: VistaGanaderia) {
     if (destino === 'familia') setFamiliaVisitada(true)
@@ -76,14 +79,19 @@ export function EspacioGanaderia({ ganaderia, ganaderias, sesion, conectado, onS
               <button type="button" className="button button-outline" onClick={() => navegar('calendario')}>Ver calendario</button>
             </div>
           </section>
-          <div hidden={vistaActual === 'inicio' || vistaActual === 'familia' || vistaActual === 'reportes'}>
-            <AnimalesPanel ganaderia={ganaderia} sesion={sesion} vista={vistaActual === 'reportes' ? 'inicio' : vistaActual}
+          <div hidden={vistaActual === 'inicio' || vistaActual === 'familia' || vistaPropia}>
+            <AnimalesPanel ganaderia={ganaderia} sesion={sesion} vista={vistaPropia ? 'inicio' : vistaActual}
               onSesionInvalida={onSesionInvalida} onRolEnLineaChange={setRolEnLinea} />
           </div>
           {vistaActual === 'reportes' && (conectado
             ? <ReportesPanel key={ganaderia.id} ganaderiaId={ganaderia.id}
                 token={sesion.accessToken} onSesionInvalida={onSesionInvalida} />
             : <section className="producer-home"><h2>Reportes</h2>
+                <p>Recupera la conexión para consultar los registros confirmados.</p></section>)}
+          {vistaActual === 'analisis' && (conectado
+            ? <AnalisisPanel key={ganaderia.id} ganaderiaId={ganaderia.id}
+                token={sesion.accessToken} onSesionInvalida={onSesionInvalida} />
+            : <section className="producer-home"><h2>Análisis y alertas</h2>
                 <p>Recupera la conexión para consultar los registros confirmados.</p></section>)}
           {propietario && familiaVisitada && <div hidden={vistaActual !== 'familia'}>
             <AccesoFamiliarPanel ganaderiaId={ganaderia.id}

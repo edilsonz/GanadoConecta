@@ -13,8 +13,8 @@ La [consolidación de la interfaz](05-preparacion-implementacion/36-consolidacio
 | RF05 | HU05, HU19 | ACT01 | [SPEC-03](../specs/SPEC-03-reproduccion-partos-genealogia/tasks.md). Cálculo automático de parto pendiente. |
 | RF06 | HU06 | ACT01 | [SPEC-05](../specs/SPEC-05-historial-peso/tasks.md). Otros indicadores pendientes. |
 | RF07 | HU07 | ACT01 | [SPEC-07](../specs/SPEC-07-calendario-campanas/tasks.md). Calendario y avisos en pantalla; entrega externa pendiente. |
-| RF08 | HU08, HU20 | ACT01 | Análisis histórico pendiente. |
-| RF09 | HU09 | ACT01 | Alertas por tendencias pendientes. |
+| RF08 | HU08, HU20 | ACT01 | [SPEC-12](../specs/SPEC-12-analisis-alertas-asistente/tasks.md). Análisis descriptivo de registros confirmados, con procedencia y fechas. Inferencia mediante modelo pendiente. |
+| RF09 | HU09 | ACT01 | [SPEC-12](../specs/SPEC-12-analisis-alertas-asistente/tasks.md). Avisos internos de hoy y vencidos a partir de la agenda. Criterios por tendencias pendientes. |
 | RF10 | HU10 | ACT01 | [SPEC-11](../specs/SPEC-11-reportes-ganaderos/tasks.md). Reportes sanitarios, reproductivos y de peso por ganadería con autorización y fechas inclusivas. |
 | RF11 | HU11 | ACT03 | [SPEC-10](../specs/SPEC-10-administracion-usuarios/tasks.md). Consultas administrativas, estadísticas y auditoría. Acciones sobre cuentas pendientes de aprobación. |
 | RF12 | HU12 | ACT01 | [SPEC-08](../specs/SPEC-08-catalogo-anuncios/tasks.md). Almacenamiento local de desarrollo. |
@@ -24,7 +24,7 @@ La [consolidación de la interfaz](05-preparacion-implementacion/36-consolidacio
 | RF16 | HU16, HU17 | ACT01, ACT02, ACT03 | [SPEC-09](../specs/SPEC-09-ventas-moderacion/tasks.md). Recepción deshabilitada mientras se aprueba la política; revisión autorizada y retiro auditado. |
 | RF17 | HU18 | ACT01 | [SPEC-01](../specs/SPEC-01-registro-ganado-offline/tasks.md), [sincronización sanitaria](05-preparacion-implementacion/32-sincronizacion-sanitaria-offline.md). Alcance offline parcial. |
 | RF18 | HU19, HU12 | ACT01, ACT02 | [SPEC-03](../specs/SPEC-03-reproduccion-partos-genealogia/tasks.md) y [SPEC-08](../specs/SPEC-08-catalogo-anuncios/tasks.md). Proyección pública limitada y optativa. |
-| RF19 | HU20 | ACT01 | Asistente conversacional pendiente. |
+| RF19 | HU20 | ACT01 | [SPEC-12](../specs/SPEC-12-analisis-alertas-asistente/plan.md#frontera-de-inferencia-prevista). Proyección autorizada disponible para análisis estructurado. Modelo, corpus y respuesta conversacional pendientes. |
 | RF20 | HU21 | ACT01 | [SPEC-01](../specs/SPEC-01-registro-ganado-offline/tasks.md) y [SPEC-06](../specs/SPEC-06-alta-masiva/tasks.md). |
 | RF21 | HU22 | ACT01 | [SPEC-04](../specs/SPEC-04-acceso-familiar/tasks.md) y [SPEC-01](../specs/SPEC-01-registro-ganado-offline/tasks.md). Acceso vigente en servidor y al sincronizar. |
 | RF22 | HU23 | ACT01 | [SPEC-02](../specs/SPEC-02-seguimiento-sanitario/tasks.md) y [SPEC-07](../specs/SPEC-07-calendario-campanas/tasks.md). |

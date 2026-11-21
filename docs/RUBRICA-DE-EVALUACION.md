@@ -29,3 +29,8 @@ con casos de uso y adaptadores, contratos SDD, pruebas dirigidas, Chrome por HTT
 listado por cursor y agregaciones SQL con resultados acotados. Las mediciones
 con carga representativa siguen pendientes. Para el criterio 14, los cambios
 y V17 se registran en `develop`. La publicación remota se verifica por separado.
+
+La [evidencia de SPEC-12](../specs/SPEC-12-analisis-alertas-asistente/tasks.md#evidencia-del-incremento)
+aporta a los criterios 4–7 con contratos SDD, pruebas de integración aisladas
+y navegación por HTTPS a tres anchos. La evidencia corresponde a consultas
+descriptivas y reglas de agenda. Quedan pendientes las pruebas de inferencia.
