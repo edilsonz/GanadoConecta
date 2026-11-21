@@ -60,6 +60,8 @@ public class SeguridadConfiguracion {
                         .requestMatchers(HttpMethod.GET, "/api/v1/catalogo", "/api/v1/catalogo/*/fotos/*",
                                 "/api/v1/catalogo/reportes-disponibles").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/moderacion/reportes").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/administracion/acceso",
+                                "/api/v1/administracion/usuarios", "/api/v1/administracion/estadisticas").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/ganaderias/*/animales/*/venta",
                                 "/api/v1/catalogo/*/reportes", "/api/v1/moderacion/reportes/*/revision").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/ganaderias/*/animales/*/anuncios").authenticated()

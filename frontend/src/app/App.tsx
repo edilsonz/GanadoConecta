@@ -1,10 +1,12 @@
-import { useCallback, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import { ApiStatus } from './ApiStatus'
 import { AccesoCuenta } from '../features/cuenta/AccesoCuenta'
 import { GanaderiasPanel } from '../features/ganaderias/GanaderiasPanel'
 import { RegistroCuenta } from '../features/cuenta/RegistroCuenta'
 import { CatalogoPanel } from '../features/catalogo/CatalogoPanel'
 import { ModeracionPanel } from '../features/catalogo/ModeracionPanel'
+import { AdministracionPanel } from '../features/administracion/AdministracionPanel'
+import { consultarPermisoAdministrativo } from '../features/administracion/administracionApi'
 import type { SesionActiva } from '../features/cuenta/sesionApi'
 import { bloquearContextosOfflineUsuario } from '../offline/registroAnimalesOffline'
 import {
@@ -18,16 +20,30 @@ function observarNavegacion(cambio: () => void) {
   return () => window.removeEventListener('hashchange', cambio)
 }
 
-const enCatalogo = () => window.location.hash === '#catalogo'
+const vistaActual = () => window.location.hash
 
 export default function App() {
   const [sesion, setSesion] = useState<SesionActiva | null>(null)
   const conectado = useEstadoConexion()
-  const mostrarCatalogo = useSyncExternalStore(observarNavegacion, enCatalogo)
+  const vista = useSyncExternalStore(observarNavegacion, vistaActual)
+  const mostrarCatalogo = vista === '#catalogo'
+  const token = sesion?.accessToken
+  const [permisoAdministracion, setPermisoAdministracion] = useState<string>()
+  const puedeAdministrar = conectado && Boolean(token && permisoAdministracion === token)
+  const mostrarAdministracion = vista === '#administracion' && puedeAdministrar
+  const retirarPermiso = useCallback(() => setPermisoAdministracion(undefined), [])
   const invalidarSesion = useCallback(() => setSesion(actual => {
     if (actual) void bloquearContextosOfflineUsuario(actual.usuarioId).catch(() => undefined)
     return null
   }), [])
+
+  useEffect(() => {
+    let vigente = true
+    if (conectado && token) void consultarPermisoAdministrativo(token).then(permitido => {
+      if (vigente) setPermisoAdministracion(permitido ? token : undefined)
+    }).catch(() => { if (vigente) retirarPermiso() })
+    return () => { vigente = false }
+  }, [token, conectado, retirarPermiso])
 
   return (
     <>
@@ -38,19 +54,21 @@ export default function App() {
           <span>Ganado<span className="brand-light">Conecta</span></span>
         </a>
         <nav aria-label="Navegación principal">
-          <a className={mostrarCatalogo ? undefined : 'nav-active'} href={sesion ? '#mis-ganaderias' : '#inicio'}
-            aria-current={mostrarCatalogo ? undefined : 'page'}>{sesion ? 'Mi ganadería' : 'Inicio'}</a>
+          <a className={mostrarCatalogo || mostrarAdministracion ? undefined : 'nav-active'} href={sesion ? '#mis-ganaderias' : '#inicio'}
+            aria-current={mostrarCatalogo || mostrarAdministracion ? undefined : 'page'}>{sesion ? 'Mi ganadería' : 'Inicio'}</a>
           <a href="#iniciar-sesion">{sesion ? 'Mi cuenta' : 'Iniciar sesión'}</a>
           {!sesion && conectado && <a href="#crear-cuenta">Crear cuenta</a>}
           <a className={mostrarCatalogo ? 'nav-active' : undefined}
             aria-current={mostrarCatalogo ? 'page' : undefined} href="#catalogo">Catálogo público</a>
+          {puedeAdministrar && <a className={mostrarAdministracion ? 'nav-active' : undefined}
+            aria-current={mostrarAdministracion ? 'page' : undefined} href="#administracion">Administración</a>}
         </nav>
       </header>
 
       <PwaEstado conectado={conectado} sesionActiva={Boolean(sesion)} />
 
       <main id="contenido">
-        <div hidden={mostrarCatalogo}>
+        <div hidden={mostrarCatalogo || mostrarAdministracion}>
         {!sesion && <section className="hero" id="inicio" aria-labelledby="hero-title">
           <div className="hero-copy">
             <p className="eyebrow"><span className="small-rule" /> CERCA DE TU GANADERÍA</p>
@@ -91,10 +109,12 @@ export default function App() {
           </>
         )}
 
-        {conectado && sesion &&
+        {conectado && sesion && !mostrarAdministracion &&
           <ModeracionPanel key={sesion.usuarioId} token={sesion.accessToken} onSesionInvalida={invalidarSesion} />}
         {!sesion && <ApiStatus />}
         </div>
+        {mostrarAdministracion && sesion && <AdministracionPanel key={sesion.usuarioId}
+          token={sesion.accessToken} onSesionInvalida={invalidarSesion} onPermisoPerdido={retirarPermiso} />}
         {mostrarCatalogo && (conectado
           ? <CatalogoPanel token={sesion?.accessToken} />
           : <section className="project-section" id="catalogo"><h1>Catálogo público</h1>

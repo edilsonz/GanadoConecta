@@ -1,0 +1,36 @@
+.administracion-indicadores,
+.administracion-filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.administracion-filtros label { margin: 0; }
+
+.administracion-indicadores > div,
+.administracion-lista li {
+  padding: 14px;
+  background: #eaf1e7;
+  border: 1px solid #cfddd0;
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+
+.administracion-indicadores dd {
+  margin: 0;
+  color: #164839;
+  font-size: 1.55rem;
+  font-weight: 650;
+}
+
+.administracion-lista { display: grid; gap: 8px; padding: 0; list-style: none; }
+.administracion-lista li {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 4px 12px;
+}
+
+@media (max-width: 540px) {
+  .administracion-lista li { grid-template-columns: minmax(0, 1fr); }
+}

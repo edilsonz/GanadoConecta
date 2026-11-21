@@ -16,7 +16,7 @@ La [consolidación de la interfaz](05-preparacion-implementacion/36-consolidacio
 | RF08 | HU08, HU20 | ACT01 | Análisis histórico pendiente. |
 | RF09 | HU09 | ACT01 | Alertas por tendencias pendientes. |
 | RF10 | HU10 | ACT01 | Reportes consolidados pendientes. |
-| RF11 | HU11 | ACT03 | Gestión de usuarios y estadísticas pendientes. La moderación cubre RF16. |
+| RF11 | HU11 | ACT03 | [SPEC-10](../specs/SPEC-10-administracion-usuarios/tasks.md). Consultas administrativas, estadísticas y auditoría. Acciones sobre cuentas pendientes de aprobación. |
 | RF12 | HU12 | ACT01 | [SPEC-08](../specs/SPEC-08-catalogo-anuncios/tasks.md). Almacenamiento local de desarrollo. |
 | RF13 | HU13 | ACT02 | [SPEC-08](../specs/SPEC-08-catalogo-anuncios/tasks.md). Filtros y paginación públicos. |
 | RF14 | HU14 | ACT01 | [SPEC-08](../specs/SPEC-08-catalogo-anuncios/tasks.md). Publicar, pausar y retirar. |

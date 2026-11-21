@@ -11,7 +11,7 @@ Los [requisitos originales](01-analisis-de-sistema/03-requisitos-funcionales.md)
 | 5. Reproducción, partos y genealogía | Eventos, gestaciones informadas, partos, parentescos y auditoría | Aprobar la regla de cálculo de fecha probable de parto antes de implementarla. La fecha manual sigue disponible. |
 | 6. Peso e historial productivo | Peso histórico en kg, variación y gráfico | Definir los demás indicadores productivos con el responsable. |
 | 7. Catálogo, anuncios y ventas | Catálogo público, anuncios, fotos autorizadas, proyección acotada de genealogía, venta y moderación | Aprobar quién puede reportar, proveedor de fotos, caché e invalidación. |
-| 8. Administración de usuarios | Permiso administrativo específico de moderación | Gestión de cuentas, información general y estadísticas administrativas. |
+| 8. Administración de usuarios | Permiso de plataforma, consultas paginadas, estadísticas y auditoría. Moderación conserva un permiso independiente. | Aprobar alta/revocación administrativa y procedimientos para cambios sobre cuentas. |
 | 9. Reportes y estadísticas | Historiales de ficha como fuente | Reportes sanitarios, reproductivos y productivos. |
 | 10. Inteligencia artificial y alertas | Alcance y arquitectura definidos | Análisis histórico, alertas por tendencias e IA conversacional sustentada en fuentes. |
 
