@@ -7,7 +7,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import {
   CONFIGURACION_PRECACHE,
   MANIFEST_PWA,
-} from './src/pwaContrato.ts'
+} from './src/pwa/pwaContrato.ts'
 
 export default defineConfig(({ mode }) => {
   const environment = loadEnv(mode, fileURLToPath(new URL('..', import.meta.url)), '')

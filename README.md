@@ -98,6 +98,23 @@ Las herramientas de pruebas se revisarán y documentarán antes de implementarla
 Las carpetas se crearán cuando tengan contenido real; la infraestructura
 de despliegue de infra/ se distingue de los adaptadores internos del backend.
 
+En `frontend/src/`, `app/` contiene la composición y el layout, y
+`features/` agrupa pantallas, contratos TypeScript, clientes API, estilos
+propios y pruebas por funcionalidad. `offline/` reúne IndexedDB,
+autorización local y sincronización. `pwa/` contiene el registro y las
+actualizaciones de la PWA. El transporte HTTP compartido está en
+`shared/api/`, los estilos comunes en `estilos/` y las utilidades de
+pruebas en `test/`. Los recursos de instalación permanecen en `frontend/public/`.
+
+El espacio privado se abre al elegir una ganadería. La navegación lateral
+en escritorio se convierte en el selector «Ir a sección» en pantallas
+estrechas. «Catálogo público» se abre desde el encabezado sin cambiar la
+ganadería activa. Consulta la [evidencia de navegación](docs/05-preparacion-implementacion/36-consolidacion-ux.md).
+
+Guarda las fotografías privadas fuera del repositorio y configura
+`GANADOCONECTA_FOTOS_DIRECTORIO` como una ruta absoluta. Usa rutas externas
+para las claves RSA y los certificados locales.
+
 ## Estado del proyecto
 
 Primera base ejecutable de frontend y backend disponible para revisión.

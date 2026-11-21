@@ -12,5 +12,5 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["vite.config.ts", "src/pwaContrato.ts"]
+  "include": ["vite.config.ts", "src/pwa/pwaContrato.ts"]
 }

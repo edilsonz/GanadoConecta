@@ -10,5 +10,6 @@ El cambio reutiliza la verificación por ganadería, los formularios y el sincro
 | Limpieza y navegación | 50 pruebas dirigidas de ganado, alta masiva y agenda. 60 de inicio, selección, animales, pestañas, catálogo y moderación. 7 de cuenta y sesión. Cada ejecución finalizó sin fallos. |
 | Chrome headless | Recorrido sintético a 360, 768 y 1440 px. Selección de ganadería, seis pestañas de ficha, secciones productivas, calendario, entrada de acceso familiar y catálogo separado. El formulario de alta conservó su borrador al regresar. El ancho de desplazamiento coincidió con el viewport en las tres ejecuciones. |
 | Compilación | TypeScript correcto. Vite generó el manifiesto y el service worker PWA. |
+| Organización interna | 233 pruebas frontend en 34 archivos, sin fallos. TypeScript y build PWA correctos tras mover módulos y pruebas, actualizar imports y separar estilos. |
 
 El navegador usó respuestas controladas de la API y un perfil aislado. Quedan por ejecutar la prueba manual HTTPS integrada, una revisión con usuarios y las mediciones de carga. Ver [rúbrica](../RUBRICA-DE-EVALUACION.md) y [trazabilidad funcional](../MATRIZ-DE-TRAZABILIDAD.md).
