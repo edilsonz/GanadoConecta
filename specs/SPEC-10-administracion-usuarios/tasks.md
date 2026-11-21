@@ -4,6 +4,7 @@
 - [x] CA10-02 Consultas y pantalla independiente.
 - [x] CA10-03 Auditoría y enlace a moderación.
 - [x] Pruebas dirigidas. 14 pruebas Java contra PostgreSQL 17.12 aislado con Flyway V17 (3 de administración, 7 de esquema y 4 de catálogo/moderación). 12 pruebas React y TypeScript sin fallos. [Validación conjunta en Chrome](../SPEC-11-reportes-ganaderos/tasks.md#evidencia-conjunta).
+- [x] [Validación funcional final en Chrome](../../tests/e2e/evidencia/validacion-spec-10-11.md). Paginación, filtros, totales y auditoría contrastados con PostgreSQL. Permisos de plataforma y moderación verificados por separado.
 
 Para un ensayo aislado, registra una cuenta sintética, localiza su UUID en
 la base de pruebas y habilita su fila en `identidad.permiso_administracion`.

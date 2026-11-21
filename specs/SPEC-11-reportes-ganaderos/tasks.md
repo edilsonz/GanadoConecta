@@ -4,6 +4,7 @@
 - [x] CA11-02 Autorización y aislamiento.
 - [x] CA11-03 Vista responsiva y gráfica/tabla de pesajes.
 - [x] Pruebas dirigidas y evidencia.
+- [x] [Validación funcional final en Chrome](../../tests/e2e/evidencia/validacion-spec-10-11.md). Límites de fechas, conteos, aislamiento, revocación, gráfica y estados vacíos comprobados con datos sintéticos y PostgreSQL.
 
 ## Evidencia conjunta
 
