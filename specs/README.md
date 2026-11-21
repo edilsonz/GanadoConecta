@@ -20,7 +20,11 @@ RF17–RF22 y AC09 ya están integrados en la documentación base. La SPEC-01
 está aprobada documentalmente por el responsable el 16 de noviembre de 2026,
 incluida la rotación de renovación. La implementación es incremental y no
 completa todavía el alcance offline; el alta real de familiares y las
-invitaciones necesitan otra SPEC.
+invitaciones se detallan en [SPEC-04](SPEC-04-acceso-familiar/spec.md).
+
+| Identificador | Especificación | Plan | Tareas | Estado |
+|---|---|---|---|---|
+| SPEC-04 | [Acceso familiar](SPEC-04-acceso-familiar/spec.md) | [Plan](SPEC-04-acceso-familiar/plan.md) | [Tareas](SPEC-04-acceso-familiar/tasks.md) | Invitaciones manuales y administración de colaboradores. Transferencia de titularidad pendiente. |
 
 Las rutas entre comillas invertidas en documentos y prompts se interpretan
 desde la raíz del repositorio. Los enlaces Markdown se resuelven desde el

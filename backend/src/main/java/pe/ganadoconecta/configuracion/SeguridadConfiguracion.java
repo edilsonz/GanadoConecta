@@ -64,6 +64,13 @@ public class SeguridadConfiguracion {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/ganaderias").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/ganaderias/*/familia").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/invitaciones/aceptar",
+                                "/api/v1/ganaderias/*/familia/invitaciones").authenticated()
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/v1/ganaderias/*/familia/invitaciones/*").authenticated()
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/v1/ganaderias/*/familia/integrantes/*").authenticated()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/ganaderias/*/acceso").authenticated()
                         .requestMatchers(HttpMethod.DELETE,

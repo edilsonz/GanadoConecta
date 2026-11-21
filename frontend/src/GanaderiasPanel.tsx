@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import { AnimalesPanel } from './AnimalesPanel'
+import { AccesoFamiliarPanel, AceptarInvitacion } from './AccesoFamiliarPanel'
 import {
   crearGanaderia,
   ErrorGanaderia,
@@ -29,6 +30,7 @@ function etiquetaRol(rol: Ganaderia['rol']) {
 
 export function GanaderiasPanel({ sesion, onSesionInvalida }: GanaderiasPanelProps) {
   const [ganaderias, setGanaderias] = useState<Ganaderia[]>([])
+  const [revision, setRevision] = useState(0)
   const [seleccionada, setSeleccionada] = useState<string | null>(null)
   const [nombre, setNombre] = useState('')
   const [cargando, setCargando] = useState(false)
@@ -69,7 +71,7 @@ export function GanaderiasPanel({ sesion, onSesionInvalida }: GanaderiasPanelPro
         if (activo) setCargando(false)
       })
     return () => { activo = false }
-  }, [sesion, onSesionInvalida])
+  }, [sesion, onSesionInvalida, revision])
 
   async function crear(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -116,6 +118,8 @@ export function GanaderiasPanel({ sesion, onSesionInvalida }: GanaderiasPanelPro
         <div className="farms-empty"><p>Inicia sesión para crear y consultar tus ganaderías autorizadas.</p></div>
       ) : (
         <div className="farms-workspace">
+          <AceptarInvitacion key={sesion.usuarioId} token={sesion.accessToken}
+            onSesionInvalida={onSesionInvalida} actualizar={() => setRevision(a => a + 1)} />
           <form className="farm-create" onSubmit={crear} noValidate aria-busy={creando}>
             <div className="form-field">
               <label htmlFor="ganaderia-nombre">Nombre de la ganadería</label>
@@ -169,8 +173,11 @@ export function GanaderiasPanel({ sesion, onSesionInvalida }: GanaderiasPanelPro
       {sesion && seleccionada && (() => {
         const ganaderia = ganaderias.find(item => item.id === seleccionada)
         return ganaderia
-          ? <AnimalesPanel key={ganaderia.id} ganaderia={ganaderia}
-              sesion={sesion} onSesionInvalida={onSesionInvalida} />
+          ? <div key={`${sesion.usuarioId}-${ganaderia.id}`}>
+              {ganaderia.rol === 'PROPIETARIO' && <AccesoFamiliarPanel ganaderiaId={ganaderia.id}
+                token={sesion.accessToken} onSesionInvalida={onSesionInvalida} />}
+              <AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={onSesionInvalida} />
+            </div>
           : null
       })()}
     </section>

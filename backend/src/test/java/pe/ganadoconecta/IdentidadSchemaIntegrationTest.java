@@ -47,15 +47,17 @@ class IdentidadSchemaIntegrationTest extends SoporteJwtPostgres {
                 WHERE success
                 ORDER BY installed_rank DESC
                 LIMIT 1
-                """, String.class)).isEqualTo("11");
+                """, String.class)).isEqualTo("12");
         assertThat(jdbc.queryForList("""
                 SELECT table_name
                 FROM information_schema.tables
                 WHERE table_schema = 'identidad'
                 ORDER BY table_name
                 """, String.class)).containsExactly(
+                        "auditoria_membresia",
                         "ganaderia",
                         "intento_login",
+                        "invitacion",
                         "membresia",
                         "sesion_dispositivo",
                         "usuario",

@@ -152,6 +152,7 @@ public final class RepositorioGanaderiasPostgres implements RepositorioGanaderia
                     return ResultadoRevocacion.YA_REVOCADA;
                 }
 
+                AccesoFamiliarPostgres.actorAuditoria(jdbc, actorUsuarioId);
                 jdbc.update("""
                         UPDATE identidad.membresia
                         SET estado = 'REVOCADA', revocado_en = ?, actualizado_en = ?

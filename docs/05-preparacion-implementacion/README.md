@@ -44,6 +44,8 @@
 > completa ese contrato con el mismo orquestador, leases y comprobantes.
 > La [evidencia de reproducción, partos y genealogía](33-reproduccion-partos-genealogia.md)
 > documenta los tres incrementos privados, idempotentes y aislados por ganadería.
+> [SPEC-04](../../specs/SPEC-04-acceso-familiar/tasks.md) registra la evidencia
+> de acceso familiar, invitaciones y auditoría de membresías.
 > Background Sync, caché privada autorizada y E2E offline integral
 > continúan pendientes. Los estados de propuesta siguientes describen la
 > preparación arquitectónica original, no acreditan implementación de SPEC-01.
