@@ -1,6 +1,8 @@
 package pe.ganadoconecta.modulos.ganado.configuracion;
 
 import java.time.Clock;
+import pe.ganadoconecta.modulos.ganado.aplicacion.ControlPeso;
+import pe.ganadoconecta.modulos.ganado.adaptadores.salida.PesosPostgres;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -25,6 +27,11 @@ import pe.ganadoconecta.modulos.identidad.aplicacion.PermisoGanaderia;
 @Configuration(proxyBeanMethods = false)
 @Profile("postgres")
 public class GanadoConfiguracion {
+    @Bean ControlPeso controlPeso(UnidadDeTrabajo unidad, AutorizarAccesoGanaderiaTransaccional escribir,
+            AutorizarLecturaGanaderia leer, JdbcTemplate jdbc, Clock reloj) {
+        return new ControlPeso(unidad, escribir, leer, new PesosPostgres(jdbc), reloj);
+    }
+
     @Bean
     RepositorioAnimales repositorioAnimales(JdbcTemplate jdbc) {
         return new RepositorioAnimalesPostgres(jdbc);

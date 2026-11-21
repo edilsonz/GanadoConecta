@@ -80,7 +80,9 @@ public final class ProteccionRegistroFiltro extends OncePerRequestFilter {
             case "PUT" -> ruta.matches("^/api/v1/ganaderias/[^/]+/familia/integrantes/[^/]+$");
             default -> false;
         };
-        return !familiaProtegida && !postProtegido && !altaAnimalProtegida && !revocacionProtegida
+        boolean pesoProtegido = "POST".equals(request.getMethod())
+                && ruta.matches("^/api/v1/ganaderias/[^/]+/animales/[^/]+/pesos$");
+        return !pesoProtegido && !familiaProtegida && !postProtegido && !altaAnimalProtegida && !revocacionProtegida
                 && !vacunacionProtegida && !eventoSanitarioProtegido
                 && !eventoReproductivoProtegido && !partoProtegido
                 && !genealogiaProtegida && !agendaProtegida;

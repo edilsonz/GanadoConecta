@@ -3,6 +3,30 @@ import static org.assertj.core.api.Assertions.assertThat;import static org.sprin
 import java.time.Instant;import java.util.*;import com.fasterxml.jackson.databind.ObjectMapper;import org.junit.jupiter.api.*;import org.junit.jupiter.api.condition.EnabledIfSystemProperty;import org.springframework.beans.factory.annotation.*;import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;import org.springframework.boot.test.context.SpringBootTest;import org.springframework.jdbc.core.JdbcTemplate;import org.springframework.test.context.ActiveProfiles;import org.springframework.test.web.servlet.*;import org.springframework.transaction.annotation.Transactional;import pe.ganadoconecta.modulos.identidad.aplicacion.TokensAcceso;
 @SpringBootTest(properties={"debug=false","logging.level.root=WARN","ganadoconecta.seguridad.origen-permitido=https://127.0.0.1:5173"}) @AutoConfigureMockMvc @ActiveProfiles("postgres") @EnabledIfSystemProperty(named="ganadoconecta.postgres.integration-test",matches="true") @Transactional
 class ReproduccionPostgresIntegrationTest extends SoporteJwtPostgres{
+ @Test void pesoValidaOrdenIdempotenciaYPermisos() throws Exception {
+    String ruta = "/api/v1/ganaderias/" + ganaderia + "/animales/" + hembra + "/pesos";
+    UUID id = UUID.randomUUID();
+    guardarPeso(ruta, id, 82, "2026-01-02").andExpect(status().isCreated());
+    guardarPeso(ruta, id, 82, "2026-01-02").andExpect(status().isOk());
+    guardarPeso(ruta, id, 83, "2026-01-02").andExpect(status().isConflict());
+    guardarPeso(ruta, UUID.randomUUID(), 0, "2026-01-01").andExpect(status().isUnprocessableEntity());
+    guardarPeso(ruta, UUID.randomUUID(), 75, "2026-01-01").andExpect(status().isCreated());
+    mvc.perform(get(ruta.replace(hembra.toString(), UUID.randomUUID().toString()))
+            .header("Authorization", "Bearer " + jwt)).andExpect(status().isNotFound());
+    jdbc.update("UPDATE identidad.membresia SET rol='LECTOR' WHERE usuario_id=?", usuario);
+    guardarPeso(ruta, UUID.randomUUID(), 84, "2026-01-03").andExpect(status().isForbidden());
+    mvc.perform(get(ruta).header("Authorization", "Bearer " + jwt))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.mediciones.length()").value(2))
+            .andExpect(jsonPath("$.mediciones[0].kilos").value(75))
+            .andExpect(jsonPath("$.ultimo.kilos").value(82));
+ }
+
+ private ResultActions guardarPeso(String ruta, UUID id, int kilos, String fecha) throws Exception {
+    return mvc.perform(post(ruta).header("Authorization","Bearer " + jwt)
+            .header("Origin","https://127.0.0.1:5173").with(csrf().asHeader())
+            .contentType("application/json").content(json.writeValueAsBytes(
+                    Map.of("id", id, "kilos", kilos, "fecha", fecha))));
+ }
  @Autowired MockMvc mvc;@Autowired JdbcTemplate jdbc;@Autowired ObjectMapper json;@Autowired TokensAcceso tokens;UUID usuario,sesion,ganaderia,hembra,macho;String jwt;
  @BeforeEach void preparar(){usuario=UUID.randomUUID();sesion=UUID.randomUUID();ganaderia=UUID.randomUUID();hembra=UUID.randomUUID();macho=UUID.randomUUID();jdbc.update("INSERT INTO identidad.usuario(id,email_normalizado,password_hash,estado) VALUES(?,?,'$argon2id$fixture','ACTIVO')",usuario,usuario+"@reproduccion.invalid");jdbc.update("INSERT INTO identidad.sesion_dispositivo(id,usuario_id,creado_en,vence_en) VALUES(?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP+interval '1 hour')",sesion,usuario);jdbc.update("INSERT INTO identidad.ganaderia(id,nombre,propietario_usuario_id,estado) VALUES(?,'Aislada',?,'ACTIVA')",ganaderia,usuario);jdbc.update("INSERT INTO identidad.membresia(id,ganaderia_id,usuario_id,rol,estado) VALUES(?,?,?,'PROPIETARIO','ACTIVA')",UUID.randomUUID(),ganaderia,usuario);jdbc.update("INSERT INTO ganado.animal(id,ganaderia_id,sexo,nombre,creado_por,creado_en) VALUES(?,?, 'HEMBRA','Hembra sintética',?,CURRENT_TIMESTAMP),(?,?,'MACHO','Macho sintético',?,CURRENT_TIMESTAMP)",hembra,ganaderia,usuario,macho,ganaderia,usuario);jwt=tokens.emitir(usuario,sesion,Instant.now(),Instant.now().plusSeconds(600)).valor();}
  String ruta(){return "/api/v1/ganaderias/"+ganaderia+"/animales/"+hembra+"/eventos-reproductivos";}

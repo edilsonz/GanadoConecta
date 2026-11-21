@@ -47,7 +47,7 @@ class IdentidadSchemaIntegrationTest extends SoporteJwtPostgres {
                 WHERE success
                 ORDER BY installed_rank DESC
                 LIMIT 1
-                """, String.class)).isEqualTo("12");
+                """, String.class)).isEqualTo("13");
         assertThat(jdbc.queryForList("""
                 SELECT table_name
                 FROM information_schema.tables
@@ -92,7 +92,7 @@ class IdentidadSchemaIntegrationTest extends SoporteJwtPostgres {
                 WHERE table_schema = 'ganado'
                 ORDER BY table_name
                 """, String.class)).containsExactly(
-                        "animal", "operacion_confirmada");
+                        "animal", "medicion_peso", "operacion_confirmada");
         assertThat(jdbc.queryForList("""
                 SELECT column_name
                 FROM information_schema.columns

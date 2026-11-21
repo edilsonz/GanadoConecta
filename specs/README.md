@@ -25,6 +25,7 @@ invitaciones se detallan en [SPEC-04](SPEC-04-acceso-familiar/spec.md).
 | Identificador | Especificación | Plan | Tareas | Estado |
 |---|---|---|---|---|
 | SPEC-04 | [Acceso familiar](SPEC-04-acceso-familiar/spec.md) | [Plan](SPEC-04-acceso-familiar/plan.md) | [Tareas](SPEC-04-acceso-familiar/tasks.md) | Invitaciones manuales y administración de colaboradores. Transferencia de titularidad pendiente. |
+| SPEC-05 | [Control de peso](SPEC-05-historial-peso/spec.md) | [Plan](SPEC-05-historial-peso/plan.md) | [Tareas](SPEC-05-historial-peso/tasks.md) | Registro e historial online con gráfico. Validación manual pendiente. |
 
 Las rutas entre comillas invertidas en documentos y prompts se interpretan
 desde la raíz del repositorio. Los enlaces Markdown se resuelven desde el
