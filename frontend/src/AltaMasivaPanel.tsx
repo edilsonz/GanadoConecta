@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { FormularioAnimal } from './AnimalesPanel'
+import type { FormularioAnimal } from './formularioAnimal'
 import { ErrorAnimal, registrarAnimal, type CategoriaAnimal, type SolicitudRegistroAnimal } from './animalesApi'
 import { useProteccionActualizacionPwa } from './pwaActividad'
 

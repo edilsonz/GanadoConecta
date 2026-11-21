@@ -21,4 +21,12 @@ describe('Agenda sanitaria',()=>{
  it('programa conservando identidad en reintento',async()=>{vi.mocked(programarActividad).mockRejectedValueOnce(new Error());render(<AgendaSanitariaPanel {...p}/>);await screen.findByText('No hay actividades con este filtro.');fireEvent.change(screen.getByLabelText('Animal *'),{target:{value:'a'}});fireEvent.change(screen.getByLabelText('Fecha prevista *'),{target:{value:'2099-12-01'}});fireEvent.change(screen.getByLabelText('Descripción *'),{target:{value:'Control futuro'}});fireEvent.click(screen.getByRole('button',{name:'Programar actividad'}));fireEvent.click(await screen.findByRole('button',{name:'Reintentar misma actividad'}));await waitFor(()=>expect(programarActividad).toHaveBeenCalledTimes(2));expect(vi.mocked(programarActividad).mock.calls[0]).toEqual(vi.mocked(programarActividad).mock.calls[1])})
  it('marca realizada sin afirmar evento clínico',async()=>{vi.mocked(listarAgenda).mockResolvedValue([{actividadId:'x',animalId:'a',eventoOrigenId:null,tipo:'VACUNACION',fechaPrevista:'2099-12-01',descripcion:'Control',observaciones:null,estado:'PENDIENTE',estadoVisible:'PROXIMA',version:1,creadoEn:new Date().toISOString(),completadoEn:null}]);render(<AgendaSanitariaPanel {...p}/>);fireEvent.click(await screen.findByText('Marcar realizada'));expect(await screen.findByText('Actividad marcada como completada. No se creó un evento clínico.')).toBeInTheDocument()})
  it('lector solo consulta',async()=>{render(<AgendaSanitariaPanel {...p} puedeEscribir={false}/>);await screen.findByText('No hay actividades con este filtro.');expect(screen.queryByText('Programar actividad')).not.toBeInTheDocument()})
+ it('consulta una sola vez con el filtro inicial y permite volver a todos', async () => {
+   render(<AgendaSanitariaPanel {...p} animalInicialId="a" />)
+   await screen.findByText('No hay actividades con este filtro.')
+   expect(listarAgenda).toHaveBeenCalledExactlyOnceWith('g', 't', { animalId: 'a' })
+   expect(screen.getByLabelText('Animal *')).toHaveValue('a')
+   fireEvent.change(screen.getByLabelText('Filtrar por animal'), { target: { value: '' } })
+   await waitFor(() => expect(listarAgenda).toHaveBeenLastCalledWith('g', 't', {}))
+ })
 })

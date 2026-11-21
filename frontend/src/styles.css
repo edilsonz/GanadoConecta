@@ -939,6 +939,7 @@ h1 span {
 
 .animals-heading,.animals-list-heading,.animal-detail-heading {
   display:flex;
+  flex-wrap:wrap;
   align-items:flex-start;
   justify-content:space-between;
   gap:18px
@@ -1071,6 +1072,8 @@ h1 span {
 }
 
 .animal-option span:first-child {
+  min-width:0;
+  overflow-wrap:anywhere;
   min-width:0;
   display:grid;
   gap:3px;
@@ -1852,10 +1855,11 @@ footer p {
 .health-agenda { margin:36px 0 0; padding:24px; background:#f6f4df; border-radius:18px; min-width:0 }
 .health-agenda .animals-list-heading { flex-wrap:wrap; gap:16px }
 .agenda-list { display:grid; gap:12px; margin:18px 0 }
-.agenda-item { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px; background:white; border-left:5px solid #73947a; border-radius:10px; overflow-wrap:anywhere }
+.agenda-item { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; padding:16px; background:white; border-left:5px solid #73947a; border-radius:10px; overflow-wrap:anywhere }
+.agenda-item > div { flex:1 1 16rem; min-width:0 }
 .agenda-item.state-vencida { border-left-color:#a06145 }
 .agenda-item.state-completada { opacity:.75 }
-@media(max-width:600px){.agenda-item{align-items:stretch;flex-direction:column}.health-agenda{padding:16px}}
+@media(max-width:600px){.agenda-item{align-items:stretch;flex-direction:column}.agenda-item > div{flex:auto}.health-agenda{padding:16px}}
 .reproduction-panel,.births-panel,.genealogy-panel { margin-top:24px; padding-top:20px; border-top:1px solid #c4d6bb; min-width:0 }
 .reproduction-panel ol,.births-panel ol,.genealogy-panel ul { padding-left:20px; overflow-wrap:anywhere }
 .reproduction-panel li,.births-panel li,.genealogy-panel li { margin:12px 0 }

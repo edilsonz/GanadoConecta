@@ -20,9 +20,11 @@ const marcarSeleccion = (ids: string[], id: string, agregar: boolean) =>
 export function AgendaSanitariaPanel(p: Props) {
   const [items, setItems] = useState<ActividadSanitaria[]>([])
   const [estado, setEstado] = useState<'carga'|'listo'|'error'>('carga')
-  const [filtro, setFiltro] = useState('')
+  const [filtroManual, setFiltroManual] = useState<{ origen?: string; valor: string }>()
+  const filtro = filtroManual?.origen === p.animalInicialId
+    ? (filtroManual?.valor ?? '') : (p.animalInicialId ?? '')
   const [revision, setRevision] = useState(0)
-  const [form, setForm] = useState({ animalId: '', tipo: 'VACUNACION' as TipoActividad,
+  const [form, setForm] = useState({ animalId: p.animalInicialId ?? '', tipo: 'VACUNACION' as TipoActividad,
     fechaPrevista: '', descripcion: '', observaciones: '' })
   const [colectiva, setColectiva] = useState(false)
   const [participantes, setParticipantes] = useState<string[]>([])
@@ -35,10 +37,8 @@ export function AgendaSanitariaPanel(p: Props) {
   const grupo = colectiva || esCampana(form.tipo)
 
   useEffect(() => {
-    if (p.animalInicialId) {
-      setFiltro(p.animalInicialId)
-      setForm(f => ({ ...f, animalId: p.animalInicialId! }))
-    }
+    const inicial = p.animalInicialId
+    if (inicial) setForm(f => f.animalId === inicial ? f : { ...f, animalId: inicial })
   }, [p.animalInicialId])
   useEffect(() => {
     let vigente = true
@@ -120,7 +120,8 @@ export function AgendaSanitariaPanel(p: Props) {
   return <section className="health-agenda" id="agenda-sanitaria" aria-labelledby="agenda-title">
     <div className="animals-list-heading"><div><h3 id="agenda-title">Calendario y campañas</h3>
       <p>Actividades sanitarias, reproductivas y productivas.</p></div>
-      <label className="form-field">Filtrar por animal<select value={filtro} onChange={e => setFiltro(e.target.value)}>
+      <label className="form-field">Filtrar por animal<select value={filtro}
+        onChange={e => setFiltroManual({ origen: p.animalInicialId, valor: e.target.value })}>
         <option value="">Todos</option>{p.animales.map(a => <option key={a.animalId} value={a.animalId}>{nombre(a.animalId)}</option>)}
       </select></label>
     </div>

@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, expect, it, vi } from 'vitest'
 import { AltaMasivaPanel } from './AltaMasivaPanel'
 import { ErrorAnimal, registrarAnimal } from './animalesApi'
-import type { FormularioAnimal } from './AnimalesPanel'
+import type { FormularioAnimal } from './formularioAnimal'
 
 vi.mock(import('./animalesApi'), async original => ({
   ...await original(), registrarAnimal: vi.fn(),
