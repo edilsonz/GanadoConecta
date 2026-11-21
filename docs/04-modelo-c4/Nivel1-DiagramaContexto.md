@@ -1,73 +1,18 @@
 # Modelo C4 — Nivel 1: Contexto
 
-## 1. Objetivo
+GanadoConecta reúne la gestión de ganado vacuno, sus historiales, el calendario y el catálogo. Esta vista distingue a las personas usuarias del proveedor externo previsto.
 
-Mostrar GanadoConecta como un sistema completo, identificando
-las personas que lo utilizan y el sistema externo con el que
-se comunica.
+![Contexto vigente de GanadoConecta](diagramas/nivel-1-contexto.svg)
 
-## 2. Sistema
+[Fuente Draw.io, página 1](diagramas/ganadoconecta-c4.drawio) · [Figura histórica](../../img/historico/GanadoConecta_C4_Nivel_1_Contexto.png)
 
-GanadoConecta permite gestionar ganado vacuno, mantener
-historiales sanitarios, reproductivos y productivos,
-programar actividades, consultar reportes, analizar registros
-y publicar anuncios de animales en venta.
-
-## 3. Actores
-
-| Actor | Relación con GanadoConecta |
+| Actor o sistema | Alcance |
 |---|---|
-| Productor | Gestiona sus animales, registra controles, consulta información y administra sus anuncios. |
-| Visitante o interesado | Consulta y filtra anuncios públicos y obtiene el contacto autorizado del vendedor. |
-| Administrador | Gestiona usuarios y revisa reportes de publicaciones para moderar el catálogo. |
+| ACT01 · Titular y equipo familiar | Cuentas individuales, permisos por ganadería, registros e historiales privados. El alcance sin conexión es parcial. |
+| ACT02 · Visitante o interesado | Consulta el catálogo público y ve los datos, las fotografías, el contacto y la genealogía que se hayan autorizado. |
+| ACT03 · Moderador autorizado | Revisa reportes con permiso específico y puede retirar publicaciones. La recepción de reportes está desactivada por defecto. La gestión administrativa general de cuentas queda pendiente. |
+| EXT01 · Proveedor de notificaciones | Entrega externa pendiente. La agenda ya muestra recordatorios internos para hoy y actividades vencidas. |
 
-## 4. Sistema externo
+Registrar una venta conserva la ficha y cierra los anuncios activos. La negociación, el pago y el transporte ocurren fuera del sistema. La IA para análisis y orientación con fuentes forma parte del alcance previsto, con los límites documentados para diagnóstico y prescripción.
 
-| Sistema | Responsabilidad |
-|---|---|
-| Proveedor de notificaciones | Enviar recordatorios y alertas solicitados por GanadoConecta. |
-
-El proveedor concreto y los canales de envío están
-pendientes de selección.
-
-## 5. Diagrama
-
-![Contexto de GanadoConecta](../../img/GanadoConecta_C4_Nivel_1_Contexto.png)
-
-*Figura. Modelo C4 de nivel 1: contexto de GanadoConecta.*
-
-
-## 6. Interpretación
-
-Las flechas muestran cómo los actores utilizan GanadoConecta
-y cómo el sistema solicita el envío de notificaciones.
-
-El servicio propio de IA forma parte de GanadoConecta,
-aunque se ejecute de manera independiente.
-
-React, el backend, PostgreSQL, Redis y el almacenamiento
-de fotografías se detallan en el nivel 2.
-
-## 7. Límites del alcance
-
-- Los historiales completos permanecen privados.
-- Los anuncios muestran únicamente información autorizada.
-- La negociación, los pagos y el transporte se realizan
-  fuera de la plataforma.
-- La IA no realiza diagnósticos ni sustituye
-  la evaluación veterinaria.
-
-## 8. Contexto consolidado y estado gráfico
-
-ACT01 incorpora al titular y familiares autorizados, cada uno con cuenta propia.
-Su relación con GanadoConecta incluye colaboración en una misma ganadería,
-registro flexible/masivo, genealogía, campañas y trabajo parcial sin red.
-La IA permite conversación y orientación con fuentes sin diagnosticar ni prescribir;
-sigue dentro del sistema. La genealogía pública requiere autorización y la
-venta no transfiere historiales. ACT02 y ACT03 conservan sus límites.
-
-Solo se encontró `img/GanadoConecta_C4_Nivel_1_Contexto.png`, sin archivo
-editable asociado. Se conserva como figura original; falta reflejar visualmente
-el acceso familiar y las capacidades ampliadas. El proveedor de fotografías
-podría aparecer como sistema externo si la solución seleccionada fuese de un tercero;
-su selección y límite definitivo están pendientes. No se inventa un proveedor.
+**Trazabilidad.** [Actores](../01-analisis-de-sistema/01-actores.md), [matriz RF/HU](../MATRIZ-DE-TRAZABILIDAD.md), [hoja de ruta](../HOJA-DE-RUTA.md) y [nivel 2](Nivel2-DiagramaContenedores.md).

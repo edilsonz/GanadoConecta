@@ -1,5 +1,9 @@
 # Interfaces propuestas — estilo de GanadoConecta
 
+La interfaz vigente se documenta en la [consolidación UX](36-consolidacion-ux.md)
+y en las [capturas E2E con datos sintéticos](../../img/README.md#interfaz-actual).
+Las rutas y pantallas que siguen pertenecen a la propuesta de diseño.
+
 > **Estado de consolidación:** las 16 decisiones aprobadas por el responsable
 > del proyecto se integran en la [base consolidada](05-consolidacion-arquitectonica.md).
 > Los detalles de este documento que no figuren como aprobados allí siguen

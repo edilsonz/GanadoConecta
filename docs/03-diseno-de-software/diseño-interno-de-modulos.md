@@ -12,6 +12,10 @@ Este documento presenta el diseño propuesto.
 Las clases, tablas y contratos definitivos se concretarán
 mediante las especificaciones SDD y el diseño detallado.
 
+Para la implementación actual, consulta el [ejemplo de alta individual](../02-arquitectura-software/diagramas/clean-architecture.svg),
+el [modelo de datos con las relaciones principales](../02-arquitectura-software/diagramas/modelo-de-datos.svg)
+y su [fuente editable](../02-arquitectura-software/diagramas/ganadoconecta-tecnico.drawio).
+
 ## 2. Organización interna
 
 Cada módulo separa las siguientes responsabilidades:

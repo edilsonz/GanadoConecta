@@ -18,9 +18,9 @@ organiza sus responsabilidades internas.
 | Parte | Responsabilidad | Ejemplos en GanadoConecta |
 |---|---|---|
 | Dominio | Representar entidades y reglas fundamentales del negocio. | Animal, control sanitario, registro de peso, evento reproductivo y anuncio. |
-| Aplicación | Coordinar casos de uso y definir los contratos que necesitan. | RegistrarAnimal, RegistrarPeso, PublicarAnuncio, ConsultarAnuncios, RegistrarVenta y SolicitarAnalisis. |
+| Aplicación | Coordinar casos de uso y definir los contratos que necesitan. | RegistrarAnimal, ControlPeso, CatalogoAnuncios y RegistrarVenta. |
 | Adaptadores de interfaz | Transformar solicitudes y respuestas entre los formatos externos y los modelos internos. | Controladores REST, DTO y respuestas públicas del catálogo. |
-| Infraestructura | Implementar persistencia, caché, comunicación y configuración tecnológica. | Spring Data JPA, PostgreSQL, cliente Redis, cliente FastAPI, notificaciones y almacenamiento de fotografías. |
+| Infraestructura | Implementar persistencia, comunicación y configuración tecnológica. | JDBC/PostgreSQL, unidad de trabajo, Flyway y almacenamiento local de fotografías. Redis, FastAPI y notificaciones externas están previstos. |
 
 La aplicación web React es un cliente de la API.
 No forma parte del núcleo del backend.
@@ -45,10 +45,10 @@ el caso de uso conocerá el contrato y no la implementación concreta.
 
 ### Diagrama del enfoque arquitectónico
 
-![Clean Architecture de GanadoConecta](../../img/Figura_2_Clean_Architecture.png)
+![Dependencias actuales del alta individual de ganado](diagramas/clean-architecture.svg)
 
-*Figura 2. Clean Architecture de GanadoConecta, con Redis
-integrado mediante un contrato del núcleo y un adaptador.*
+[Fuente Draw.io, página 1](diagramas/ganadoconecta-tecnico.drawio) ·
+[Figura histórica del enfoque con Redis](../../img/historico/Figura_2_Clean_Architecture.png)
 
 ## 4. Contratos y adaptadores
 

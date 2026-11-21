@@ -21,4 +21,5 @@ Los [requisitos originales](01-analisis-de-sistema/03-requisitos-funcionales.md)
 - **Seguridad.** Mantener autorización por ganadería, revisión de exposición pública, permisos administrativos separados y operación de credenciales/secretos fuera de Git.
 - **Infraestructura y despliegue.** Flyway y Docker para reproducción local. Pendientes proveedor de fotos, Redis con invalidación, entrega EXT01, CI/CD, hosting, dominio, DNS y CDN.
 - **Interfaz.** Espacio del productor con navegación por módulo y ficha por pestañas. [Evidencia visual y de regresión](05-preparacion-implementacion/36-consolidacion-ux.md). Pendiente validación integrada con usuarios.
-- **Pruebas.** Conservar evidencia unitaria e integración. Preparar E2E, planes de consulta y k6 sobre datos sintéticos reproducibles antes de afirmar resultados de escala.
+- **Pruebas.** Conservar evidencia unitaria e integración. Los [E2E existentes](../tests/e2e/README.md) cubren SPEC-07 a SPEC-09 y navegación. Quedan pendientes los E2E offline, los planes de consulta y k6 sobre datos sintéticos reproducibles.
+- **Arquitectura.** Consultar las [vistas vigentes y fuentes Draw.io](02-arquitectura-software/diagramas/README.md) para el informe final.

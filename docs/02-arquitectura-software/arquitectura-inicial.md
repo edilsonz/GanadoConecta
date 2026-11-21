@@ -11,12 +11,12 @@ de calidad y restricciones definidos.
 
 ## 2. Organización general
 
-GanadoConecta utilizará una arquitectura cliente-servidor con
+GanadoConecta utiliza una arquitectura cliente-servidor con
 un backend monolítico modular organizado mediante Clean Architecture.
 
-El análisis inteligente se ejecutará en un servicio propio independiente.
-La solución incluirá una aplicación web, un backend principal,
-una base de datos y las integraciones necesarias.
+La aplicación web, el backend principal y PostgreSQL funcionan en el
+entorno local. El análisis inteligente se prevé como servicio propio
+independiente.
 
 La solución incorporará Redis como caché del catálogo público.
 PostgreSQL seguirá siendo la fuente principal de información
@@ -26,23 +26,28 @@ y conservará los datos permanentes.
 
 | Elemento | Tecnología | Responsabilidad |
 |---|---|---|
-| Aplicación web | React PWA | Presentar la interfaz responsiva en español y «Mi ganado»; conservar datos autorizados y operaciones pendientes en IndexedDB para trabajo parcial sin red. |
+| Aplicación web | React, TypeScript y PWA | Interfaz responsiva en español y «Mi ganado». IndexedDB conserva contexto local y operaciones pendientes en los flujos habilitados. |
 | Backend principal | Java y Spring Boot | Exponer la API REST, verificar permisos, ejecutar casos de uso y coordinar las operaciones. |
-| Base de datos | PostgreSQL | Conservar usuarios, animales, historiales, actividades, anuncios y tareas persistentes. |
-| Caché | Redis | Almacenar temporalmente resultados de consultas frecuentes del catálogo público para reducir accesos repetidos a PostgreSQL. |
-| Servicio propio de IA | Python y FastAPI | Analizar registros históricos e identificar patrones o variaciones productivas. |
-| Almacenamiento de fotografías | Solución pendiente de selección | Conservar archivos de imagen; sus referencias y metadatos se almacenarán en PostgreSQL. |
-| Proveedor externo de notificaciones | Proveedor pendiente de selección | Enviar recordatorios y alertas mediante los canales que se definan. |
+| Base de datos | PostgreSQL, JDBC y Flyway | Conserva los registros del sistema. Las migraciones V1–V16 reproducen el esquema actual. |
+| Caché | Redis · pendiente | Guardará resultados públicos del catálogo. Hoy las consultas llegan a PostgreSQL. |
+| Servicio propio de IA | Python y FastAPI · pendiente | Analizará registros históricos y ofrecerá orientación con fuentes. |
+| Almacenamiento de fotografías | Adaptador a directorio privado en desarrollo | Conserva archivos de imagen con referencias en PostgreSQL. El proveedor definitivo está pendiente. |
+| Proveedor externo de notificaciones | Pendiente | Entregará avisos por canales por definir. La agenda ya muestra recordatorios internos. |
 
-El servicio de IA forma parte de GanadoConecta, aunque se despliegue
-de manera independiente. El proveedor de notificaciones es externo.
+El diseño previsto sitúa el servicio de IA dentro de GanadoConecta y al
+proveedor de notificaciones en su entorno externo.
 
 ### Diagrama general de la arquitectura
 
-![Arquitectura general de GanadoConecta](../../img/Figura_1_Estilo_GanadoConecta.png)
+![Contenedores de la arquitectura actual de GanadoConecta](../04-modelo-c4/diagramas/nivel-2-contenedores.svg)
 
-*Figura 1. Arquitectura cliente-servidor de GanadoConecta,
-con backend monolítico modular y servicio propio de IA independiente.*
+[C4 y fuente editable](../04-modelo-c4/Nivel2-DiagramaContenedores.md) ·
+[Figura histórica de arquitectura general](../../img/historico/Figura_1_Estilo_GanadoConecta.png) ·
+[Despliegue local y sincronización](diagramas/README.md)
+
+Las integraciones futuras y responsabilidades lógicas de las secciones
+siguientes documentan el diseño previsto. Los cinco paquetes de la API en
+ejecución se identifican en el [C4 nivel 3](../04-modelo-c4/Nivel3-DiagramaComponentes.md).
 
 ## 4. Módulos del backend
 

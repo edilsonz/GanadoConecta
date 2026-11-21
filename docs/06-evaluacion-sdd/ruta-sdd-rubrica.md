@@ -122,11 +122,9 @@ arriba corresponde al material de origen. Para el estado vigente consultar
 la [matriz de evaluación](matriz-trazabilidad.md) y la
 [consolidación](../05-preparacion-implementacion/05-consolidacion-arquitectonica.md).
 
-SPEC-01, su contrato DP01, plan y tareas están aprobados documentalmente por
+SPEC-01, su contrato DP01, plan y tareas quedaron aprobados documentalmente por
 el responsable el 16 de noviembre de 2026 con rotación de tokens de renovación.
-La fase 0 global no se considera terminada ni hay implementación verificada:
-faltan proyecto ejecutable, acceso real previo, pruebas y evidencias.
-Los PNG siguen esperando fuentes editables. Playwright, k6,
-Flyway y GitHub Actions son herramientas previstas en esta ruta; su selección
-concreta/versiones y uso se documentarán antes de implementar los proyectos.
-Ningún criterio de ejecución se considera demostrado por esta revisión documental.
+La revisión del ZIP pertenece a la línea base. Para el avance posterior consulta
+la [rúbrica vigente](../RUBRICA-DE-EVALUACION.md), las
+[fuentes editables y vistas gráficas](../02-arquitectura-software/diagramas/README.md)
+y la [evidencia de navegador](../../tests/e2e/README.md).

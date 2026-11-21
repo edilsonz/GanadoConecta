@@ -12,4 +12,9 @@ El cambio reutiliza la verificación por ganadería, los formularios y el sincro
 | Compilación | TypeScript correcto. Vite generó el manifiesto y el service worker PWA. |
 | Organización interna | 233 pruebas frontend en 34 archivos, sin fallos. TypeScript y build PWA correctos tras mover módulos y pruebas, actualizar imports y separar estilos. |
 
-El navegador usó respuestas controladas de la API y un perfil aislado. Quedan por ejecutar la prueba manual HTTPS integrada, una revisión con usuarios y las mediciones de carga. Ver [rúbrica](../RUBRICA-DE-EVALUACION.md) y [trazabilidad funcional](../MATRIZ-DE-TRAZABILIDAD.md).
+El navegador de este incremento usó respuestas controladas de la API y un
+perfil aislado. La ejecución posterior de [E2E en Chrome por HTTPS](../../tests/e2e/README.md)
+verificó la navegación con Spring Boot y PostgreSQL aislado. Las
+[capturas vigentes](../../img/README.md#interfaz-actual) proceden de esa
+ejecución. Quedan la revisión con usuarios y las mediciones de carga.
+Ver [rúbrica](../RUBRICA-DE-EVALUACION.md) y [trazabilidad funcional](../MATRIZ-DE-TRAZABILIDAD.md).

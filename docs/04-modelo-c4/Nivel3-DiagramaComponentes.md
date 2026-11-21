@@ -1,139 +1,22 @@
 # Modelo C4 — Nivel 3: Componentes
 
-## 1. Objetivo
+La API Spring Boot se despliega como un monolito modular. Sus cinco módulos separan los casos de uso y el dominio de los adaptadores HTTP y de persistencia.
 
-Detallar los componentes internos de la API Backend
-de GanadoConecta, sus responsabilidades y sus colaboraciones
-con los demás contenedores y servicios.
+![Componentes vigentes del backend de GanadoConecta](diagramas/nivel-3-componentes.svg)
 
-El alcance de este diagrama es el backend principal
-desarrollado con Java y Spring Boot.
+[Fuente Draw.io, página 3](diagramas/ganadoconecta-c4.drawio) · [Figura histórica](../../img/historico/GanadoConecta_C4_Nivel_3_Componentes.png)
 
-## 2. Organización del backend
-
-El backend será un monolito modular organizado mediante
-Clean Architecture.
-
-Sus componentes compartirán una aplicación desplegable.
-La separación de responsabilidades permitirá mantener
-las reglas de negocio independientes de la infraestructura.
-
-## 3. Componentes principales
-
-| Componente | Responsabilidad |
+| Componente | Responsabilidad y contratos |
 |---|---|
-| API REST y seguridad | Recibir solicitudes, validar su formato, autenticar e invocar casos de uso. |
-| Usuarios y acceso | Gestionar cuentas, perfiles, roles y permisos. |
-| Animales | Gestionar información individual, pertenencia y estado de los animales. |
-| Seguimiento ganadero | Gestionar registros e historiales sanitarios, reproductivos y productivos. |
-| Anuncios y moderación | Gestionar publicaciones, catálogo, estados y reportes de anuncios. |
-| Calendario y alertas | Gestionar actividades, recordatorios y alertas. |
-| Análisis inteligente | Preparar solicitudes y gestionar resultados de análisis. |
-| Reportes | Consultar información consolidada y estadísticas autorizadas. |
-| Ejecutor de tareas | Procesar tareas persistentes, registrar estados y aplicar reintentos. |
+| Adaptadores HTTP y seguridad | Controladores REST, validación, Argon2id en autenticación, JWT RS256, sesión persistente, CSRF, origen y comprobación de membresía para las operaciones privadas. |
+| `identidad` | Cuentas y sesiones, ganaderías, membresías, invitaciones y revocación. SPEC-01 y SPEC-04. |
+| `ganado` | Alta individual y masiva, listado, ficha, historial de pesos y venta. SPEC-01, SPEC-05, SPEC-06 y SPEC-09. |
+| `sanidad` | Vacunación e historial, calendario, recordatorios internos y campañas con atenciones confirmadas. SPEC-02 y SPEC-07. |
+| `reproduccion` | Eventos reproductivos, gestación, partos, crías, genealogía y auditoría. SPEC-03. |
+| `catalogo` | Anuncios y fotos, proyección pública autorizada, revisión de reportes y moderación. SPEC-08 y SPEC-09. |
 
-## 4. Adaptadores de infraestructura
+Los controladores delegan a los casos de uso. Los adaptadores JDBC y de archivos dependen de los contratos del núcleo. Las escrituras sincronizadas reutilizan los endpoints de ganado y sanidad y comprueban nuevamente la autorización dentro de la transacción. El registro de venta cambia el estado del animal y cierra sus anuncios activos de forma atómica.
 
-| Adaptador | Responsabilidad | Destino |
-|---|---|---|
-| Persistencia | Implementar repositorios y operaciones transaccionales. | PostgreSQL |
-| Caché | Consultar, almacenar e invalidar resultados públicos con caducidad. | Redis |
-| IA | Transformar solicitudes y resultados del análisis. | Servicio Python/FastAPI |
-| Notificaciones | Solicitar envíos e interpretar respuestas y errores. | Proveedor externo |
-| Fotografías | Guardar y recuperar archivos de imagen. | Almacenamiento de archivos u objetos |
+La edición del perfil y la administración general de cuentas siguen pendientes. También quedan los informes consolidados, el análisis inteligente y sus tareas diferidas, las notificaciones externas y la caché Redis. El adaptador local de fotografías y la consulta pública a PostgreSQL están disponibles.
 
-Los adaptadores implementarán contratos definidos en el núcleo.
-Los casos de uso no dependerán directamente de sus tecnologías.
-
-## 5. Diagrama
-
-![Componentes del backend de GanadoConecta](../../img/GanadoConecta_C4_Nivel_3_Componentes.png)
-
-*Figura. Modelo C4 de nivel 3: componentes de la API Backend.*
-
-## 6. Lectura de las relaciones
-
-La aplicación web consume la API REST mediante HTTPS y JSON.
-
-Los controladores invocan los casos de uso, que comprueban
-los permisos, la pertenencia de los registros y las reglas
-correspondientes.
-
-Las flechas que parten del grupo de módulos resumen
-las colaboraciones con los adaptadores. No significan
-que todos los módulos utilicen todos los adaptadores.
-
-Las flechas representan colaboraciones durante la ejecución.
-Las dependencias del código apuntarán hacia el núcleo
-según Clean Architecture.
-
-## 7. Operaciones relevantes
-
-### Consulta del catálogo
-
-El backend utiliza el contrato de caché para consultar Redis.
-Cuando no existe una entrada vigente o Redis falla,
-obtiene los datos desde PostgreSQL.
-
-Los cambios confirmados en anuncios invalidan las entradas
-afectadas. Las invalidaciones fallidas se registran
-y reintentan.
-
-La especificación definirá cómo impedir la exposición
-de información que haya dejado de estar autorizada.
-
-### Registro de venta
-
-La actualización del animal y el cierre de sus anuncios activos
-se ejecutan dentro de una misma transacción de PostgreSQL.
-
-El historial se conserva. Después de confirmar el cambio,
-se invalida la caché afectada.
-
-### Análisis y notificaciones
-
-El ejecutor procesa las tareas persistentes y utiliza
-los adaptadores correspondientes.
-
-Se controlan estados, intentos y recuperación ante fallos,
-con mecanismos para reducir resultados o envíos duplicados.
-
-## 8. Verificación
-
-- Pruebas unitarias de reglas y casos de uso.
-- Pruebas de integración de API, permisos y pertenencia.
-- Pruebas de persistencia, transacciones y tareas.
-- Pruebas de caducidad, invalidación y fallos de Redis.
-- Pruebas de integración de IA y notificaciones.
-- Pruebas de carga de consultas de animales y anuncios.
-
-## 9. Estado
-
-El diagrama representa la arquitectura propuesta.
-La implementación y las pruebas están pendientes.
-
-El nivel 4 se elaborará cuando se concrete el diseño
-de código de un componente seleccionado.
-
-## 10. Componentes y relaciones consolidados
-
-| Componente | Responsabilidad ampliada | Colaboración |
-|---|---|---|
-| API REST y seguridad | Recibir operaciones de sincronización, autenticar y validar formato. | Casos de uso del módulo responsable. |
-| Usuarios y acceso | Ganaderías y membresías familiares; comprobar autorización vigente. | Persistencia PostgreSQL. |
-| Animales | Altas individuales/masivas, categorías, nacimientos, parentescos y genealogía. | Seguimiento para eventos reproductivos; Anuncios para proyección pública y venta. |
-| Seguimiento ganadero | Campañas colectivas y atenciones individuales asociadas a cada animal. | Animales y Calendario mediante contratos. |
-| Casos de uso y persistencia | Verificar permisos/versiones y deduplicar operaciones; confirmar un único efecto. | Módulo responsable de cada operación; PostgreSQL. |
-| Análisis inteligente | Consultas propias autorizadas y orientación basada en fuentes. | Adaptador del FastAPI existente. |
-| Calendario | Recordatorios individuales/colectivos sin IA. | Ejecutor de tareas y adaptador de notificaciones. |
-| Anuncios | Publicar genealogía solo autorizada; cerrar publicaciones sin transferir fichas. | Animales y adaptador de caché tras confirmar la transacción. |
-
-Sincronización es una entrada transversal a casos de uso existentes, no un
-microservicio ni una vía para omitir reglas. El estado idempotente y el cambio
-de negocio deben confirmarse de forma consistente en PostgreSQL; el detalle
-transaccional y la política de conflictos se concretarán en las SPEC.
-
-Solo se encontró `img/GanadoConecta_C4_Nivel_3_Componentes.png`, sin fuente
-editable. Queda pendiente reflejar gráficamente estas ampliaciones. Se conserva
-el PNG original. El diseño de bajo nivel se desarrolla en
-[diseño interno](../03-diseno-de-software/diseño-interno-de-modulos.md).
+**Trazabilidad.** [Diseño interno y modelo de datos](../03-diseno-de-software/diseño-interno-de-modulos.md), [ejemplo Clean Architecture](../02-arquitectura-software/diagramas/clean-architecture.svg), [contratos SDD](../../specs/README.md) y [evidencia E2E](../../tests/e2e/README.md).

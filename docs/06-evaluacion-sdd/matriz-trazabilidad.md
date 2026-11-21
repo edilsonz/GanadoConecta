@@ -5,6 +5,11 @@ transcrita en [ruta SDD](ruta-sdd-rubrica.md); no se dispuso de una fuente docen
 adicional ni se verificó aprobación docente. «Disponible» significa documentación,
 no software, despliegue ni prueba aprobada.
 
+La [rúbrica vigente](../RUBRICA-DE-EVALUACION.md) enlaza las nuevas
+[fuentes y vistas arquitectónicas](../02-arquitectura-software/diagramas/README.md)
+y las [pruebas E2E](../../tests/e2e/README.md). La tabla siguiente conserva
+la revisión histórica.
+
 Rutas entre comillas invertidas relativas a la raíz del repositorio.
 La [matriz de decisiones](../05-preparacion-implementacion/05-consolidacion-arquitectonica.md)
 relaciona las 16 decisiones del producto, que son distintas de estos 16 criterios.

@@ -59,7 +59,13 @@ Su separación lógica no implica desplegarlos como servicios independientes.
 
 ### Diagrama de componentes del backend
 
-![Componentes del backend de GanadoConecta](../../img/GanadoConecta_C4_Nivel_3_Componentes.png)
+![Componentes implementados del backend de GanadoConecta](../04-modelo-c4/diagramas/nivel-3-componentes.svg)
+
+[C4 nivel 3 y fuente editable](../04-modelo-c4/Nivel3-DiagramaComponentes.md)
+
+Las agrupaciones lógicas descritas en este documento conservan el diseño
+previsto. En la ejecución actual el catálogo lee de PostgreSQL. Redis,
+el análisis inteligente y las notificaciones externas siguen pendientes.
 
 *Figura. Modelo C4 de nivel 3: componentes del backend de GanadoConecta.*
 

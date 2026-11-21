@@ -1,5 +1,9 @@
 # Sincronización sanitaria offline — SPEC-02 S07
 
+El [flujo editable de arquitectura](../02-arquitectura-software/diagramas/ganadoconecta-tecnico.drawio)
+y su [vista SVG](../02-arquitectura-software/diagramas/sincronizacion-offline.svg)
+resumen la autorización, el reenvío y la confirmación local.
+
 ## Resultado
 
 El orquestador existente sincroniza ahora `CREAR_ANIMAL`, vacunaciones y los

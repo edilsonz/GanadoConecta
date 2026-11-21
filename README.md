@@ -73,7 +73,7 @@ fotografías están pendientes de selección.
 | docs/04-modelo-c4/ | Documentación de los modelos C4 |
 | docs/05-preparacion-implementacion/ | Propuestas de preparación; pendientes de revisión |
 | docs/06-evaluacion-sdd/ | Ruta SDD y criterios de evaluación |
-| img/ | Imágenes de los diagramas arquitectónicos y modelos C4 |
+| img/ | [Índice de recursos gráficos y archivo histórico](img/README.md) |
 | tecnologia/ | Propuesta tecnológica |
 | specs/ | Una carpeta por funcionalidad con spec.md, plan.md y tasks.md; plantilla original conservada |
 | prompts-codex/ | Instrucciones reutilizables para tareas de Codex |

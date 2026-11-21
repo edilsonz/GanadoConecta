@@ -11,6 +11,9 @@ Arquitectura cliente-servidor; frontend React; backend Java/Spring Boot **monoli
 
 ## Vista simplificada (propuesta textual, no sustituye imágenes C4)
 
+La [vista vigente de contenedores](../04-modelo-c4/Nivel2-DiagramaContenedores.md)
+distingue los elementos implementados de esta propuesta.
+
 ```mermaid
 flowchart TB
   subgraph CLIENTE[Dispositivos: celular y computadora]

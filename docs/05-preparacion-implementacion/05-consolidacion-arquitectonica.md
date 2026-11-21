@@ -71,10 +71,10 @@ JWT offline, algoritmo de conflictos ni habilitación de ventas offline.
 Estos detalles de v2 se conservan para evaluar en las SPEC; no se promueven
 por estar escritos en un borrador o prompt.
 
-Las fuentes editables C4 no se encontraron en los archivos del repositorio:
-solo hay los PNG de niveles 1–3 en img/. Draw.io figura como herramienta,
-pero no hay archivos .drawio asociados. No se inspeccionaron repositorios
-externos ni se afirma que las fuentes no existan fuera de este repositorio.
+En esta consolidación se encontraron los PNG originales, sin fuentes
+asociadas en el repositorio. Los [PNG históricos](../../img/README.md#archivo-histórico)
+se conservan. La [actualización gráfica](../02-arquitectura-software/diagramas/README.md)
+incorporó fuentes Draw.io nuevas y vistas del estado implementado.
 
 ## Pendientes antes de implementar el flujo afectado
 
@@ -88,7 +88,7 @@ externos ni se afirma que las fuentes no existan fuera de este repositorio.
 | TTL, claves, invalidación reintentable y protección ante revocación | SPEC de catálogo | No exponer datos retirados desde caché. |
 | Modelo, fuentes/corpus, privacidad, retención, errores y respuesta conversacional | SPEC de IA | Integración FastAPI; no se elige proveedor. |
 | Fotografías, notificaciones, infraestructura, versiones y herramientas de prueba | Plan técnico de cada integración | Implementación/despliegue correspondiente. |
-| Fuentes editables de diagramas y revisión visual | docs/04-modelo-c4 | Regeneración de imágenes y cierre gráfico del criterio 3. |
+| Vistas gráficas vigentes | [Índice de diagramas](../02-arquitectura-software/diagramas/README.md) | C4 1–3 y vistas técnicas exportadas desde Draw.io. |
 
 La ausencia de un pendiente no autoriza a implementar fuera de la SPEC.
 Los criterios de evaluación se relacionan en la

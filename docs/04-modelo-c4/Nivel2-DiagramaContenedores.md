@@ -1,114 +1,20 @@
 # Modelo C4 — Nivel 2: Contenedores
 
-## 1. Objetivo
+Un contenedor C4 representa una aplicación o un almacén. El esquema separa las piezas de la ejecución local de las integraciones previstas.
 
-Mostrar las aplicaciones y los almacenamientos que forman
-GanadoConecta, sus responsabilidades y sus relaciones.
+![Contenedores vigentes de GanadoConecta](diagramas/nivel-2-contenedores.svg)
 
-En C4, un contenedor representa una aplicación o un almacenamiento.
-No significa necesariamente un contenedor Docker.
+[Fuente Draw.io, página 2](diagramas/ganadoconecta-c4.drawio) · [Figura histórica](../../img/historico/GanadoConecta_C4_Nivel_2_Contenedores.png)
 
-## 2. Contenedores del sistema
+| Contenedor o recurso | Responsabilidad vigente |
+|---|---|
+| Aplicación web · React y TypeScript | Interfaz responsiva en español. El Service Worker precacha recursos estáticos. IndexedDB V3 conserva contexto local y operaciones pendientes para los flujos habilitados. |
+| API · Java y Spring Boot | Monolito modular con Clean Architecture, seguridad y autorización. Atiende las operaciones online y las que el cliente reenvía al recuperar la conexión. |
+| PostgreSQL 17 · JDBC y Flyway | Fuente de verdad para los registros, transacciones y comprobantes de idempotencia. El esquema actual se reproduce con V1–V16. |
+| Directorio privado de fotos | Almacenamiento local de desarrollo detrás del adaptador del catálogo. PostgreSQL conserva referencias y metadatos. |
 
-| Contenedor | Tecnología | Responsabilidad |
-|---|---|---|
-| Aplicación web | React | Presentar las interfaces de gestión, administración y catálogo público. |
-| API Backend | Java y Spring Boot | Ejecutar los casos de uso, comprobar permisos y coordinar las operaciones del sistema. |
-| Base de datos | PostgreSQL | Conservar los registros permanentes, sus relaciones y las tareas persistentes. |
-| Caché | Redis | Guardar temporalmente resultados de consultas frecuentes del catálogo público. |
-| Servicio propio de IA | Python y FastAPI | Analizar registros históricos y devolver patrones o variaciones productivas. |
-| Almacenamiento de fotografías | Archivos u objetos | Conservar las imágenes de los anuncios. |
+El cliente usa REST/HTTPS y JSON. Las fotografías se envían como archivos binarios y se consultan mediante rutas del catálogo. El alcance sin conexión cubre el alta individual y determinados eventos sanitarios, con revalidación de sesión y permisos al sincronizar. Las consultas privadas de la API requieren conexión.
 
-La solución concreta de almacenamiento de fotografías
-está pendiente de selección.
+**Previsto.** Redis para resultados públicos del catálogo con caducidad e invalidación, servicio propio de IA en Python/FastAPI, entrega externa de notificaciones, almacenamiento definitivo de fotografías y despliegue de producción con DNS y CDN. Las consultas públicas llegan hoy a PostgreSQL.
 
-## 3. Sistema externo
-
-El proveedor de notificaciones enviará recordatorios y alertas
-solicitados por el backend.
-
-Se representa fuera del límite de GanadoConecta porque
-es un servicio externo. Su proveedor y canales están
-pendientes de selección.
-
-## 4. Diagrama
-
-![Contenedores de GanadoConecta](../../img/GanadoConecta_C4_Nivel_2_Contenedores.png)
-
-*Figura. Modelo C4 de nivel 2: contenedores de GanadoConecta.*
-
-## 5. Relaciones principales
-
-| Origen | Destino | Interacción |
-|---|---|---|
-| Productor, visitante y administrador | Aplicación web | Utilizan las funcionalidades correspondientes a sus permisos. |
-| Aplicación web | API Backend | Invoca operaciones mediante API REST sobre HTTPS y JSON. |
-| API Backend | PostgreSQL | Lee y escribe registros mediante operaciones SQL y transacciones. |
-| API Backend | Redis | Consulta, guarda e invalida resultados del catálogo mediante el protocolo Redis sobre TCP. |
-| API Backend | Servicio propio de IA | Solicita análisis y recibe resultados mediante HTTP y JSON. |
-| API Backend | Proveedor de notificaciones | Solicita el envío de recordatorios y alertas. |
-| API Backend | Almacenamiento de fotografías | Guarda y recupera imágenes mediante un adaptador. |
-
-Los mecanismos concretos de integración con notificaciones
-y almacenamiento se definirán al seleccionar sus soluciones.
-
-## 6. Uso de la caché
-
-PostgreSQL será la fuente principal de información.
-
-El backend consultará Redis para obtener resultados públicos
-del catálogo. Si la entrada no existe, ha caducado o Redis falla,
-consultará PostgreSQL.
-
-Los resultados tendrán caducidad. Después de confirmar cambios
-en anuncios, se invalidarán las entradas afectadas.
-
-La especificación definirá cómo controlar resultados
-desactualizados y evitar la exposición de información
-que haya dejado de estar autorizada.
-
-## 7. Procesamiento independiente
-
-El backend principal será una aplicación monolítica modular.
-Sus módulos compartirán una unidad de despliegue.
-
-El servicio de IA se ejecutará de manera independiente.
-Las solicitudes de análisis y notificaciones se gestionarán
-mediante tareas persistentes en segundo plano dentro del backend.
-
-## 8. Seguridad y datos
-
-- El backend verificará identidad, permisos y pertenencia.
-- Los historiales completos permanecerán privados.
-- Redis almacenará únicamente resultados públicos del catálogo.
-- Las fotografías se conservarán como archivos; PostgreSQL
-  mantendrá sus referencias y metadatos.
-- Las integraciones recibirán únicamente los datos necesarios.
-
-## 9. Relación con el siguiente nivel
-
-El nivel 3 detallará los componentes internos de la API Backend:
-controladores, módulos, ejecutor de tareas y adaptadores.
-
-## 10. Contenedores y relaciones consolidados
-
-| Origen | Destino | Relación aprobada |
-|---|---|---|
-| Titular y familiares autorizados | React PWA | Interfaz responsiva en español con «Mi ganado». |
-| React PWA | IndexedDB local | Consulta de datos previamente autorizados y cola de registros pendientes, dentro del dispositivo cliente. |
-| React PWA | API Backend | Sincronización al recuperar conexión por REST/HTTPS/JSON, con permisos actuales, versiones y deduplicación. |
-| API Backend | PostgreSQL | Ganaderías, membresías, parentescos, campañas y control de operaciones sincronizadas, además de los registros originales. |
-| API Backend | FastAPI existente | Análisis y conversación sobre datos filtrados por autorización; orientación con fuentes confiables. |
-| API Backend | Almacenamiento de fotografías | Adaptador de infraestructura; sin microservicio de fotografías. |
-
-Service Worker y almacenamiento local son detalles internos del cliente PWA,
-no nuevos servicios del backend. Redis solo conserva resultados públicos del
-catálogo. El cliente no accede directamente a PostgreSQL, Redis o FastAPI.
-El proveedor/modelo de IA y las fuentes concretas están pendientes de selección.
-La cola local no garantiza almacenamiento permanente ni arranque sin preparación.
-
-Solo se encontró `img/GanadoConecta_C4_Nivel_2_Contenedores.png`, sin fuente
-editable. Se mantiene la imagen original. Queda pendiente representar PWA,
-IndexedDB y sincronización, ampliar FastAPI y precisar el límite del almacenamiento
-cuando se elija proveedor. Esta tabla actualiza las relaciones documentadas;
-no afirma que la imagen haya sido regenerada.
+**Trazabilidad.** [Decisiones arquitectónicas](../01-analisis-de-sistema/07-decisiones-arquitectonicas.md), [contratos SDD](../../specs/README.md), [despliegue local](../02-arquitectura-software/diagramas/despliegue-local.svg), [sincronización](../02-arquitectura-software/diagramas/sincronizacion-offline.svg) y [nivel 3](Nivel3-DiagramaComponentes.md).
