@@ -13,7 +13,8 @@ const hoyLima = () => new Intl.DateTimeFormat('en-CA', {
   timeZone: 'America/Lima', year: 'numeric', month: '2-digit', day: '2-digit',
 }).format(new Date())
 const estados = { PROXIMA: 'Programada', PENDIENTE: 'Pendiente', VENCIDA: 'Vencida', COMPLETADA: 'Realizada' }
-const esCampana = (tipo: TipoActividad) => tipo.startsWith('CAMPANA_')
+const esCampana = (tipo: string) => tipo.startsWith('CAMPANA_')
+const opcionesTipo = Object.entries(tiposActividad)
 const marcarSeleccion = (ids: string[], id: string, agregar: boolean) =>
   agregar ? [...ids, id] : ids.filter(actual => actual !== id)
 
@@ -94,7 +95,7 @@ export function AgendaSanitariaPanel(p: Props) {
   }
 
   async function completar(id: string, datos?: ConfirmacionCampana) {
-    if (ocupado.current) return
+    if (!p.puedeEscribir || ocupado.current) return
     ocupado.current = true
     setEnviando(true)
     try {
@@ -136,10 +137,15 @@ export function AgendaSanitariaPanel(p: Props) {
       className={`agenda-item state-${a.estadoVisible.toLowerCase()}`}><div>
       <span className="access-badge">{estados[a.estadoVisible]}</span> <strong>{tiposActividad[a.tipo]} · {a.fechaPrevista}</strong>
       <p>{a.animalId ? nombre(a.animalId) : `${a.participantes?.length ?? 0} participantes`} · {a.descripcion}</p>
+      {!a.animalId && !esCampana(a.tipo) && <p>Actividad colectiva de agenda. Su cierre no registra atenciones.</p>}
       {a.observaciones && <p>{a.observaciones}</p>}
       {a.fechaAtencion && <p>Fecha de atención {a.fechaAtencion}. Atendidos: {a.atendidos?.map(nombre).join(', ')}.</p>}
-      {campana === a.actividadId && <form onSubmit={e => { e.preventDefault(); void completar(a.actividadId, confirmacion) }}>
+      {a.fechaAtencion && a.participantes?.some(id => !a.atendidos?.includes(id)) &&
+        <p>Sin atención confirmada: {a.participantes.filter(id => !a.atendidos?.includes(id)).map(nombre).join(', ')}.</p>}
+      {p.puedeEscribir && campana === a.actividadId &&
+        <form onSubmit={e => { e.preventDefault(); void completar(a.actividadId, confirmacion) }}>
         <fieldset disabled={enviando}><legend>Atenciones realmente realizadas</legend>
+          <p>Marca únicamente a los animales que recibieron atención.</p>
           {a.participantes?.map(id => <label className="checkbox-field" key={id}><input type="checkbox"
             checked={confirmacion.atendidos.includes(id)} onChange={e => {
               const seleccionado = e.target.checked
@@ -166,15 +172,29 @@ export function AgendaSanitariaPanel(p: Props) {
       <h4>Programar actividad</h4>
       <fieldset disabled={enviando || Boolean(pendiente)}>
         <div className="animal-fields-grid">
-          <label className="form-field">Tipo *<select value={form.tipo}
+          <label className="form-field">Tipo *<select value={form.tipo} aria-describedby="agenda-tipo-ayuda"
             onChange={e => setForm({ ...form, tipo: e.target.value as TipoActividad })}>
-            {Object.entries(tiposActividad).map(([tipo, etiqueta]) => <option key={tipo} value={tipo}>{etiqueta}</option>)}
+            <optgroup label="Actividades de agenda">
+              {opcionesTipo.filter(([tipo]) => !esCampana(tipo))
+                .map(([tipo, etiqueta]) => <option key={tipo} value={tipo}>{etiqueta}</option>)}
+            </optgroup>
+            <optgroup label="Campañas con confirmación por animal">
+              {opcionesTipo.filter(([tipo]) => esCampana(tipo))
+                .map(([tipo, etiqueta]) => <option key={tipo} value={tipo}>{etiqueta}</option>)}
+            </optgroup>
           </select></label>
           <label className="form-field">Fecha prevista *<input type="date" min={hoyLima()} value={form.fechaPrevista}
             onChange={e => setForm({ ...form, fechaPrevista: e.target.value })} /></label>
         </div>
+        <p id="agenda-tipo-ayuda">{esCampana(form.tipo)
+          ? 'Al cerrar la campaña podrás confirmar cuáles animales recibieron atención.'
+          : 'Marcar una actividad de agenda como realizada no registra atenciones. Para confirmarlas, elige una campaña.'}</p>
         {!esCampana(form.tipo) && <label className="checkbox-field"><input type="checkbox" checked={colectiva}
           onChange={e => setColectiva(e.target.checked)} />Actividad colectiva</label>}
+        {colectiva && form.tipo === 'VACUNACION' && <button className="button button-outline" type="button"
+          onClick={() => setForm(f => ({ ...f, tipo: 'CAMPANA_VACUNACION' }))}>
+          Usar campaña de vacunación
+        </button>}
         {grupo ? <fieldset><legend>Animales participantes</legend>{p.animales.map(a => <label className="checkbox-field" key={a.animalId}>
           <input type="checkbox" checked={participantes.includes(a.animalId)} disabled={participantes.length >= 100 && !participantes.includes(a.animalId)}
             onChange={e => setParticipantes(marcarSeleccion(participantes, a.animalId, e.target.checked))} />{nombre(a.animalId)}</label>)}</fieldset>

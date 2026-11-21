@@ -159,6 +159,43 @@ class VacunacionesPostgresIntegrationTest extends SoporteJwtPostgres {
                 Integer.class, otro)).isZero();
     }
 
+    @Test void campanaVacunacionConfirmaSoloElPrimerAnimalYConservaTrazabilidad() throws Exception {
+        UUID otro = UUID.randomUUID(), actividad = UUID.randomUUID();
+        jdbc.update("UPDATE ganado.animal SET nombre='PRUEBA-LOTE-01' WHERE id=?", animal);
+        jdbc.update("""
+                INSERT INTO ganado.animal(id,ganaderia_id,sexo,nombre,creado_por,creado_en)
+                VALUES(?,?,'MACHO','PRUEBA-LOTE-02',?,now())
+                """, otro, ganaderia, usuario);
+        var hoy = java.time.LocalDate.now(java.time.ZoneId.of("America/Lima"));
+        programar(json.writeValueAsString(Map.of("actividadId", actividad, "tipo", "CAMPANA_VACUNACION",
+                "participantes", java.util.List.of(animal, otro), "fechaPrevista", hoy.plusDays(1).toString(),
+                "descripcion", "Campaña sintética"))).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.estadoVisible").value("PROXIMA"));
+        var completar = post(rutaAgenda()+"/"+actividad+"/completar").header("Authorization","Bearer "+jwt)
+                .header("Origin","https://127.0.0.1:5173").with(csrf().asHeader());
+        mvc.perform(completar).andExpect(status().isUnprocessableEntity());
+        String confirmacion = json.writeValueAsString(Map.of("atendidos", java.util.List.of(animal),
+                "fechaAtencion", hoy.toString(), "nombreVacuna", "Vacuna sintética"));
+        for (int intento = 0; intento < 2; intento++) {
+            mvc.perform(completar.contentType("application/json").content(confirmacion)).andExpect(status().isOk())
+                    .andExpect(jsonPath("$.estado").value("COMPLETADA"))
+                    .andExpect(jsonPath("$.participantes.length()").value(2))
+                    .andExpect(jsonPath("$.atendidos.length()").value(1))
+                    .andExpect(jsonPath("$.atendidos[0]").value(animal.toString()));
+        }
+        assertThat(jdbc.queryForList("""
+                SELECT animal_id FROM sanidad.evento_sanitario
+                WHERE ganaderia_id=? AND tipo='VACUNACION'
+                """, UUID.class, ganaderia)).containsExactly(animal);
+        assertThat(jdbc.queryForList("""
+                SELECT p.animal_id FROM sanidad.participante_agenda p
+                JOIN sanidad.evento_sanitario e ON e.id=p.evento_confirmado_id AND e.animal_id=p.animal_id
+                WHERE p.ganaderia_id=? AND p.actividad_id=?
+                """, UUID.class, ganaderia, actividad)).containsExactly(animal);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM sanidad.evento_sanitario WHERE animal_id=?",
+                Integer.class, otro)).isZero();
+    }
+
     private org.springframework.test.web.servlet.ResultActions confirmarCampana(UUID actividad, UUID atendido, String fecha)
             throws Exception {
         return mvc.perform(post(rutaAgenda()+"/"+actividad+"/completar").header("Authorization","Bearer "+jwt)
