@@ -23,6 +23,7 @@ nuevas especificaciones. Reorganizar un borrador no implica aprobarlo.
 | SPEC-08 | [Anuncios y catálogo](SPEC-08-catalogo-anuncios/spec.md) | [Plan](SPEC-08-catalogo-anuncios/plan.md) | [Tareas](SPEC-08-catalogo-anuncios/tasks.md) | Proyección pública, gestión y fotos con adaptador local. Redis y proveedor definitivo pendientes. |
 | SPEC-09 | [Ventas y moderación](SPEC-09-ventas-moderacion/spec.md) | [Plan](SPEC-09-ventas-moderacion/plan.md) | [Tareas](SPEC-09-ventas-moderacion/tasks.md) | Venta y revisión auditada. Recepción de reportes desactivada por defecto. |
 | SPEC-10 | [Administración](SPEC-10-administracion-usuarios/spec.md) | [Plan](SPEC-10-administracion-usuarios/plan.md) | [Tareas](SPEC-10-administracion-usuarios/tasks.md) | Consulta y auditoría con permiso de plataforma. Acciones sobre cuentas pendientes de aprobación. |
+| SPEC-11 | [Reportes ganaderos](SPEC-11-reportes-ganaderos/spec.md) | [Plan](SPEC-11-reportes-ganaderos/plan.md) | [Tareas](SPEC-11-reportes-ganaderos/tasks.md) | Agregados sanitarios, reproductivos y de peso con filtros, autorización y evidencia en navegador. |
 
 RF17–RF22 y AC09 forman parte de la documentación base. La SPEC-01 fue
 aprobada el 16 de noviembre de 2026, incluida la rotación de renovación.

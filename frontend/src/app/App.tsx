@@ -104,7 +104,8 @@ export default function App() {
         ) : (
           <>
             <AccesoCuenta sesion={sesion} onSesionChange={setSesion} />
-            {sesion && <GanaderiasPanel key={sesion.usuarioId} sesion={sesion} onSesionInvalida={invalidarSesion} />}
+            {sesion && <GanaderiasPanel key={sesion.usuarioId} sesion={sesion}
+              conectado={conectado} onSesionInvalida={invalidarSesion} />}
             {!sesion && conectado && <RegistroCuenta />}
           </>
         )}

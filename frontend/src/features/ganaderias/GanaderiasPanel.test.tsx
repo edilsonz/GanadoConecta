@@ -46,7 +46,7 @@ describe('Panel de ganaderías', () => {
   })
 
   it('no consulta sin sesión y explica el requisito', () => {
-    render(<GanaderiasPanel sesion={null} onSesionInvalida={vi.fn()} />)
+    render(<GanaderiasPanel conectado sesion={null} onSesionInvalida={vi.fn()} />)
 
     expect(screen.getByText(/Inicia sesión para crear/)).toBeInTheDocument()
     expect(listarGanaderias).not.toHaveBeenCalled()
@@ -54,14 +54,14 @@ describe('Panel de ganaderías', () => {
 
   it('representa el estado vacío autorizado', async () => {
     vi.mocked(listarGanaderias).mockResolvedValue([])
-    render(<GanaderiasPanel sesion={sesion} onSesionInvalida={vi.fn()} />)
+    render(<GanaderiasPanel conectado sesion={sesion} onSesionInvalida={vi.fn()} />)
 
     expect(await screen.findByText(/Aún no tienes ganaderías/)).toBeInTheDocument()
   })
 
   it('lista y selecciona una ganadería solo en memoria', async () => {
     vi.mocked(listarGanaderias).mockResolvedValue([propia])
-    render(<GanaderiasPanel sesion={sesion} onSesionInvalida={vi.fn()} />)
+    render(<GanaderiasPanel conectado sesion={sesion} onSesionInvalida={vi.fn()} />)
 
     const opcion = await screen.findByRole('button', { name: /Los Pinos/ })
     fireEvent.click(opcion)
@@ -79,7 +79,7 @@ describe('Panel de ganaderías', () => {
     vi.mocked(listarGanaderias).mockResolvedValue([])
     let resolver: ((valor: typeof propia) => void) | undefined
     vi.mocked(crearGanaderia).mockReturnValue(new Promise(resolve => { resolver = resolve }))
-    render(<GanaderiasPanel sesion={sesion} onSesionInvalida={vi.fn()} />)
+    render(<GanaderiasPanel conectado sesion={sesion} onSesionInvalida={vi.fn()} />)
     await screen.findByText(/Aún no tienes ganaderías/)
 
     fireEvent.change(screen.getByLabelText('Nombre de la ganadería'), { target: { value: 'Los Pinos' } })
@@ -97,7 +97,7 @@ describe('Panel de ganaderías', () => {
   it('invalida la sesión si el backend la rechaza', async () => {
     const invalidar = vi.fn()
     vi.mocked(listarGanaderias).mockRejectedValue(new ErrorGanaderia('sesion'))
-    render(<GanaderiasPanel sesion={sesion} onSesionInvalida={invalidar} />)
+    render(<GanaderiasPanel conectado sesion={sesion} onSesionInvalida={invalidar} />)
 
     await waitFor(() => expect(invalidar).toHaveBeenCalledOnce())
     expect(screen.getByText(/Tu sesión terminó/)).toBeInTheDocument()
@@ -106,7 +106,7 @@ describe('Panel de ganaderías', () => {
   it('cambia de ganadería y reserva anuncios y acceso familiar al propietario', async () => {
     const lectura = { ...propia, id: 'otra-ganaderia', nombre: 'La Quebrada', rol: 'LECTOR' as const }
     vi.mocked(listarGanaderias).mockResolvedValue([propia, lectura])
-    render(<GanaderiasPanel sesion={sesion} onSesionInvalida={vi.fn()} />)
+    render(<GanaderiasPanel conectado sesion={sesion} onSesionInvalida={vi.fn()} />)
     fireEvent.click(await screen.findByRole('button', { name: /Los Pinos/ }))
     expect(screen.getByRole('button', { name: 'Anuncios' })).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('Ganadería activa'), { target: { value: lectura.id } })
@@ -118,7 +118,7 @@ describe('Panel de ganaderías', () => {
   it('muestra un conflicto seguro de creación', async () => {
     vi.mocked(listarGanaderias).mockResolvedValue([])
     vi.mocked(crearGanaderia).mockRejectedValue(new ErrorGanaderia('conflicto'))
-    render(<GanaderiasPanel sesion={sesion} onSesionInvalida={vi.fn()} />)
+    render(<GanaderiasPanel conectado sesion={sesion} onSesionInvalida={vi.fn()} />)
     await screen.findByText(/Aún no tienes ganaderías/)
 
     fireEvent.change(screen.getByLabelText('Nombre de la ganadería'), { target: { value: 'Los Pinos' } })

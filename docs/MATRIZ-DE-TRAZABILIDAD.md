@@ -15,7 +15,7 @@ La [consolidación de la interfaz](05-preparacion-implementacion/36-consolidacio
 | RF07 | HU07 | ACT01 | [SPEC-07](../specs/SPEC-07-calendario-campanas/tasks.md). Calendario y avisos en pantalla; entrega externa pendiente. |
 | RF08 | HU08, HU20 | ACT01 | Análisis histórico pendiente. |
 | RF09 | HU09 | ACT01 | Alertas por tendencias pendientes. |
-| RF10 | HU10 | ACT01 | Reportes consolidados pendientes. |
+| RF10 | HU10 | ACT01 | [SPEC-11](../specs/SPEC-11-reportes-ganaderos/tasks.md). Reportes sanitarios, reproductivos y de peso por ganadería con autorización y fechas inclusivas. |
 | RF11 | HU11 | ACT03 | [SPEC-10](../specs/SPEC-10-administracion-usuarios/tasks.md). Consultas administrativas, estadísticas y auditoría. Acciones sobre cuentas pendientes de aprobación. |
 | RF12 | HU12 | ACT01 | [SPEC-08](../specs/SPEC-08-catalogo-anuncios/tasks.md). Almacenamiento local de desarrollo. |
 | RF13 | HU13 | ACT02 | [SPEC-08](../specs/SPEC-08-catalogo-anuncios/tasks.md). Filtros y paginación públicos. |

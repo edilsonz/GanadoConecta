@@ -22,3 +22,10 @@ Seguimiento de los 16 criterios transcritos en la [ruta SDD original](06-evaluac
 | 16 | Presentación y dominio del tema | Guion en [ruta SDD](06-evaluacion-sdd/ruta-sdd-rubrica.md), ADR y trazabilidad. | Preparar demostración y defensa. |
 
 Para respaldar la base en GitHub se usan migraciones, esquema y datos sintéticos autorizados. Los respaldos con datos privados, secretos y archivos de entorno deben permanecer fuera del repositorio.
+
+Los incrementos de [administración](../specs/SPEC-10-administracion-usuarios/plan.md)
+y [reportes](../specs/SPEC-11-reportes-ganaderos/tasks.md#evidencia-conjunta) aportan a los criterios 3–9
+con casos de uso y adaptadores, contratos SDD, pruebas dirigidas, Chrome por HTTPS,
+listado por cursor y agregaciones SQL con resultados acotados. Las mediciones
+con carga representativa siguen pendientes. Para el criterio 14, los cambios
+y V17 se registran en `develop`. La publicación remota se verifica por separado.

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AccesoFamiliarPanel } from '../../features/ganaderias/AccesoFamiliarPanel'
 import { AnimalesPanel } from '../../features/ganado/AnimalesPanel'
+import { ReportesPanel } from '../../features/reportes/ReportesPanel'
 import type { Ganaderia, RolGanaderia } from '../../features/ganaderias/ganaderiasApi'
 import type { SesionActiva } from '../../features/cuenta/sesionApi'
 import './espacioGanaderia.css'
@@ -12,6 +13,7 @@ const vistas = {
   reproduccion: 'Reproducción',
   produccion: 'Producción',
   calendario: 'Calendario',
+  reportes: 'Reportes',
   anuncios: 'Anuncios',
   familia: 'Acceso familiar',
 } as const
@@ -22,11 +24,12 @@ type Props = {
   ganaderia: Ganaderia
   ganaderias: Ganaderia[]
   sesion: SesionActiva
+  conectado: boolean
   onSeleccionar: (id: string) => void
   onSesionInvalida: () => void
 }
 
-export function EspacioGanaderia({ ganaderia, ganaderias, sesion, onSeleccionar, onSesionInvalida }: Props) {
+export function EspacioGanaderia({ ganaderia, ganaderias, sesion, conectado, onSeleccionar, onSesionInvalida }: Props) {
   const [vista, setVista] = useState<VistaGanaderia>('inicio')
   const [familiaVisitada, setFamiliaVisitada] = useState(false)
   const [rolEnLinea, setRolEnLinea] = useState<RolGanaderia | null>(null)
@@ -73,10 +76,15 @@ export function EspacioGanaderia({ ganaderia, ganaderias, sesion, onSeleccionar,
               <button type="button" className="button button-outline" onClick={() => navegar('calendario')}>Ver calendario</button>
             </div>
           </section>
-          <div hidden={vistaActual === 'inicio' || vistaActual === 'familia'}>
-            <AnimalesPanel ganaderia={ganaderia} sesion={sesion} vista={vistaActual}
+          <div hidden={vistaActual === 'inicio' || vistaActual === 'familia' || vistaActual === 'reportes'}>
+            <AnimalesPanel ganaderia={ganaderia} sesion={sesion} vista={vistaActual === 'reportes' ? 'inicio' : vistaActual}
               onSesionInvalida={onSesionInvalida} onRolEnLineaChange={setRolEnLinea} />
           </div>
+          {vistaActual === 'reportes' && (conectado
+            ? <ReportesPanel key={ganaderia.id} ganaderiaId={ganaderia.id}
+                token={sesion.accessToken} onSesionInvalida={onSesionInvalida} />
+            : <section className="producer-home"><h2>Reportes</h2>
+                <p>Recupera la conexión para consultar los registros confirmados.</p></section>)}
           {propietario && familiaVisitada && <div hidden={vistaActual !== 'familia'}>
             <AccesoFamiliarPanel ganaderiaId={ganaderia.id}
               token={sesion.accessToken} onSesionInvalida={onSesionInvalida} />

@@ -12,6 +12,7 @@ import { useProteccionActualizacionPwa } from '../../pwa/pwaActividad'
 
 type GanaderiasPanelProps = {
   sesion: SesionActiva | null
+  conectado: boolean
   onSesionInvalida: () => void
 }
 
@@ -28,7 +29,7 @@ function etiquetaRol(rol: Ganaderia['rol']) {
   return rol === 'PROPIETARIO' ? 'Propietario' : rol === 'EDITOR' ? 'Editor' : 'Lector'
 }
 
-export function GanaderiasPanel({ sesion, onSesionInvalida }: GanaderiasPanelProps) {
+export function GanaderiasPanel({ sesion, conectado, onSesionInvalida }: GanaderiasPanelProps) {
   const [ganaderias, setGanaderias] = useState<Ganaderia[]>([])
   const [revision, setRevision] = useState(0)
   const [seleccionada, setSeleccionada] = useState<string | null>(null)
@@ -176,7 +177,7 @@ export function GanaderiasPanel({ sesion, onSesionInvalida }: GanaderiasPanelPro
         </>
       )}
       {sesion && ganaderiaActiva && <EspacioGanaderia key={`${sesion.usuarioId}-${ganaderiaActiva.id}`}
-        ganaderia={ganaderiaActiva} ganaderias={ganaderias} sesion={sesion}
+        ganaderia={ganaderiaActiva} ganaderias={ganaderias} sesion={sesion} conectado={conectado}
         onSeleccionar={setSeleccionada} onSesionInvalida={onSesionInvalida} />}
     </section>
   )
