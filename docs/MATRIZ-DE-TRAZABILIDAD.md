@@ -1,0 +1,28 @@
+# Matriz funcional de GanadoConecta
+
+Esta matriz referencia los catálogos originales de [22 requisitos](01-analisis-de-sistema/03-requisitos-funcionales.md), [23 historias](01-analisis-de-sistema/02-historias-de-usuario.md) y [tres actores humanos](01-analisis-de-sistema/01-actores.md). ACT01 es productor e integrante autorizado según rol; ACT02, visitante o interesado; ACT03, administrador. EXT01 sigue siendo un sistema externo. «Evidencia» enlaza a las tareas de la SPEC, con enlaces al contrato y al plan en el [índice SDD](../specs/README.md).
+
+| RF | HU asociadas | Actores | Evidencia o alcance pendiente |
+|---|---|---|---|
+| RF01 | HU01, HU22 | ACT01 | [SPEC-01](../specs/SPEC-01-registro-ganado-offline/tasks.md) y [SPEC-04](../specs/SPEC-04-acceso-familiar/tasks.md). Perfil pendiente. |
+| RF02 | HU02, HU21 | ACT01 | [SPEC-01](../specs/SPEC-01-registro-ganado-offline/tasks.md), [SPEC-06](../specs/SPEC-06-alta-masiva/tasks.md). Edición pendiente. |
+| RF03 | HU03 | ACT01 | [Sanidad](../specs/SPEC-02-seguimiento-sanitario/tasks.md), [reproducción](../specs/SPEC-03-reproduccion-partos-genealogia/tasks.md), [peso](../specs/SPEC-05-historial-peso/tasks.md). Cobertura productiva parcial. |
+| RF04 | HU04, HU23 | ACT01 | [SPEC-02](../specs/SPEC-02-seguimiento-sanitario/tasks.md) y [SPEC-07](../specs/SPEC-07-calendario-campanas/tasks.md). Baño individual en interfaz pendiente. |
+| RF05 | HU05, HU19 | ACT01 | [SPEC-03](../specs/SPEC-03-reproduccion-partos-genealogia/tasks.md). Cálculo automático de parto pendiente. |
+| RF06 | HU06 | ACT01 | [SPEC-05](../specs/SPEC-05-historial-peso/tasks.md). Otros indicadores pendientes. |
+| RF07 | HU07 | ACT01 | [SPEC-07](../specs/SPEC-07-calendario-campanas/tasks.md). Calendario y avisos en pantalla; entrega externa pendiente. |
+| RF08 | HU08, HU20 | ACT01 | Análisis histórico pendiente. |
+| RF09 | HU09 | ACT01 | Alertas por tendencias pendientes. |
+| RF10 | HU10 | ACT01 | Reportes consolidados pendientes. |
+| RF11 | HU11 | ACT03 | Gestión de usuarios y estadísticas pendientes. La moderación cubre RF16. |
+| RF12 | HU12 | ACT01 | [SPEC-08](../specs/SPEC-08-catalogo-anuncios/tasks.md). Almacenamiento local de desarrollo. |
+| RF13 | HU13 | ACT02 | [SPEC-08](../specs/SPEC-08-catalogo-anuncios/tasks.md). Filtros y paginación públicos. |
+| RF14 | HU14 | ACT01 | [SPEC-08](../specs/SPEC-08-catalogo-anuncios/tasks.md). Publicar, pausar y retirar. |
+| RF15 | HU15 | ACT01 | [SPEC-09](../specs/SPEC-09-ventas-moderacion/tasks.md). Venta y cierre transaccionales online. |
+| RF16 | HU16, HU17 | ACT01, ACT02, ACT03 | [SPEC-09](../specs/SPEC-09-ventas-moderacion/tasks.md). Recepción deshabilitada mientras se aprueba la política; revisión autorizada y retiro auditado. |
+| RF17 | HU18 | ACT01 | [SPEC-01](../specs/SPEC-01-registro-ganado-offline/tasks.md), [sincronización sanitaria](05-preparacion-implementacion/32-sincronizacion-sanitaria-offline.md). Alcance offline parcial. |
+| RF18 | HU19, HU12 | ACT01, ACT02 | [SPEC-03](../specs/SPEC-03-reproduccion-partos-genealogia/tasks.md) y [SPEC-08](../specs/SPEC-08-catalogo-anuncios/tasks.md). Proyección pública limitada y optativa. |
+| RF19 | HU20 | ACT01 | Asistente conversacional pendiente. |
+| RF20 | HU21 | ACT01 | [SPEC-01](../specs/SPEC-01-registro-ganado-offline/tasks.md) y [SPEC-06](../specs/SPEC-06-alta-masiva/tasks.md). |
+| RF21 | HU22 | ACT01 | [SPEC-04](../specs/SPEC-04-acceso-familiar/tasks.md) y [SPEC-01](../specs/SPEC-01-registro-ganado-offline/tasks.md). Acceso vigente en servidor y al sincronizar. |
+| RF22 | HU23 | ACT01 | [SPEC-02](../specs/SPEC-02-seguimiento-sanitario/tasks.md) y [SPEC-07](../specs/SPEC-07-calendario-campanas/tasks.md). |

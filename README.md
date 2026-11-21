@@ -19,6 +19,11 @@ También contará con un catálogo de anuncios de animales en venta,
 donde los interesados podrán consultar la información publicada y
 contactar al vendedor mediante el medio que este autorice.
 
+Para consultar el estado de los diez módulos y las evidencias de evaluación,
+consulta la [hoja de ruta](docs/HOJA-DE-RUTA.md), la
+[matriz funcional](docs/MATRIZ-DE-TRAZABILIDAD.md) y la
+[rúbrica de evaluación](docs/RUBRICA-DE-EVALUACION.md).
+
 ## Alcance inicial
 
 - Gestión individual de animales e historiales.
