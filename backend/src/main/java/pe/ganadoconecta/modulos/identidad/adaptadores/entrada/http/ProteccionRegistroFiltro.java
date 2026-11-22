@@ -73,6 +73,8 @@ public final class ProteccionRegistroFiltro extends OncePerRequestFilter {
         boolean agendaProtegida = "POST".equals(request.getMethod())
                 && request.getRequestURI().matches("^/api/v1/ganaderias/[^/]+/agenda-sanitaria(?:/[^/]+/completar)?$");
         String ruta = request.getRequestURI();
+        boolean asistenteProtegido = "POST".equals(request.getMethod())
+                && ruta.matches("^/api/v1/ganaderias/[^/]+/asistente$");
         boolean familiaProtegida = switch (request.getMethod()) {
             case "POST" -> ruta.equals("/api/v1/invitaciones/aceptar")
                     || ruta.matches("^/api/v1/ganaderias/[^/]+/familia/invitaciones$");
@@ -93,7 +95,7 @@ public final class ProteccionRegistroFiltro extends OncePerRequestFilter {
         return !ventaOReporte && !anuncioProtegido && !pesoProtegido && !familiaProtegida && !postProtegido && !altaAnimalProtegida && !revocacionProtegida
                 && !vacunacionProtegida && !eventoSanitarioProtegido
                 && !eventoReproductivoProtegido && !partoProtegido
-                && !genealogiaProtegida && !agendaProtegida;
+                && !genealogiaProtegida && !agendaProtegida && !asistenteProtegido;
     }
 
     @Override

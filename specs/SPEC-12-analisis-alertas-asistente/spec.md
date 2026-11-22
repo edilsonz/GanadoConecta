@@ -19,11 +19,9 @@ sesión reciben 401 y los accesos ajenos, inexistentes o revocados reciben 403.
   nuevos al leer. Queda pendiente la detección por tendencias con criterios
   aprobados. El aviso reutiliza la agenda de RF07, que es independiente de IA.
 - **RF19:** el asistente consulta datos propios con referencias y explicita
-  insuficiencia de registros o fuentes. La orientación general requiere un
-  corpus revisado. El motor real, su corpus y su integración segura están
-  pendientes. Mientras tanto, la sección informa su disponibilidad y la
-  aplicación ofrece consultas estructuradas de datos propios, sin entrada de
-  prompts ni generación de respuestas conversacionales.
+  insuficiencia de registros. El alcance de registros propios se verificó
+  con inferencia local de `qwen3:4b-instruct-2507-q4_K_M` en Ollama. La
+  orientación general requiere un corpus revisado y queda fuera de esta fase.
 
 ## Criterios y excepciones
 
@@ -32,8 +30,8 @@ sesión reciben 401 y los accesos ajenos, inexistentes o revocados reciben 403.
 | CA12-01 | El análisis identifica orígenes y período, muestra los conteos confirmados sin duplicar campañas o partos, compara pesajes en orden y explica la ausencia de datos o de un pesaje anterior. |
 | CA12-02 | La consulta de alertas devuelve solo las actividades de hoy y las vencidas de la ganadería autorizada. Las recargas conservan su UUID y el cierre retira el aviso. |
 | CA12-03 | La API rechaza accesos ajenos y revocados, incluido el filtro por animal ajeno, y evita cachés privadas. La UI elimina resultados anteriores al cambiar de ámbito o al recibir un rechazo. |
-| CA12-04 | Sin motor disponible, la UI indica que el asistente está pendiente y permite usar análisis y alertas. Las solicitudes fallidas se distinguen de consultas sin datos. |
-| CA12-05 | Cuando se integre un modelo real, solo usa hechos autorizados y fuentes revisadas, identifica sus referencias e insuficiencia y resiste peticiones para ampliar su ámbito o ejecutar escrituras. Pendiente. |
+| CA12-04 | Sin motor disponible, la UI informa la indisponibilidad y permite usar análisis y alertas. Las solicitudes fallidas se distinguen de consultas sin datos. |
+| CA12-05 | El asistente local usa hechos autorizados, cita sus registros, informa insuficiencia y mantiene el ámbito y el acceso de solo lectura ante instrucciones del usuario. El corpus de orientación general queda pendiente. |
 
 Los parámetros inválidos se rechazan con 400. Si falla la base de datos,
 la API devuelve 503. El módulo requiere conexión y no guarda los resultados

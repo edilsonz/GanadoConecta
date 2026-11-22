@@ -24,7 +24,7 @@ La [consolidación de la interfaz](05-preparacion-implementacion/36-consolidacio
 | RF16 | HU16, HU17 | ACT01, ACT02, ACT03 | [SPEC-09](../specs/SPEC-09-ventas-moderacion/tasks.md). Recepción deshabilitada mientras se aprueba la política; revisión autorizada y retiro auditado. |
 | RF17 | HU18 | ACT01 | [SPEC-01](../specs/SPEC-01-registro-ganado-offline/tasks.md), [sincronización sanitaria](05-preparacion-implementacion/32-sincronizacion-sanitaria-offline.md). Alcance offline parcial. |
 | RF18 | HU19, HU12 | ACT01, ACT02 | [SPEC-03](../specs/SPEC-03-reproduccion-partos-genealogia/tasks.md) y [SPEC-08](../specs/SPEC-08-catalogo-anuncios/tasks.md). Proyección pública limitada y optativa. |
-| RF19 | HU20 | ACT01 | [SPEC-12](../specs/SPEC-12-analisis-alertas-asistente/plan.md#frontera-de-inferencia-prevista). Proyección autorizada disponible para análisis estructurado. Modelo, corpus y respuesta conversacional pendientes. |
+| RF19 | HU20 | ACT01 | [SPEC-12](../specs/SPEC-12-analisis-alertas-asistente/tasks.md#fase-2--validación-local-de-rf19). Asistente local con Qwen3, registros propios y citas verificados en Chrome. Corpus de orientación general pendiente. |
 | RF20 | HU21 | ACT01 | [SPEC-01](../specs/SPEC-01-registro-ganado-offline/tasks.md) y [SPEC-06](../specs/SPEC-06-alta-masiva/tasks.md). |
 | RF21 | HU22 | ACT01 | [SPEC-04](../specs/SPEC-04-acceso-familiar/tasks.md) y [SPEC-01](../specs/SPEC-01-registro-ganado-offline/tasks.md). Acceso vigente en servidor y al sincronizar. |
 | RF22 | HU23 | ACT01 | [SPEC-02](../specs/SPEC-02-seguimiento-sanitario/tasks.md) y [SPEC-07](../specs/SPEC-07-calendario-campanas/tasks.md). |

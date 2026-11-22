@@ -5,6 +5,7 @@ import { ErrorAnimal, listarAnimales, type Animal } from '../ganado/animalesApi'
 import { fechaHoyLima } from '../ganado/formularioAnimal'
 import type { FiltrosReporte } from '../reportes/reportesApi'
 import { consultarAnalisis, consultarAlertas, type Analisis } from './analisisApi'
+import { AsistentePanel } from './AsistentePanel'
 import './analisis.css'
 
 const tiposSanitarios: Record<string, string> = {
@@ -165,9 +166,8 @@ export function AnalisisPanel({ ganaderiaId, token, onSesionInvalida }: Props) {
           </li>)}</ul>}
       </>}
     </section>
-    <section className="analisis-tarjeta" aria-labelledby="analisis-asistente">
-      <h3 id="analisis-asistente">Asistente conversacional</h3>
-      <p>No disponible. La selección y validación del modelo y de las fuentes de orientación están pendientes.</p>
-    </section>
+    <AsistentePanel key={`${ganaderiaId}:${aplicados.animalId}:${aplicados.desde}:${aplicados.hasta}`}
+      ganaderiaId={ganaderiaId} token={token} filtros={aplicados} onSesionInvalida={onSesionInvalida}
+      animal={aplicados.animalId ? animales.find(a => a.animalId === aplicados.animalId)?.nombre || 'Animal seleccionado' : ''} />
   </section>
 }

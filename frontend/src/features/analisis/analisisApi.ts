@@ -11,6 +11,13 @@ export type Alertas = {
     fechaPrevista: string; estado: 'PENDIENTE' | 'VENCIDA' }[]
 }
 
+export type TemaAsistente = 'PESO' | 'SANIDAD' | 'REPRODUCCION' | 'AGENDA'
+export type RespuestaAsistente = {
+  estado: 'RESPUESTA' | 'INSUFICIENTE'
+  texto: string
+  fuentes: { registroId: string; tipo: string; fecha: string }[]
+}
+
 const ruta = (ganaderiaId: string) => `/api/v1/ganaderias/${encodeURIComponent(ganaderiaId)}`
 
 export function consultarAnalisis(ganaderiaId: string, token: string, { desde, hasta, animalId }: FiltrosReporte) {
@@ -21,4 +28,11 @@ export function consultarAnalisis(ganaderiaId: string, token: string, { desde, h
 
 export function consultarAlertas(ganaderiaId: string, token: string) {
   return solicitudPrivada<Alertas>(`${ruta(ganaderiaId)}/alertas`, token)
+}
+
+export function preguntarAsistente(ganaderiaId: string, token: string, pregunta: string, tema: TemaAsistente,
+  { desde, hasta, animalId }: FiltrosReporte) {
+  return solicitudPrivada<RespuestaAsistente>(`${ruta(ganaderiaId)}/asistente`, token, 'POST', {
+    pregunta, tema, desde, hasta, ...(animalId ? { animalId } : {}),
+  })
 }

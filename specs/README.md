@@ -24,7 +24,7 @@ nuevas especificaciones. Reorganizar un borrador no implica aprobarlo.
 | SPEC-09 | [Ventas y moderación](SPEC-09-ventas-moderacion/spec.md) | [Plan](SPEC-09-ventas-moderacion/plan.md) | [Tareas](SPEC-09-ventas-moderacion/tasks.md) | Venta y revisión auditada. Recepción de reportes desactivada por defecto. |
 | SPEC-10 | [Administración](SPEC-10-administracion-usuarios/spec.md) | [Plan](SPEC-10-administracion-usuarios/plan.md) | [Tareas](SPEC-10-administracion-usuarios/tasks.md) | Consulta y auditoría con permiso de plataforma. Acciones sobre cuentas pendientes de aprobación. |
 | SPEC-11 | [Reportes ganaderos](SPEC-11-reportes-ganaderos/spec.md) | [Plan](SPEC-11-reportes-ganaderos/plan.md) | [Tareas](SPEC-11-reportes-ganaderos/tasks.md) | Agregados sanitarios, reproductivos y de peso con filtros, autorización y evidencia en navegador. |
-| SPEC-12 | [Análisis, alertas y asistente](SPEC-12-analisis-alertas-asistente/spec.md) | [Plan](SPEC-12-analisis-alertas-asistente/plan.md) | [Tareas](SPEC-12-analisis-alertas-asistente/tasks.md) | Análisis descriptivo y avisos de agenda operativos. Inferencia, corpus, conversación y avisos por tendencias pendientes. |
+| SPEC-12 | [Análisis, alertas y asistente](SPEC-12-analisis-alertas-asistente/spec.md) | [Plan](SPEC-12-analisis-alertas-asistente/plan.md) | [Tareas](SPEC-12-analisis-alertas-asistente/tasks.md) | Análisis descriptivo, avisos de agenda y conversación local sobre registros propios verificados. Corpus y avisos por tendencias pendientes. |
 
 RF17–RF22 y AC09 forman parte de la documentación base. La SPEC-01 fue
 aprobada el 16 de noviembre de 2026, incluida la rotación de renovación.

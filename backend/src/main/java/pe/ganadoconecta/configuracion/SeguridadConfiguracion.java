@@ -79,6 +79,7 @@ public class SeguridadConfiguracion {
                         .requestMatchers(HttpMethod.GET, "/api/v1/ganaderias/*/animales/*/pesos",
                                 "/api/v1/ganaderias/*/reportes", "/api/v1/ganaderias/*/analisis",
                                 "/api/v1/ganaderias/*/alertas").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/ganaderias/*/asistente").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/ganaderias/*/animales/*/pesos").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/ganaderias/*/familia").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/invitaciones/aceptar",

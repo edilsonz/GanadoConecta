@@ -13,7 +13,7 @@ Los [requisitos originales](01-analisis-de-sistema/03-requisitos-funcionales.md)
 | 7. Catálogo, anuncios y ventas | Catálogo público, anuncios, fotos autorizadas, proyección acotada de genealogía, venta y moderación | Aprobar quién puede reportar, proveedor de fotos, caché e invalidación. |
 | 8. Administración de usuarios | Permiso de plataforma, consultas paginadas, estadísticas y auditoría. Moderación conserva un permiso independiente. | Aprobar alta/revocación administrativa y procedimientos para cambios sobre cuentas. |
 | 9. Reportes y estadísticas | Reportes por ganadería con fechas y animal, agregados sanitarios y reproductivos, evolución de peso y variaciones. | Acordar exportación e indicadores adicionales. |
-| 10. Inteligencia artificial y alertas | [SPEC-12](../specs/SPEC-12-analisis-alertas-asistente/tasks.md): análisis descriptivo de registros confirmados y avisos internos de agenda. | Seleccionar modelo y corpus, validar FastAPI e IA conversacional y acordar reglas para alertas por tendencias. |
+| 10. Inteligencia artificial y alertas | [SPEC-12](../specs/SPEC-12-analisis-alertas-asistente/tasks.md): análisis descriptivo, avisos internos y conversación local de registros propios verificada con FastAPI y Qwen3 en Ollama. | Corpus de orientación general, análisis de patrones mediante modelo y reglas para alertas por tendencias. |
 
 ## Aspectos transversales
 

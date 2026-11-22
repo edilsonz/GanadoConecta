@@ -88,7 +88,7 @@ Organización de implementación (frontend/ y backend/ existen; las demás rutas
 |---|---|
 | frontend/ | Aplicación React y sus pruebas unitarias y de integración |
 | backend/ | Monolito modular Java/Spring Boot, migraciones y pruebas unitarias y de integración |
-| servicio-ia/ | Servicio Python/FastAPI independiente y sus pruebas |
+| [servicio-ia/](servicio-ia/README.md) | Servicio Python/FastAPI independiente, configuración local y sus pruebas |
 | tests/e2e/ | Pruebas de flujos completos entre servicios |
 | tests/carga/ | Escenarios, datos sintéticos y resultados de carga documentados |
 | infra/ | Configuración de entornos, servicios locales y despliegue sin secretos |

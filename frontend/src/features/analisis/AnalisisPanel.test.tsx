@@ -5,7 +5,7 @@ import { listarAnimales, type Animal } from '../ganado/animalesApi'
 import { consultarAlertas, consultarAnalisis, type Analisis } from './analisisApi'
 import { AnalisisPanel } from './AnalisisPanel'
 
-vi.mock('./analisisApi', () => ({ consultarAlertas: vi.fn(), consultarAnalisis: vi.fn() }))
+vi.mock('./analisisApi', () => ({ consultarAlertas: vi.fn(), consultarAnalisis: vi.fn(), preguntarAsistente: vi.fn() }))
 vi.mock('../ganado/animalesApi', async original => ({ ...await original<object>(), listarAnimales: vi.fn() }))
 
 const props = { ganaderiaId: 'ganaderia-a', token: 'sintetico', onSesionInvalida: vi.fn() }
@@ -23,14 +23,14 @@ beforeEach(() => {
   vi.mocked(listarAnimales).mockResolvedValue(pagina)
 })
 
-it('identifica ausencia de datos y disponibilidad real del asistente', async () => {
+it('identifica ausencia de datos y muestra el asistente de solo consulta', async () => {
   render(<AnalisisPanel {...props} />)
   expect(await screen.findByText('No hay eventos sanitarios en el período.')).toBeVisible()
   expect(screen.getByText('No hay eventos reproductivos en el período.')).toBeVisible()
   expect(await screen.findByText('No hay actividades de hoy o vencidas por atender.')).toBeVisible()
   const asistente = screen.getByRole('region', { name: 'Asistente conversacional' })
-  expect(within(asistente).getByText(/No disponible/)).toBeVisible()
-  expect(within(asistente).queryByRole('textbox')).toBeNull()
+  expect(within(asistente).getByText(/no reemplaza la valoración veterinaria/)).toBeVisible()
+  expect(within(asistente).getByRole('textbox', { name: 'Pregunta' })).toBeVisible()
 })
 
 it('pagina animales y muestra el resultado confirmado del intervalo seleccionado', async () => {

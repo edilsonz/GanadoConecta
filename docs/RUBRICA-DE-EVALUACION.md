@@ -32,5 +32,9 @@ y V17 se registran en `develop`. La publicación remota se verifica por separado
 
 La [evidencia de SPEC-12](../specs/SPEC-12-analisis-alertas-asistente/tasks.md#evidencia-del-incremento)
 aporta a los criterios 4–7 con contratos SDD, pruebas de integración aisladas
-y navegación por HTTPS a tres anchos. La evidencia corresponde a consultas
-descriptivas y reglas de agenda. Quedan pendientes las pruebas de inferencia.
+y navegación por HTTPS a tres anchos para consultas descriptivas y reglas de agenda.
+
+La [validación local de RF19](../specs/SPEC-12-analisis-alertas-asistente/tasks.md#fase-2--validación-local-de-rf19)
+aporta a los criterios 3–7 con inferencia real de Qwen3 desde Chrome, citas
+contrastadas con PostgreSQL aislado, pruebas de permisos y de degradación
+y mediciones de latencia y memoria en el equipo de desarrollo.
