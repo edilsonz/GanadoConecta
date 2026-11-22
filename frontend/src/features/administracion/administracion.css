@@ -10,16 +10,16 @@
 
 .administracion-indicadores > div,
 .administracion-lista li {
-  padding: 14px;
-  background: #eaf1e7;
-  border: 1px solid #cfddd0;
-  border-radius: 8px;
+  padding: 14px 16px;
+  background: var(--salvia);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
   overflow-wrap: anywhere;
 }
 
 .administracion-indicadores dd {
   margin: 0;
-  color: #164839;
+  color: var(--verde-bosque);
   font-size: 1.55rem;
   font-weight: 650;
 }
@@ -29,6 +29,7 @@
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: 4px 12px;
+  background: var(--superficie);
 }
 
 @media (max-width: 540px) {

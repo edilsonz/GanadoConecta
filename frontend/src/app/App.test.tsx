@@ -41,7 +41,10 @@ describe('Inicio de GanadoConecta', () => {
     expect(screen.getByRole('link', { name: 'Catálogo público' })).toHaveAttribute('href', '#catalogo')
     expect(screen.getByRole('heading', { name: 'Crea tu cuenta.' })).toBeInTheDocument()
     expect(screen.getByRole('textbox', { name: 'Correo electrónico' })).toBeInTheDocument()
-    expect(screen.getByText(/PWA instalable/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'GanadoConecta, inicio' })).toHaveAttribute('href', '#inicio')
+    expect(screen.getByRole('img', { name: 'Ganado vacuno en un pastizal entre árboles y neblina' }))
+      .toHaveAttribute('srcset', expect.stringContaining('640w'))
+    expect(screen.getByRole('link', { name: 'Crear mi cuenta' })).toHaveAttribute('href', '#crear-cuenta')
     expect(await screen.findByText('Conexión con el servicio disponible')).toBeInTheDocument()
   })
 
@@ -95,5 +98,6 @@ describe('Inicio de GanadoConecta', () => {
     expect(screen.getByRole('region', { name: 'Acceso offline seguro' })).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Acceso de cuenta' })).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Crea tu cuenta.' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Crear mi cuenta' })).not.toBeInTheDocument()
   })
 })

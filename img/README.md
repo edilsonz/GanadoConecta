@@ -9,6 +9,12 @@ documentación. La trazabilidad de evaluación está en la [rúbrica](../docs/RU
 
 ## Interfaz actual
 
+La [identidad aprobada](marca/README.md) reúne el logo original, las variantes
+de favicon e instalación y la procedencia de la fotografía. Consulta las
+[capturas HTTPS de la renovación](../tests/e2e/evidencia/identidad-2026-11-21/README.md).
+
+## Capturas funcionales de referencia
+
 Las capturas de Chrome con datos sintéticos están versionadas en la
 [evidencia E2E](../tests/e2e/README.md). Se reutilizan aquí mediante enlaces
 a la corrida del 21 de noviembre de 2026.

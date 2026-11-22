@@ -28,6 +28,7 @@ describe('contrato PWA', () => {
     expect(CONFIGURACION_PRECACHE.runtimeCaching).toEqual([])
     expect(CONFIGURACION_PRECACHE.globPatterns).toEqual([
       '**/*.{js,css,html,svg,png,ico,woff,woff2,webmanifest}',
+      '**/pastizal-ganadero-*.jpg',
     ])
     expect(CONFIGURACION_PRECACHE.globIgnores).toEqual(expect.arrayContaining([
       '**/manifest.webmanifest',

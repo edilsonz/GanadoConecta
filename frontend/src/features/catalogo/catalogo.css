@@ -16,7 +16,14 @@
   display:block;
   max-width:100%;
   max-height:16rem;
+  border-radius:9px;
   margin-block:6px;
   object-fit:contain
 }
 .catalog-grid input[type="file"] { max-width:100%; min-width:0 }
+
+.catalog-grid article {
+  display:grid;
+  align-content:start;
+  min-width:0;
+}

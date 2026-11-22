@@ -1,4 +1,5 @@
 import { FormEvent, useRef, useState } from 'react'
+import simboloMarca from '../../assets/marca/ganadoconecta-simbolo.png'
 import { ErrorRegistro, registrarCuenta } from './authApi'
 import { useProteccionActualizacionPwa } from '../../pwa/pwaActividad'
 
@@ -89,19 +90,13 @@ export function RegistroCuenta() {
   return (
     <section className="register-section" id="crear-cuenta" aria-labelledby="register-title">
       <div className="register-intro">
-        <p className="eyebrow"><span className="small-rule" /> PRIMER PASO</p>
+        <img className="account-emblem" src={simboloMarca} alt="" width="288" height="112" />
         <h2 id="register-title">Crea tu cuenta.</h2>
-        <p>Registra tus datos de acceso de forma segura. Tu cuenta se crea sin roles, ganaderías ni una sesión iniciada.</p>
-        <ul aria-label="Características del registro">
-          <li><span aria-hidden="true">✓</span> Contraseña protegida con Argon2id</li>
-          <li><span aria-hidden="true">✓</span> Sin datos de animales en esta etapa</li>
-          <li><span aria-hidden="true">✓</span> Acceso familiar todavía no disponible</li>
-        </ul>
+        <p>Después de crear tu cuenta, inicia sesión para crear una ganadería o aceptar una invitación familiar.</p>
       </div>
 
       <div className="register-card">
         <div className="register-card-heading">
-          <span className="step-number">01</span>
           <div><h3>Datos de tu cuenta</h3><p>Todos los campos son obligatorios.</p></div>
         </div>
 

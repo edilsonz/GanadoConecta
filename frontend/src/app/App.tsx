@@ -9,6 +9,9 @@ import { AdministracionPanel } from '../features/administracion/AdministracionPa
 import { consultarPermisoAdministrativo } from '../features/administracion/administracionApi'
 import type { SesionActiva } from '../features/cuenta/sesionApi'
 import { bloquearContextosOfflineUsuario } from '../offline/registroAnimalesOffline'
+import marca from '../assets/marca/ganadoconecta-marca.png'
+import pastizal from '../assets/marca/pastizal-ganadero-1280.jpg'
+import pastizalMovil from '../assets/marca/pastizal-ganadero-640.jpg'
 import {
   AccesoOfflineSeguro,
   PwaEstado,
@@ -50,16 +53,15 @@ export default function App() {
       <a className="skip-link" href="#contenido">Ir al contenido</a>
       <header className="site-header">
         <a className="brand" href={sesion ? '#mis-ganaderias' : '#inicio'} aria-label="GanadoConecta, inicio">
-          <span className="brand-mark" aria-hidden="true">gc<span>·</span></span>
-          <span>Ganado<span className="brand-light">Conecta</span></span>
+          <img src={marca} alt="" width="392" height="180" />
         </a>
         <nav aria-label="Navegación principal">
           <a className={mostrarCatalogo || mostrarAdministracion ? undefined : 'nav-active'} href={sesion ? '#mis-ganaderias' : '#inicio'}
             aria-current={mostrarCatalogo || mostrarAdministracion ? undefined : 'page'}>{sesion ? 'Mi ganadería' : 'Inicio'}</a>
           <a href="#iniciar-sesion">{sesion ? 'Mi cuenta' : 'Iniciar sesión'}</a>
-          {!sesion && conectado && <a href="#crear-cuenta">Crear cuenta</a>}
           <a className={mostrarCatalogo ? 'nav-active' : undefined}
             aria-current={mostrarCatalogo ? 'page' : undefined} href="#catalogo">Catálogo público</a>
+          {!sesion && conectado && <a className="nav-cta" href="#crear-cuenta">Crear cuenta</a>}
           {puedeAdministrar && <a className={mostrarAdministracion ? 'nav-active' : undefined}
             aria-current={mostrarAdministracion ? 'page' : undefined} href="#administracion">Administración</a>}
         </nav>
@@ -67,36 +69,24 @@ export default function App() {
 
       <PwaEstado conectado={conectado} sesionActiva={Boolean(sesion)} />
 
-      <main id="contenido">
+      <main id="contenido" tabIndex={-1}>
         <div hidden={mostrarCatalogo || mostrarAdministracion}>
         {!sesion && <section className="hero" id="inicio" aria-labelledby="hero-title">
           <div className="hero-copy">
-            <p className="eyebrow"><span className="small-rule" /> CERCA DE TU GANADERÍA</p>
-            <h1 id="hero-title">Tu ganado.<br />Su cuidado.<br /><span>Todo conectado.</span></h1>
-            <p className="hero-description">Estamos construyendo un espacio sencillo para organizar la información y acompañar el cuidado de tu ganado vacuno.</p>
-            <a className="button button-primary" href="#crear-cuenta">Crear mi cuenta <span aria-hidden="true">↗</span></a>
-            <p className="hero-note">PWA instalable · La carga básica offline no sustituye sesión ni permisos</p>
+            <p className="hero-tagline">Tu ganadería, siempre conectada</p>
+            <h1 id="hero-title">Tu ganado.<br />{' '}Su cuidado.<br />{' '}<span>Todo conectado.</span></h1>
+            <p className="hero-description">Registra tus animales, consulta sus historiales y organiza las tareas de tu ganadería en un solo lugar.</p>
+            <div className="hero-actions">
+              {conectado && <a className="button button-primary" href="#crear-cuenta">Crear mi cuenta <span aria-hidden="true">↗</span></a>}
+              <a className="button button-outline" href="#catalogo">Explorar catálogo</a>
+            </div>
           </div>
-          <div className="landscape" aria-hidden="true">
-            <div className="landscape-caption"><span>GANADOCONECTA</span><span>CRECER CON CUIDADO ↗</span></div>
-            <svg viewBox="0 0 600 620" preserveAspectRatio="xMidYMid slice" role="presentation">
-              <circle cx="440" cy="142" r="48" fill="#e8ce86" />
-              <path d="M0 300 Q130 155 290 275 T600 210 V620 H0Z" fill="#c4d6bb" />
-              <path d="M0 390 Q180 210 370 345 T600 315 V620 H0Z" fill="#73947a" />
-              <path d="M0 500 Q180 330 370 415 T600 420 V620 H0Z" fill="#3d6b52" />
-              <path d="M380 620 Q260 470 390 360" fill="none" stroke="#e6e2c8" strokeWidth="30" />
-              <path d="M0 540 Q160 440 275 470 M0 575 Q170 470 290 505 M0 610 Q170 510 310 550" fill="none" stroke="#83a387" strokeWidth="2" />
-              <g transform="translate(155 290)" fill="#f6f4df" stroke="#254e3c" strokeWidth="4" strokeLinejoin="round">
-                <path d="M0 45 Q-10 0 30 0 H95 Q115 2 115 28 L115 65 H96 L90 42 H30 L23 65 H7 Z" />
-                <path d="M94 0 L118 -13 L138 -3 L139 27 L116 34 L105 22 Z" />
-                <path d="M118 -13 L111 -26 M132 -9 L142 -20" fill="none" />
-                <path d="M0 12 L-14 30 L-12 46" fill="none" />
-                <path d="M24 0 L45 3 L55 23 L32 32 L16 19 Z" fill="#254e3c" stroke="none" />
-                <circle cx="129" cy="6" r="3" fill="#254e3c" stroke="none" />
-              </g>
-            </svg>
-            <div className="landscape-bottom"><span>Una mirada al futuro del cuidado ganadero.</span><span>↗</span></div>
-          </div>
+          <figure className="hero-photo">
+            <img src={pastizal} srcSet={`${pastizalMovil} 640w, ${pastizal} 1280w`}
+              sizes="(max-width: 680px) 92vw, (max-width: 1280px) 54vw, 680px"
+              width="1280" height="853" alt="Ganado vacuno en un pastizal entre árboles y neblina" fetchPriority="high" />
+            <figcaption><a href="https://commons.wikimedia.org/wiki/File:Cattle_in_meadow_(Unsplash).jpg">Fotografía de Karsten Würth</a></figcaption>
+          </figure>
         </section>}
 
         {!conectado && !sesion ? (
@@ -121,7 +111,7 @@ export default function App() {
           : <section className="project-section" id="catalogo"><h1>Catálogo público</h1>
               <p>Conéctate a internet para consultar las publicaciones.</p></section>)}
       </main>
-      <footer><a className="footer-brand" href={sesion ? '#mis-ganaderias' : '#inicio'}>GanadoConecta</a><p>Información clara. Cuidado cercano.</p></footer>
+      <footer className="site-footer"><a className="footer-brand" href={sesion ? '#mis-ganaderias' : '#inicio'}>GanadoConecta</a><p>Tu ganadería, siempre conectada</p></footer>
     </>
   )
 }

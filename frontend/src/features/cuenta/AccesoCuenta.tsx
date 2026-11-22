@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
+import simboloMarca from '../../assets/marca/ganadoconecta-simbolo.png'
 import {
   cerrarSesionRemota,
   ErrorSesion,
@@ -177,6 +178,7 @@ export function AccesoCuenta({ sesion, onSesionChange }: AccesoCuentaProps) {
     <section className={sesion ? 'login-section login-section-active' : 'login-section'}
       id="iniciar-sesion" aria-labelledby="login-title">
       <div className="login-intro">
+        {!sesion && <img className="account-emblem" src={simboloMarca} alt="" width="288" height="112" />}
         <h2 id="login-title">{sesion ? 'Mi cuenta' : 'Vuelve a tu cuenta.'}</h2>
         {!sesion && <p>Administra las ganaderías a las que tienes acceso.</p>}
       </div>
