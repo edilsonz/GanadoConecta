@@ -4,6 +4,9 @@ Esta matriz referencia los catálogos originales de [22 requisitos](01-analisis-
 
 La [consolidación de la interfaz](05-preparacion-implementacion/36-consolidacion-ux.md) aporta evidencia transversal de navegación para los flujos privados y el catálogo. Los contratos de la matriz conservan su alcance.
 
+La [auditoría funcional](AUDITORIA-FUNCIONAL.md) complementa esta matriz con el
+estado de cada RF y HU, evidencias ejecutadas y brechas observadas.
+
 | RF | HU asociadas | Actores | Evidencia o alcance pendiente |
 |---|---|---|---|
 | RF01 | HU01, HU22 | ACT01 | [SPEC-01](../specs/SPEC-01-registro-ganado-offline/tasks.md) y [SPEC-04](../specs/SPEC-04-acceso-familiar/tasks.md). Perfil pendiente. |

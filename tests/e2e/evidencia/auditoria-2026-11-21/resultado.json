@@ -1,0 +1,189 @@
+{
+  "fecha": "2026-11-21",
+  "base": "97f68b8",
+  "correccion": "098643c",
+  "entorno": {
+    "navegador": "Chrome headless por HTTPS, perfil de pruebas aislado",
+    "node": "22.19.0",
+    "springBoot": "3.5.16",
+    "postgresql": "Docker 17.12, base sintética nueva",
+    "flyway": "V1–V17",
+    "ia": "FastAPI con Python 3.14 y Ollama 0.40.17, modelo qwen3:4b-instruct-2507-q4_K_M",
+    "anchosPx": [
+      360,
+      768,
+      1440
+    ]
+  },
+  "resultados": {
+    "aprobados": 28,
+    "fallidos": 0,
+    "bloqueados": 0
+  },
+  "casos": {
+    "campanasCatalogoVentasYUX": [
+      {
+        "caso": "SPEC-07",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "SPEC-08",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "SPEC-09",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "UX/UI",
+        "estado": "aprobado"
+      }
+    ],
+    "productor": [
+      {
+        "caso": "A · registro, acceso y restauración HTTPS",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "B · creación, listado y selección de ganadería",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "D · alta individual y lote mixto persistente",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "C · invitación, roles, acceso ajeno y revocación",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "E · campaña de desparasitación y seguimiento por animal",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "F · monta, evaluación, parto y parentesco",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "G · pesajes, diferencia y gráfica",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "M · IndexedDB, reconexión y reenvío sin duplicar",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "A · cierre e imposibilidad de restaurar tras recarga",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "L · aviso de hoy y retiro al cerrar una actividad",
+        "estado": "aprobado"
+      }
+    ],
+    "administracionReportesModeracionYUX": [
+      {
+        "caso": "CA10-02/03 · listado, filtros, indicadores y auditoría",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "CA11-01/03 · agregados, límites, peso, error y ganadería vacía",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "CA10-01 · HTTP 403, navegación directa y permiso de moderación",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "CA11-02 · propietario, editor, lector, revocación y aislamiento",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "CA09-03 · retiro por moderador aislado, catálogo y auditoría",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "Interfaz y teclado · 1440 px",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "Interfaz y teclado · 768 px",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "Interfaz y teclado · 360 px",
+        "estado": "aprobado"
+      }
+    ],
+    "asistenteYUX": [
+      {
+        "caso": "Cinco preguntas propias en español, cifras y referencias reales, inyección rechazada",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "1440 px sin desbordamiento",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "768 px sin desbordamiento",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "360 px sin desbordamiento",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "Ganadería sin historiales y limpieza del chat anterior",
+        "estado": "aprobado"
+      },
+      {
+        "caso": "503 con FastAPI activo y Ollama inaccesible; análisis disponible",
+        "estado": "aprobado"
+      }
+    ]
+  },
+  "tiemposObservadosAsistenteEnSegundos": [
+    {
+      "tema": "PESO",
+      "segundos": 1.997
+    },
+    {
+      "tema": "PESO",
+      "segundos": 0.546
+    },
+    {
+      "tema": "SANIDAD",
+      "segundos": 0.56
+    },
+    {
+      "tema": "REPRODUCCION",
+      "segundos": 0.446
+    },
+    {
+      "tema": "AGENDA",
+      "segundos": 0.559
+    },
+    {
+      "tema": "PESO",
+      "segundos": 0.552
+    },
+    {
+      "tema": "PESO",
+      "segundos": 0.12
+    }
+  ],
+  "capturas": [
+    "lote.png",
+    "genealogia.png",
+    "pendiente-offline.png",
+    "moderacion-retiro.png",
+    "administracion-360.png",
+    "asistente-360.png"
+  ],
+  "observaciones": [
+    "Resultados finales de los casos distintos. Se excluyen la preparación HTTPS y comprobaciones repetidas.",
+    "Los casos afectados por el directorio de fotos o selectores del arnés se ejecutaron nuevamente tras corregir la preparación.",
+    "La regresión de recarga durante el cierre falló antes de la corrección y pasó al aplicar el cambio.",
+    "Solo datos sintéticos. La recepción pública de reportes permaneció desactivada."
+  ]
+}

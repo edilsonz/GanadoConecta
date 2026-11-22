@@ -67,6 +67,23 @@ recorrido, o configura `GC_E2E_CHROME` si Chrome tiene otra ruta. El origen
 aislado se puede cambiar con `GC_E2E_URL`. Las capturas y `resultado.json`
 se guardan en `.cache/e2e/<id>/`, ruta ignorada por Git.
 
+Para la auditoría de los flujos privados, con el mismo entorno aislado:
+
+```powershell
+node tests/e2e/auditoria-productor.mjs
+```
+
+El arnés crea cuentas de prueba y una ganadería por ejecución. Comprueba acceso,
+invitaciones, roles, alta individual y por lote, campaña de desparasitación,
+reproducción, pesajes, avisos de agenda y la cola nativa de IndexedDB. Simula la
+desconexión mediante Chrome DevTools, reenvía el mismo registro a la API real y
+vuelve a consultar tras la recarga. Usa `--familia` o `--alertas` para repetir el
+caso indicado y su preparación. Guarda resultados y capturas en
+`.cache/e2e-auditoria/<id>/`. Si ejecutas varios recorridos, usa el mismo directorio
+privado previamente creado para las fotografías de prueba.
+[Informe de auditoría](../../docs/AUDITORIA-FUNCIONAL.md) ·
+[Resultados E2E](evidencia/auditoria-2026-11-21/resultado.json).
+
 ## Evidencia del 21 de noviembre de 2026
 
 **4/4 recorridos aprobados, 0 fallidos.** Chrome headless 158 y Node.js 22.19.0

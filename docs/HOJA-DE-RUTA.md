@@ -2,6 +2,9 @@
 
 Los [requisitos originales](01-analisis-de-sistema/03-requisitos-funcionales.md), las [historias](01-analisis-de-sistema/02-historias-de-usuario.md) y los [actores](01-analisis-de-sistema/01-actores.md) definen el alcance. La [matriz](MATRIZ-DE-TRAZABILIDAD.md) sigue los 22 RF y 23 HU; la [rúbrica](RUBRICA-DE-EVALUACION.md) recoge las evidencias docentes.
 
+La [auditoría funcional](AUDITORIA-FUNCIONAL.md) registra las verificaciones,
+brechas y el orden recomendado para cerrar requisitos antes de rendimiento e infraestructura.
+
 | Módulo | Incrementos disponibles | Trabajo pendiente |
 |---|---|---|
 | 1. Autenticación y perfiles | Registro, sesión y logout online | Actualizar datos personales y de contacto; decidir verificación del correo. |
@@ -21,5 +24,5 @@ Los [requisitos originales](01-analisis-de-sistema/03-requisitos-funcionales.md)
 - **Seguridad.** Mantener autorización por ganadería, revisión de exposición pública, permisos administrativos separados y operación de credenciales/secretos fuera de Git.
 - **Infraestructura y despliegue.** Flyway y Docker para reproducción local. Pendientes proveedor de fotos, Redis con invalidación, entrega EXT01, CI/CD, hosting, dominio, DNS y CDN.
 - **Interfaz.** Espacio del productor con navegación por módulo y ficha por pestañas. [Evidencia visual y de regresión](05-preparacion-implementacion/36-consolidacion-ux.md). Pendiente validación integrada con usuarios.
-- **Pruebas.** Conservar evidencia unitaria e integración. Los [E2E existentes](../tests/e2e/README.md) cubren SPEC-07 a SPEC-09 y navegación. Quedan pendientes los E2E offline, los planes de consulta y k6 sobre datos sintéticos reproducibles.
+- **Pruebas.** La [auditoría](AUDITORIA-FUNCIONAL.md#pruebas-y-evidencias) registra resultados de PostgreSQL, frontend, PWA, FastAPI y Chrome aislados. Quedan pendientes ampliar casos offline y medir los planes de consulta y carga con k6.
 - **Arquitectura.** Consultar las [vistas vigentes y fuentes Draw.io](02-arquitectura-software/diagramas/README.md) para el informe final.
