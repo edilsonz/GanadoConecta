@@ -6,6 +6,8 @@ import './estilos/identidad.css'
 import './estilos/historiales.css'
 import './features/calendario/agendaSanitaria.css'
 import './features/catalogo/catalogo.css'
+import './estilos/workspace.css'
+import './features/ganado/espacioAnimales.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode><App /></StrictMode>,

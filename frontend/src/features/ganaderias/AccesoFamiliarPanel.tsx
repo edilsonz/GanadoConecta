@@ -76,7 +76,9 @@ export function AccesoFamiliarPanel({ ganaderiaId, token, onSesionInvalida }: Se
     else { setResumen(undefined); setCodigo(''); setMensaje('') }
   }}>
     <summary>Acceso familiar</summary>
-    <section className="animal-form">
+    <div className="family-workspace">
+    <section className="workspace-card family-invite" aria-labelledby="family-invite-heading">
+      <h4 id="family-invite-heading">Nueva invitación</h4>
       <form onSubmit={e => {
         e.preventDefault()
         setCodigo('')
@@ -99,10 +101,13 @@ export function AccesoFamiliarPanel({ ganaderiaId, token, onSesionInvalida }: Se
         <input readOnly value={codigo} onFocus={e => e.currentTarget.select()} />
       </label>}
       {mensaje && <p role="status">{mensaje}</p>}
+    </section>
+    <section className="workspace-card family-directory" aria-labelledby="family-directory-heading">
+      <h4 id="family-directory-heading">Personas con acceso</h4>
       <button className="button button-outline" disabled={ocupado} onClick={() => void ejecutar()}>Actualizar integrantes</button>
       {resumen && <>
         <h5>Integrantes</h5>
-        {resumen.integrantes.map(i => <div className="form-field" key={i.usuarioId}>
+        {resumen.integrantes.map(i => <div className="form-field family-entry" key={i.usuarioId}>
           <p style={{ overflowWrap: 'anywhere' }}>{i.correo} · {i.rol} · {i.estado}</p>
           {i.rol !== 'PROPIETARIO' && i.estado === 'ACTIVA' && <>
             <label>Permiso de {i.correo}<select disabled={ocupado} value={i.rol} onChange={e => {
@@ -118,12 +123,13 @@ export function AccesoFamiliarPanel({ ganaderiaId, token, onSesionInvalida }: Se
         </div>)}
         <h5>Invitaciones</h5>
         {resumen.invitaciones.length === 0 && <p>Aún no hay invitaciones.</p>}
-        {resumen.invitaciones.map(i => <div className="form-field" key={i.id}>
+        {resumen.invitaciones.map(i => <div className="form-field family-entry" key={i.id}>
           <p style={{ overflowWrap: 'anywhere' }}>{i.correo} · {i.rol} · {i.estado} · Vence {new Date(i.venceEn).toLocaleString('es-PE', { timeZone: 'America/Lima' })}</p>
           {i.estado === 'PENDIENTE' && <button className="button button-outline" disabled={ocupado}
             onClick={() => void ejecutar(() => solicitudPrivada(`${ruta}/invitaciones/${i.id}`, token, 'DELETE'))}>Cancelar invitación</button>}
         </div>)}
       </>}
     </section>
+    </div>
   </details>
 }

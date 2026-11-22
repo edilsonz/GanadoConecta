@@ -10,7 +10,7 @@ main,
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  padding: 12px var(--margen) 14px;
+  padding: 9px var(--margen) 11px;
   border-bottom: 1px solid var(--borde);
 }
 
@@ -23,7 +23,7 @@ main,
 
 .brand img {
   display: block;
-  width: clamp(124px, 13vw, 174px);
+  width: clamp(116px, 12vw, 164px);
   height: auto;
 }
 
@@ -63,11 +63,14 @@ main,
 }
 
 .hero {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
-  align-items: center;
-  gap: clamp(24px, 4.8vw, 76px);
-  padding: clamp(32px, 5.5vw, 78px) var(--margen) clamp(36px, 5vw, 64px);
+  grid-template-columns: minmax(0, .93fr) minmax(0, 1.07fr);
+  align-items: stretch;
+  margin: clamp(24px, 3.5vw, 48px) var(--margen) clamp(30px, 4vw, 56px);
+  border-radius: clamp(16px, 2vw, 28px);
+  background: #193e2f;
+  box-shadow: 0 15px 32px rgb(24 60 48 / 12%);
 }
 
 .hero-copy,
@@ -75,12 +78,17 @@ main,
   min-width: 0;
 }
 
+.hero-copy {
+  align-self: center;
+  padding: clamp(24px, 4.1vw, 62px);
+}
+
 .hero-tagline {
   display: flex;
   align-items: center;
   gap: 10px;
   margin: 0 0 clamp(12px, 2.2vw, 28px);
-  color: var(--tierra);
+  color: #e7c59a;
   font-size: clamp(.82rem, 1.4vw, 1rem);
   font-weight: 700;
 }
@@ -95,22 +103,22 @@ main,
 
 .hero h1 {
   margin: 0 0 clamp(14px, 2.5vw, 30px);
-  color: var(--verde-bosque);
+  color: #fffdf7;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(2.25rem, 4.55vw, 4.45rem);
+  font-size: clamp(2.15rem, 4.1vw, 4.15rem);
   font-weight: 600;
   letter-spacing: -.065em;
   line-height: 1.03;
 }
 
 .hero h1 span {
-  color: var(--verde);
+  color: #d9e5bf;
 }
 
 .hero-description {
   max-width: 40ch;
   margin: 0 0 clamp(18px, 3vw, 32px);
-  color: var(--texto-secundario);
+  color: #edf2e7;
   font-size: clamp(.95rem, 1.1vw, 1.1rem);
   line-height: 1.65;
 }
@@ -122,26 +130,50 @@ main,
   gap: 10px;
 }
 
+.hero-actions .button-primary {
+  background: #f5e5ce;
+  color: #193e2f;
+}
+
+.hero-actions .button-primary:hover {
+  background: #fff4e4;
+}
+
+.hero-actions .button-outline {
+  color: #fffdf7;
+  border-color: #b8ccbc;
+}
+
+.hero-actions .button-outline:hover {
+  background: #315745;
+}
+
 .hero-photo {
+  position: relative;
   margin: 0;
+  min-height: 100%;
+  border-radius: 0 clamp(16px, 2vw, 28px) clamp(16px, 2vw, 28px) 0;
+  background: #687c61;
 }
 
 .hero-photo img {
   display: block;
   width: 100%;
-  height: auto;
-  aspect-ratio: 1.36;
+  height: 100%;
+  min-height: 360px;
   object-fit: cover;
-  object-position: 51% 60%;
-  border-radius: clamp(14px, 2.3vw, 32px);
-  background: var(--salvia);
+  object-position: 49% 61%;
+  border-radius: inherit;
 }
 
 .hero-photo figcaption {
-  padding-top: 8px;
-  color: var(--texto-secundario);
+  position: absolute;
+  inset: auto 9px 9px auto;
+  padding: 6px 9px;
+  border-radius: 6px;
+  color: #fffdf7;
+  background: #193328;
   font-size: .73rem;
-  text-align: right;
 }
 
 .hero-photo figcaption a {
@@ -158,6 +190,32 @@ main,
   border: 1px solid var(--borde);
   border-radius: 10px;
   background: var(--superficie);
+}
+
+.account-layout:not(.account-layout-active) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: clamp(16px, 2.4vw, 30px);
+  margin: 0 var(--margen) 38px;
+}
+
+.account-layout:not(.account-layout-active) :is(.register-section, .login-section) {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  margin: 0;
+  padding: clamp(14px, 2.5vw, 30px);
+}
+
+.account-layout:not(.account-layout-active) :is(.login-intro, .register-intro) h2 {
+  font-size: clamp(1.6rem, 3vw, 2.5rem);
+  letter-spacing: -.045em;
+  margin-bottom: 7px;
+}
+
+.account-layout:not(.account-layout-active) :is(.login-card, .register-card) {
+  min-height: 0;
+  padding: clamp(14px, 2vw, 26px);
 }
 
 .site-footer {
@@ -201,12 +259,13 @@ main,
 
   .hero {
     grid-template-columns: minmax(0, 1fr);
-    gap: 22px;
-    padding-top: 28px;
+    margin-block-start: 20px;
   }
 
+  .hero-copy { padding: 24px 18px; }
+
   .hero h1 {
-    font-size: clamp(2.55rem, 9.5vw, 3.7rem);
+    font-size: clamp(2.25rem, 9.1vw, 3.55rem);
   }
 
   .hero .button {
@@ -215,6 +274,17 @@ main,
   }
 
   .hero-photo img {
-    aspect-ratio: 1.56;
+    min-height: 0;
+    height: auto;
+    aspect-ratio: 1.62;
+  }
+
+  .hero-photo {
+    min-height: 0;
+    border-radius: 0 0 16px 16px;
+  }
+
+  .account-layout:not(.account-layout-active) {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

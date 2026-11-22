@@ -54,8 +54,8 @@ export function AdministracionPanel({ token, onSesionInvalida, onPermisoPerdido 
   return (
     <section className="project-section administracion" id="administracion" aria-labelledby="titulo-administracion">
       <h1 id="titulo-administracion">Administración</h1>
-      <section aria-label="Estadísticas de plataforma">
-        {estadisticas ? <dl className="administracion-indicadores">
+      <section className="admin-stats" aria-label="Estadísticas de plataforma">
+        {estadisticas ? <dl className="administracion-indicadores workspace-metrics">
           <div><dt>Cuentas totales</dt><dd>{estadisticas.cuentas}</dd></div>
           <div><dt>Cuentas activas</dt><dd>{estadisticas.cuentasActivas}</dd></div>
           <div><dt>Ganaderías totales</dt><dd>{estadisticas.ganaderias}</dd></div>
@@ -64,7 +64,8 @@ export function AdministracionPanel({ token, onSesionInvalida, onPermisoPerdido 
           : <p role="status">Cargando estadísticas…</p>}
       </section>
 
-      <h2>Cuentas de usuario</h2>
+      <section className="workspace-card admin-directory" aria-labelledby="admin-directory-title">
+      <h2 id="admin-directory-title">Cuentas de usuario</h2>
       <form className="administracion-filtros" onSubmit={e => {
         e.preventDefault()
         setRetorno([])
@@ -86,8 +87,9 @@ export function AdministracionPanel({ token, onSesionInvalida, onPermisoPerdido 
         onClick={() => setRevision(n => n + 1)}>Reintentar consultas</button>}
       {pagina ? (pagina.items.length ? <ul className="administracion-lista" aria-label="Cuentas">
         {pagina.items.map(u => <li key={u.id}>
-          <strong>{u.correo}</strong><span>{u.estado === 'ACTIVO' ? 'Activa' : 'Inactiva'}</span>
-          <small>{u.id}</small><span>Alta: {fechaAlta.format(new Date(u.creadoEn))}</span>
+          <div><strong>{u.correo}</strong><small>{u.id}</small></div>
+          <span className="access-badge">{u.estado === 'ACTIVO' ? 'Activa' : 'Inactiva'}</span>
+          <span>Alta: {fechaAlta.format(new Date(u.creadoEn))}</span>
         </li>)}
       </ul> : <p>No se encontraron cuentas.</p>) : !error && <p role="status">Consultando cuentas…</p>}
       <div className="catalog-actions">
@@ -98,6 +100,7 @@ export function AdministracionPanel({ token, onSesionInvalida, onPermisoPerdido 
           Siguiente
         </button>}
       </div>
+      </section>
       <ModeracionPanel token={token} onSesionInvalida={onSesionInvalida} />
     </section>
   )

@@ -5,6 +5,7 @@ import { AnalisisPanel } from '../../features/analisis/AnalisisPanel'
 import { ReportesPanel } from '../../features/reportes/ReportesPanel'
 import type { Ganaderia, RolGanaderia } from '../../features/ganaderias/ganaderiasApi'
 import type { SesionActiva } from '../../features/cuenta/sesionApi'
+import { InicioGanaderia } from './InicioGanaderia'
 import './espacioGanaderia.css'
 
 const vistas = {
@@ -21,6 +22,12 @@ const vistas = {
 } as const
 
 export type VistaGanaderia = keyof typeof vistas
+
+const grupos = [
+  { nombre: 'Trabajo diario', secciones: ['inicio', 'ganado', 'sanidad', 'reproduccion', 'produccion', 'calendario'] },
+  { nombre: 'Seguimiento', secciones: ['reportes', 'analisis'] },
+  { nombre: 'Gestión', secciones: ['anuncios', 'familia'] },
+] as const satisfies readonly { nombre: string; secciones: readonly VistaGanaderia[] }[]
 
 type Props = {
   ganaderia: Ganaderia
@@ -40,6 +47,10 @@ export function EspacioGanaderia({ ganaderia, ganaderias, sesion, conectado, onS
     propietario || (id !== 'familia' && id !== 'anuncios'))
   const vistaActual = disponibles.includes(vista) ? vista : 'inicio'
   const vistaPropia = vistaActual === 'reportes' || vistaActual === 'analisis'
+  const gruposVisibles = grupos.map(grupo => ({
+    nombre: grupo.nombre,
+    secciones: grupo.secciones.filter(id => disponibles.includes(id)),
+  })).filter(grupo => grupo.secciones.length)
 
   function navegar(destino: VistaGanaderia) {
     if (destino === 'familia') setFamiliaVisitada(true)
@@ -61,24 +72,24 @@ export function EspacioGanaderia({ ganaderia, ganaderias, sesion, conectado, onS
       </header>
       <div className="producer-layout">
         <nav className="producer-sidebar" aria-label="Secciones de la ganadería">
-          {disponibles.map(id => <button key={id} type="button"
-            aria-current={id === vistaActual ? 'page' : undefined}
-            onClick={() => navegar(id)}>{vistas[id]}</button>)}
+          {gruposVisibles.map(grupo => <div className="sidebar-group" key={grupo.nombre}>
+            <p>{grupo.nombre}</p>
+            {grupo.secciones.map(id => <button key={id} type="button"
+              aria-current={id === vistaActual ? 'page' : undefined}
+              onClick={() => navegar(id)}>{vistas[id]}</button>)}
+          </div>)}
         </nav>
         <label className="producer-mobile-nav form-field">Ir a sección
           <select value={vistaActual} onChange={event => navegar(event.target.value as VistaGanaderia)}>
-            {disponibles.map(id => <option key={id} value={id}>{vistas[id]}</option>)}
+            {gruposVisibles.map(grupo => <optgroup key={grupo.nombre} label={grupo.nombre}>
+              {grupo.secciones.map(id => <option key={id} value={id}>{vistas[id]}</option>)}
+            </optgroup>)}
           </select>
         </label>
         <div className="producer-content">
-          <section className="producer-home" hidden={vistaActual !== 'inicio'} aria-labelledby="producer-home-title">
-            <h2 id="producer-home-title">Inicio</h2>
-            <p>Consulta las fichas de tu ganadería o revisa las actividades programadas.</p>
-            <div className="producer-actions">
-              <button type="button" className="button button-primary" onClick={() => navegar('ganado')}>Ver animales</button>
-              <button type="button" className="button button-outline" onClick={() => navegar('calendario')}>Ver calendario</button>
-            </div>
-          </section>
+          {vistaActual === 'inicio' && <InicioGanaderia ganaderiaId={ganaderia.id} token={sesion.accessToken}
+            conectado={conectado} accesoVigente={rolEnLinea !== null} navegar={navegar}
+            onSesionInvalida={onSesionInvalida} />}
           <div hidden={vistaActual === 'inicio' || vistaActual === 'familia' || vistaPropia}>
             <AnimalesPanel ganaderia={ganaderia} sesion={sesion} vista={vistaPropia ? 'inicio' : vistaActual}
               onSesionInvalida={onSesionInvalida} onRolEnLineaChange={setRolEnLinea} />

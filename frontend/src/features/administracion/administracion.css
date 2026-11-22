@@ -1,37 +1,31 @@
-.administracion-indicadores,
 .administracion-filtros {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  grid-template-columns: minmax(0, 1fr) minmax(10rem, .55fr) auto;
   gap: 12px;
   align-items: end;
 }
 
 .administracion-filtros label { margin: 0; }
 
-.administracion-indicadores > div,
-.administracion-lista li {
-  padding: 14px 16px;
-  background: var(--salvia);
-  border: 1px solid var(--borde);
-  border-radius: 12px;
-  overflow-wrap: anywhere;
-}
-
-.administracion-indicadores dd {
-  margin: 0;
-  color: var(--verde-bosque);
-  font-size: 1.55rem;
-  font-weight: 650;
-}
+.admin-stats { margin-bottom: 20px; }
+.admin-directory h2 { margin-top: 0; }
+.administracion-lista li small { display: block; color: var(--texto-secundario); }
 
 .administracion-lista { display: grid; gap: 8px; padding: 0; list-style: none; }
 .administracion-lista li {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-  gap: 4px 12px;
-  background: var(--superficie);
+  grid-template-columns: minmax(0, 2fr) auto minmax(0, 1fr);
+  gap: 6px 14px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--borde);
+  border-radius: 9px;
+  background: var(--crema);
+  overflow-wrap: anywhere;
 }
 
-@media (max-width: 540px) {
-  .administracion-lista li { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 650px) {
+  .administracion-lista li,
+  .administracion-filtros { grid-template-columns: minmax(0, 1fr); }
+  .administracion-lista .access-badge { justify-self: start; }
 }

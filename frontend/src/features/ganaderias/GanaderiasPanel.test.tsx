@@ -4,6 +4,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { GanaderiasPanel } from './GanaderiasPanel'
 import { crearGanaderia, ErrorGanaderia, listarGanaderias, type RolGanaderia } from './ganaderiasApi'
 
+vi.mock('../../app/layout/InicioGanaderia', () => ({
+  InicioGanaderia: () => <section aria-label="Resumen de la ganadería" />,
+}))
+
 vi.mock('../ganado/AnimalesPanel', () => ({
   AnimalesPanel: ({ ganaderia, onRolEnLineaChange }: {
     ganaderia: { rol: RolGanaderia }

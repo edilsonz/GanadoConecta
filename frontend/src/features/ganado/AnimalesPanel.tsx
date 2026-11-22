@@ -205,6 +205,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida,
   const [animalIdActual, setAnimalIdActual] = useState<string | null>(null)
   const [ficha, setFicha] = useState<Animal | null>(null)
   const [buscar, setBuscar] = useState('')
+  const [sexoListado, setSexoListado] = useState<Animal['sexo'] | ''>('')
   const [calendarioVisitado, setCalendarioVisitado] = useState(false)
   const [cargandoFicha, setCargandoFicha] = useState(false)
   const [pendientesLocales, setPendientesLocales] = useState<OperacionPendienteLocal[]>([])
@@ -751,14 +752,25 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida,
   const totalRecuperablesVisibles = recuperablesVisibles.length
     + sanitariasRecuperablesVisibles.length
   const enGanado = vista === 'ganado'
+  const fichaId = ficha?.animalId
+  const encabezadoFicha = useRef<HTMLHeadingElement>(null)
+  const filaFicha = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (cargandoFicha) return
+    if (fichaId) encabezadoFicha.current?.focus()
+    else if (filaFicha.current?.isConnected) {
+      filaFicha.current.focus()
+      filaFicha.current = null
+    }
+  }, [cargandoFicha, fichaId])
   const enCalendario = vista === 'calendario'
   const seccionFicha = vistasDeFicha[vista]
   const verListado = enGanado || Boolean(seccionFicha && !ficha && !cargandoFicha)
   const puedeAdministrarAnuncios = acceso?.rol === 'PROPIETARIO' && !navegadorSinConexion
   const termino = buscar.trim().toLocaleLowerCase('es')
-  const animalesVisibles = termino ? animales.filter(animal =>
-    [tituloAnimal(animal), animal.areteFrente, animal.areteReverso]
-      .some(texto => texto?.toLocaleLowerCase('es').includes(termino))) : animales
+  const animalesVisibles = animales.filter(animal => (!sexoListado || animal.sexo === sexoListado) &&
+    (!termino || [tituloAnimal(animal), animal.areteFrente, animal.areteReverso]
+      .some(texto => texto?.toLocaleLowerCase('es').includes(termino))))
 
   useEffect(() => {
     if (enCalendario) setCalendarioVisitado(true)
@@ -780,6 +792,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida,
       </div>
 
       {mensaje && <div className="form-notice animals-notice" role="status">{mensaje}</div>}
+      <div className={enGanado ? 'animals-stage animals-stage-ganado' : 'animals-stage'}>
       {cargando ? (
         <p className="animals-loading" role="status">Verificando acceso y consultando animales…</p>
       ) : !acceso ? (
@@ -794,6 +807,8 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida,
                 {actualizandoLista ? 'Actualizando…' : 'Actualizar'}
               </button>
             </div>
+            {enGanado && puedeRegistrar && fichaId &&
+              <a href="#registro-animal" className="animal-entry-link">Ir al formulario de registro</a>}
             {estadoListado === 'ERROR' && (
               <div className="animals-list-error" role="alert">
                 <strong>No se pudo cargar el listado de animales</strong>
@@ -802,9 +817,16 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida,
                   : 'No se confirmó si existen animales. Pulsa «Actualizar» para volver a intentarlo.'}</p>
               </div>
             )}
-            {animales.length > 0 && <label className="form-field animal-search">Buscar en los animales cargados
-              <input type="search" value={buscar} onChange={event => setBuscar(event.target.value)} />
-            </label>}
+            {animales.length > 0 && <div className="animal-filters">
+              <label className="form-field animal-search">Buscar en los animales cargados
+                <input type="search" value={buscar} onChange={event => setBuscar(event.target.value)} />
+              </label>
+              <label className="form-field">Filtrar por sexo
+                <select value={sexoListado} onChange={event => setSexoListado(event.target.value as typeof sexoListado)}>
+                  <option value="">Todos</option><option value="HEMBRA">Hembras</option><option value="MACHO">Machos</option>
+                </select>
+              </label>
+            </div>}
             {estadoListado === 'LISTO' && animales.length === 0 ? (
               <div className="animals-empty"><p>Aún no hay animales registrados en esta ganadería.</p></div>
             ) : animales.length > 0 && (
@@ -812,7 +834,12 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida,
                 {animalesVisibles.length === 0 && <p>No hay coincidencias entre los animales cargados.</p>}
                 {animalesVisibles.map(animal => (
                   <button className="animal-option" type="button" key={animal.animalId}
-                    onClick={() => void abrirFicha(animal.animalId)}>
+                    aria-expanded={fichaId === animal.animalId}
+                    aria-controls={fichaId === animal.animalId ? 'ficha-animal-activa' : undefined}
+                    onClick={event => {
+                      filaFicha.current = event.currentTarget
+                      void abrirFicha(animal.animalId)
+                    }}>
                     <span><strong>{tituloAnimal(animal)}</strong><small>{descripcionAnimal(animal)}</small></span>
                     <span aria-hidden="true">→</span>
                   </button>
@@ -898,165 +925,16 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida,
             )}
           </div>
 
-          <div hidden={!enGanado}>
-          {puedeRegistrar ? (
-            <form className="animal-form" onSubmit={registrar} noValidate aria-busy={enviando}>
-              <div className="animal-form-heading">
-                <h4>Registrar un animal</h4>
-                <p>Solo el sexo es obligatorio. Los identificadores técnicos se generan de forma segura.</p>
-              </div>
-              {offlinePreparado ? (
-                <div className="offline-preparation offline-preparation-ready" role="status">
-                  <strong>Trabajo sin conexión preparado</strong>
-                  <p>Este usuario y ganadería pueden crear pendientes locales durante la vigencia autorizada.</p>
-                  <span className={navegadorSinConexion ? 'network-state offline' : 'network-state online'}>
-                    {navegadorSinConexion
-                      ? 'El navegador informa: sin conexión'
-                      : 'El navegador informa: con conexión'}
-                  </span>
-                </div>
-              ) : (
-                <div className="offline-preparation">
-                  <p>Opcional: habilita registros locales solo si este es un dispositivo de confianza.</p>
-                  <button className="button button-outline" type="button"
-                    onClick={() => void prepararOffline()} disabled={enviando}>
-                    Preparar trabajo sin conexión
-                  </button>
-                </div>
-              )}
-              <div className="form-field">
-                <label htmlFor="animal-sexo">Sexo *</label>
-                <select id="animal-sexo" value={formulario.sexo}
-                  onChange={event => cambiarSexo(event.target.value as '' | SexoAnimal)}
-                  disabled={camposBloqueados} aria-invalid={Boolean(errores.sexo)}
-                  aria-describedby={errores.sexo ? 'animal-error-sexo' : undefined}>
-                  <option value="">Selecciona una opción</option>
-                  <option value="HEMBRA">Hembra</option>
-                  <option value="MACHO">Macho</option>
-                </select>
-                {errores.sexo && <span className="field-error" id="animal-error-sexo">{errores.sexo}</span>}
-              </div>
-              <div className="animal-fields-grid">
-                <CampoTexto id="animal-nombre" etiqueta="Nombre" valor={formulario.nombre}
-                  maximo={100} error={errores.nombre} disabled={camposBloqueados}
-                  onChange={valor => cambiar('nombre', valor)} />
-                <CampoTexto id="animal-raza" etiqueta="Raza" valor={formulario.raza}
-                  maximo={100} error={errores.raza} disabled={camposBloqueados}
-                  onChange={valor => cambiar('raza', valor)} />
-                <CampoTexto id="animal-arete-frente" etiqueta="Arete frontal" valor={formulario.areteFrente}
-                  maximo={100} error={errores.areteFrente} disabled={camposBloqueados}
-                  onChange={valor => cambiar('areteFrente', valor)} />
-                <CampoTexto id="animal-arete-reverso" etiqueta="Arete reverso" valor={formulario.areteReverso}
-                  maximo={100} error={errores.areteReverso} disabled={camposBloqueados}
-                  onChange={valor => cambiar('areteReverso', valor)} />
-              </div>
-              <fieldset className="textile-identification">
-                <legend>Lana o cinta en las orejas</legend>
-                <p>Opcional. Si la usas, indica sus colores y ubicación.</p>
-                <div className="animal-fields-grid">
-                  <CampoTexto id="animal-colores-textil" etiqueta="Colores de la lana o cinta"
-                    valor={formulario.coloresIdentificacionTextil} maximo={100}
-                    error={errores.coloresIdentificacionTextil} disabled={camposBloqueados}
-                    onChange={valor => cambiar('coloresIdentificacionTextil', valor)} />
-                  <div className="form-field">
-                    <label htmlFor="animal-ubicacion-textil">Ubicación</label>
-                    <select id="animal-ubicacion-textil"
-                      value={formulario.ubicacionIdentificacionTextil}
-                      onChange={event => cambiar('ubicacionIdentificacionTextil',
-                        event.target.value as '' | UbicacionIdentificacionTextil)}
-                      disabled={camposBloqueados}
-                      aria-invalid={Boolean(errores.ubicacionIdentificacionTextil)}
-                      aria-describedby={errores.ubicacionIdentificacionTextil
-                        ? 'animal-error-ubicacion-textil' : undefined}>
-                      <option value="">Sin ubicación</option>
-                      <option value="IZQUIERDA">Oreja izquierda</option>
-                      <option value="DERECHA">Oreja derecha</option>
-                      <option value="AMBAS">Ambas orejas</option>
-                    </select>
-                    {errores.ubicacionIdentificacionTextil && (
-                      <span className="field-error" id="animal-error-ubicacion-textil">
-                        {errores.ubicacionIdentificacionTextil}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </fieldset>
-              <div className="animal-fields-grid">
-                <div className="form-field">
-                  <label htmlFor="animal-fecha">Fecha de nacimiento</label>
-                  <input id="animal-fecha" type="date" value={formulario.fechaNacimiento}
-                    max={fechaHoyLima()} disabled={camposBloqueados}
-                    onChange={event => cambiar('fechaNacimiento', event.target.value)}
-                    aria-invalid={Boolean(errores.fechaNacimiento)}
-                    aria-describedby={errores.fechaNacimiento ? 'animal-error-fecha' : undefined} />
-                  {errores.fechaNacimiento
-                    && <span className="field-error" id="animal-error-fecha">{errores.fechaNacimiento}</span>}
-                </div>
-                <div className="form-field">
-                  <label htmlFor="animal-categoria">Categoría</label>
-                  <select id="animal-categoria" value={formulario.categoria}
-                    onChange={event => cambiar('categoria', event.target.value as '' | CategoriaAnimal)}
-                    disabled={camposBloqueados || !formulario.sexo}
-                    aria-invalid={Boolean(errores.categoria)}>
-                    <option value="">Sin categoría</option>
-                    {formulario.sexo && categoriasPorSexo[formulario.sexo].map(categoria => (
-                      <option value={categoria} key={categoria}>{etiquetasCategoria[categoria]}</option>
-                    ))}
-                  </select>
-                  {!formulario.sexo && <span className="field-help">Selecciona primero el sexo.</span>}
-                </div>
-              </div>
-              {formulario.fechaNacimiento && (
-                <label className="checkbox-field">
-                  <input type="checkbox" checked={formulario.nacimientoEstimado}
-                    onChange={event => cambiar('nacimientoEstimado', event.target.checked)}
-                    disabled={camposBloqueados} />
-                  La fecha de nacimiento es aproximada
-                </label>
-              )}
-              <div className="form-field">
-                <label htmlFor="animal-observaciones">Observaciones</label>
-                <textarea id="animal-observaciones" value={formulario.observaciones}
-                  rows={3} disabled={camposBloqueados}
-                  onChange={event => cambiar('observaciones', event.target.value)}
-                  aria-invalid={Boolean(errores.observaciones)}
-                  aria-describedby={errores.observaciones
-                    ? 'animal-observaciones-error animal-observaciones-contador'
-                    : 'animal-observaciones-contador'} />
-                <span className="field-help" id="animal-observaciones-contador">
-                  {Array.from(formulario.observaciones).length}/2000 caracteres
-                </span>
-                {errores.observaciones
-                  && <span className="field-error" id="animal-observaciones-error">{errores.observaciones}</span>}
-              </div>
-              {pendienteIncierto && (
-                <p className="retry-note">No se generarán identificadores nuevos: este botón reenvía la misma operación.</p>
-              )}
-              <button className="button button-primary submit-button" type="submit" disabled={enviando}>
-                {enviando ? 'Registrando…' : pendienteIncierto ? 'Reintentar mismo registro' : 'Registrar animal'}
-              </button>
-            </form>
-          ) : (
-            <div className="reader-note">
-              <strong>Acceso de lectura</strong>
-              <p>Puedes consultar las fichas, pero este rol no permite registrar animales.</p>
-            </div>
-          )}
-          </div>
         </div>
       )}
 
-      {puedeRegistrar && <div hidden={!enGanado}><AltaMasivaPanel ganaderiaId={ganaderia.id} token={sesion.accessToken}
-        conectado={!navegadorSinConexion} inicial={formularioInicial} validar={validarFormulario}
-        preparar={crearSolicitud} categorias={etiquetasCategoria} onSesionInvalida={onSesionInvalida}
-        alConfirmar={() => { void cargarPrimeraPagina().catch(() => undefined) }} /></div>}
-
       {(cargandoFicha || ficha) && (
-        <div className="animal-detail" hidden={!enGanado && !seccionFicha}>
+        <div className="animal-detail" id="ficha-animal-activa" hidden={!enGanado && !seccionFicha}>
           {cargandoFicha ? <p role="status">Consultando ficha…</p> : ficha && (
             <>
               <div className="animal-detail-heading">
-                <div><p className="eyebrow">FICHA INDIVIDUAL</p><h4>{tituloAnimal(ficha)}</h4></div>
+                <div><p className="eyebrow">FICHA INDIVIDUAL</p>
+                  <h4 tabIndex={-1} ref={encabezadoFicha}>{tituloAnimal(ficha)}</h4></div>
                 <button className="button button-outline" type="button" onClick={() => setFicha(null)}>Cerrar</button>
               </div>
               <FichaAnimalTabs key={ficha.animalId} sugerida={seccionFicha ?? 'general'} contenido={{
@@ -1079,7 +957,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida,
                   </dl>
                   {ficha.observaciones && <p className="animal-observations"><strong>Observaciones</strong>{ficha.observaciones}</p>}
                 </>,
-                sanidad: <>
+                sanidad: <div className="ficha-temas">
                   <VacunacionesPanel key={`${ganaderia.id}-${ficha.animalId}`} ganaderiaId={ganaderia.id}
                     usuarioId={sesion.usuarioId} animalId={ficha.animalId}
                     accessToken={sesion.accessToken} puedeEscribir={puedeRegistrar}
@@ -1091,20 +969,20 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida,
                     revisionLocal={revisionSanidadLocal}
                     onPendientesLocalesChange={() => void cargarPendientesLocales()}
                     onSesionInvalida={onSesionInvalida} />
-                </>,
-                reproduccion: <>
+                </div>,
+                reproduccion: <div className="ficha-temas">
                   <ReproduccionPanel ganaderiaId={ganaderia.id} animal={ficha}
                     animales={animales} accessToken={sesion.accessToken}
                     puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
                   <PartosPanel ganaderiaId={ganaderia.id} madre={ficha}
                     animales={animales} accessToken={sesion.accessToken}
                     puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
-                </>,
+                </div>,
                 peso: <>
                   <PesosPanel key={ficha.animalId} ganaderiaId={ganaderia.id} animalId={ficha.animalId}
                     token={sesion.accessToken} puedeEscribir={puedeRegistrar} onSesionInvalida={onSesionInvalida} />
                 </>,
-                anuncios: puedeAdministrarAnuncios ? <>
+                anuncios: puedeAdministrarAnuncios ? <div className="ficha-temas">
                   <AnunciosPanel key={`anuncios-${ficha.animalId}-${ficha.estado}`} ganaderiaId={ganaderia.id}
                       animalId={ficha.animalId} token={sesion.accessToken} vendido={ficha.estado === 'VENDIDO'}
                       onSesionInvalida={onSesionInvalida} />
@@ -1114,7 +992,7 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida,
                         setFicha(actual => actual?.animalId === ficha.animalId ? { ...actual, estado:'VENDIDO' } : actual)
                         void cargarPrimeraPagina().catch(() => undefined)
                       }} />}
-                </> : undefined,
+                </div> : undefined,
                 genealogia: <>
                   <GenealogiaPanel ganaderiaId={ganaderia.id} animal={ficha}
                     animales={animales} accessToken={sesion.accessToken}
@@ -1125,6 +1003,156 @@ export function AnimalesPanel({ ganaderia, sesion, onSesionInvalida,
           )}
         </div>
       )}
+      {acceso && <div className="animal-entry" hidden={!enGanado}>
+        {puedeRegistrar ? (
+          <form id="registro-animal" className="animal-form" tabIndex={-1} onSubmit={registrar} noValidate aria-busy={enviando}>
+            <div className="animal-form-heading">
+              <h4>Registrar un animal</h4>
+              <p>Solo el sexo es obligatorio. Los identificadores técnicos se generan de forma segura.</p>
+            </div>
+            {offlinePreparado ? (
+              <div className="offline-preparation offline-preparation-ready" role="status">
+                <strong>Trabajo sin conexión preparado</strong>
+                <p>Este usuario y ganadería pueden crear pendientes locales durante la vigencia autorizada.</p>
+                <span className={navegadorSinConexion ? 'network-state offline' : 'network-state online'}>
+                  {navegadorSinConexion
+                    ? 'El navegador informa: sin conexión'
+                    : 'El navegador informa: con conexión'}
+                </span>
+              </div>
+            ) : (
+              <div className="offline-preparation">
+                <p>Opcional: habilita registros locales solo si este es un dispositivo de confianza.</p>
+                <button className="button button-outline" type="button"
+                  onClick={() => void prepararOffline()} disabled={enviando}>
+                  Preparar trabajo sin conexión
+                </button>
+              </div>
+            )}
+            <div className="form-field">
+              <label htmlFor="animal-sexo">Sexo *</label>
+              <select id="animal-sexo" value={formulario.sexo}
+                onChange={event => cambiarSexo(event.target.value as '' | SexoAnimal)}
+                disabled={camposBloqueados} aria-invalid={Boolean(errores.sexo)}
+                aria-describedby={errores.sexo ? 'animal-error-sexo' : undefined}>
+                <option value="">Selecciona una opción</option>
+                <option value="HEMBRA">Hembra</option>
+                <option value="MACHO">Macho</option>
+              </select>
+              {errores.sexo && <span className="field-error" id="animal-error-sexo">{errores.sexo}</span>}
+            </div>
+            <div className="animal-fields-grid">
+              <CampoTexto id="animal-nombre" etiqueta="Nombre" valor={formulario.nombre}
+                maximo={100} error={errores.nombre} disabled={camposBloqueados}
+                onChange={valor => cambiar('nombre', valor)} />
+              <CampoTexto id="animal-raza" etiqueta="Raza" valor={formulario.raza}
+                maximo={100} error={errores.raza} disabled={camposBloqueados}
+                onChange={valor => cambiar('raza', valor)} />
+              <CampoTexto id="animal-arete-frente" etiqueta="Arete frontal" valor={formulario.areteFrente}
+                maximo={100} error={errores.areteFrente} disabled={camposBloqueados}
+                onChange={valor => cambiar('areteFrente', valor)} />
+              <CampoTexto id="animal-arete-reverso" etiqueta="Arete reverso" valor={formulario.areteReverso}
+                maximo={100} error={errores.areteReverso} disabled={camposBloqueados}
+                onChange={valor => cambiar('areteReverso', valor)} />
+            </div>
+            <fieldset className="textile-identification">
+              <legend>Lana o cinta en las orejas</legend>
+              <p>Opcional. Si la usas, indica sus colores y ubicación.</p>
+              <div className="animal-fields-grid">
+                <CampoTexto id="animal-colores-textil" etiqueta="Colores de la lana o cinta"
+                  valor={formulario.coloresIdentificacionTextil} maximo={100}
+                  error={errores.coloresIdentificacionTextil} disabled={camposBloqueados}
+                  onChange={valor => cambiar('coloresIdentificacionTextil', valor)} />
+                <div className="form-field">
+                  <label htmlFor="animal-ubicacion-textil">Ubicación</label>
+                  <select id="animal-ubicacion-textil"
+                    value={formulario.ubicacionIdentificacionTextil}
+                    onChange={event => cambiar('ubicacionIdentificacionTextil',
+                      event.target.value as '' | UbicacionIdentificacionTextil)}
+                    disabled={camposBloqueados}
+                    aria-invalid={Boolean(errores.ubicacionIdentificacionTextil)}
+                    aria-describedby={errores.ubicacionIdentificacionTextil
+                      ? 'animal-error-ubicacion-textil' : undefined}>
+                    <option value="">Sin ubicación</option>
+                    <option value="IZQUIERDA">Oreja izquierda</option>
+                    <option value="DERECHA">Oreja derecha</option>
+                    <option value="AMBAS">Ambas orejas</option>
+                  </select>
+                  {errores.ubicacionIdentificacionTextil && (
+                    <span className="field-error" id="animal-error-ubicacion-textil">
+                      {errores.ubicacionIdentificacionTextil}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </fieldset>
+            <div className="animal-fields-grid">
+              <div className="form-field">
+                <label htmlFor="animal-fecha">Fecha de nacimiento</label>
+                <input id="animal-fecha" type="date" value={formulario.fechaNacimiento}
+                  max={fechaHoyLima()} disabled={camposBloqueados}
+                  onChange={event => cambiar('fechaNacimiento', event.target.value)}
+                  aria-invalid={Boolean(errores.fechaNacimiento)}
+                  aria-describedby={errores.fechaNacimiento ? 'animal-error-fecha' : undefined} />
+                {errores.fechaNacimiento
+                  && <span className="field-error" id="animal-error-fecha">{errores.fechaNacimiento}</span>}
+              </div>
+              <div className="form-field">
+                <label htmlFor="animal-categoria">Categoría</label>
+                <select id="animal-categoria" value={formulario.categoria}
+                  onChange={event => cambiar('categoria', event.target.value as '' | CategoriaAnimal)}
+                  disabled={camposBloqueados || !formulario.sexo}
+                  aria-invalid={Boolean(errores.categoria)}>
+                  <option value="">Sin categoría</option>
+                  {formulario.sexo && categoriasPorSexo[formulario.sexo].map(categoria => (
+                    <option value={categoria} key={categoria}>{etiquetasCategoria[categoria]}</option>
+                  ))}
+                </select>
+                {!formulario.sexo && <span className="field-help">Selecciona primero el sexo.</span>}
+              </div>
+            </div>
+            {formulario.fechaNacimiento && (
+              <label className="checkbox-field">
+                <input type="checkbox" checked={formulario.nacimientoEstimado}
+                  onChange={event => cambiar('nacimientoEstimado', event.target.checked)}
+                  disabled={camposBloqueados} />
+                La fecha de nacimiento es aproximada
+              </label>
+            )}
+            <div className="form-field">
+              <label htmlFor="animal-observaciones">Observaciones</label>
+              <textarea id="animal-observaciones" value={formulario.observaciones}
+                rows={3} disabled={camposBloqueados}
+                onChange={event => cambiar('observaciones', event.target.value)}
+                aria-invalid={Boolean(errores.observaciones)}
+                aria-describedby={errores.observaciones
+                  ? 'animal-observaciones-error animal-observaciones-contador'
+                  : 'animal-observaciones-contador'} />
+              <span className="field-help" id="animal-observaciones-contador">
+                {Array.from(formulario.observaciones).length}/2000 caracteres
+              </span>
+              {errores.observaciones
+                && <span className="field-error" id="animal-observaciones-error">{errores.observaciones}</span>}
+            </div>
+            {pendienteIncierto && (
+              <p className="retry-note">No se generarán identificadores nuevos: este botón reenvía la misma operación.</p>
+            )}
+            <button className="button button-primary submit-button" type="submit" disabled={enviando}>
+              {enviando ? 'Registrando…' : pendienteIncierto ? 'Reintentar mismo registro' : 'Registrar animal'}
+            </button>
+          </form>
+        ) : (
+          <div className="reader-note">
+            <strong>Acceso de lectura</strong>
+            <p>Puedes consultar las fichas, pero este rol no permite registrar animales.</p>
+          </div>
+        )}
+      {puedeRegistrar && <AltaMasivaPanel ganaderiaId={ganaderia.id} token={sesion.accessToken}
+        conectado={!navegadorSinConexion} inicial={formularioInicial} validar={validarFormulario}
+        preparar={crearSolicitud} categorias={etiquetasCategoria} onSesionInvalida={onSesionInvalida}
+        alConfirmar={() => { void cargarPrimeraPagina().catch(() => undefined) }} />}
+      </div>}
+      </div>
       {acceso && (enCalendario || calendarioVisitado) && <div hidden={!enCalendario}>
         <AgendaSanitariaPanel ganaderiaId={ganaderia.id} animales={animales}
         accessToken={sesion.accessToken} puedeEscribir={puedeRegistrar}

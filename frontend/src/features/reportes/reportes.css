@@ -12,9 +12,15 @@
 .reporte-tarjeta h3 { margin-block: 0 12px; }
 .reporte-indicadores div { padding: 12px; border-radius: 9px; background: var(--salvia); overflow-wrap: anywhere; }
 .reporte-indicadores dd { margin: 4px 0 0; font-size: 1.4rem; font-weight: 650; }
-.reporte-grafico { max-width: 38rem; }
-.reporte-pesos { width: 100%; margin-top: 14px; border-collapse: collapse; text-align: left; font-size: .9rem; }
+.reporte-resumen-grid, .reporte-peso-grid {
+  display: grid;
+  align-items: start;
+  gap: 12px;
+}
+.reportes-panel { container-type: inline-size; }
+.reporte-grafico { min-width: 0; max-width: 38rem; }
+.reporte-pesos { min-width: 0; }
 .reporte-pesos caption { text-align: left; font-weight: 650; margin-bottom: 8px; }
-.reporte-pesos td, .reporte-pesos th { padding: 9px 6px; border-bottom: 1px solid var(--borde); overflow-wrap: anywhere; }
-.reporte-pesos thead { background: var(--salvia); }
-.reporte-pesos tbody tr:nth-child(even) { background: var(--crema); }
+@container (min-width: 42rem) {
+  .reporte-resumen-grid, .reporte-peso-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

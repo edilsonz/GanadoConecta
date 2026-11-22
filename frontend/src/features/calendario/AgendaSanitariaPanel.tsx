@@ -126,17 +126,21 @@ export function AgendaSanitariaPanel(p: Props) {
         <option value="">Todos</option>{p.animales.map(a => <option key={a.animalId} value={a.animalId}>{nombre(a.animalId)}</option>)}
       </select></label>
     </div>
-    {estado === 'carga' && <p role="status">Consultando calendario…</p>}
-    {estado === 'error' && <p role="alert">No se pudo cargar el calendario.</p>}
-    {estado === 'listo' && !items.length && <p>No hay actividades con este filtro.</p>}
-    {estado === 'listo' && avisos.length > 0 && <aside aria-label="Recordatorios internos">
+    <div className="agenda-layout">
+    <div className="agenda-activities">
+    {estado === 'carga' && <p className="workspace-state" role="status">Consultando calendario…</p>}
+    {estado === 'error' && <p className="workspace-state" role="alert">No se pudo cargar el calendario.</p>}
+    {estado === 'listo' && !items.length && <p className="workspace-state">No hay actividades con este filtro.</p>}
+    {estado === 'listo' && avisos.length > 0 && <aside className="agenda-reminders" aria-label="Recordatorios internos">
       <strong>Recordatorios internos</strong>
       <ul>{avisos.map(a => <li key={a.actividadId}>{estados[a.estadoVisible]} · {a.fechaPrevista} · {a.descripcion}</li>)}</ul>
     </aside>}
     {estado === 'listo' && <div className="agenda-list">{items.map(a => <article key={a.actividadId}
       className={`agenda-item state-${a.estadoVisible.toLowerCase()}`}><div>
-      <span className="access-badge">{estados[a.estadoVisible]}</span> <strong>{tiposActividad[a.tipo]} · {a.fechaPrevista}</strong>
-      <p>{a.animalId ? nombre(a.animalId) : `${a.participantes?.length ?? 0} participantes`} · {a.descripcion}</p>
+      <div className="agenda-item-meta"><span className="access-badge">{estados[a.estadoVisible]}</span>
+        <time dateTime={a.fechaPrevista}>{a.fechaPrevista}</time></div>
+      <h4>{a.descripcion}</h4>
+      <p>{tiposActividad[a.tipo]} · {a.animalId ? nombre(a.animalId) : `${a.participantes?.length ?? 0} participantes`}</p>
       {!a.animalId && !esCampana(a.tipo) && <p>Actividad colectiva de agenda. Su cierre no registra atenciones.</p>}
       {a.observaciones && <p>{a.observaciones}</p>}
       {a.fechaAtencion && <p>Fecha de atención {a.fechaAtencion}. Atendidos: {a.atendidos?.map(nombre).join(', ')}.</p>}
@@ -168,6 +172,7 @@ export function AgendaSanitariaPanel(p: Props) {
         }}>{esCampana(a.tipo) ? 'Seleccionar atendidos' : 'Marcar realizada'}</button>}
     </article>)}</div>}
     {mensaje && <p role="status">{mensaje}</p>}
+    </div>
     {p.puedeEscribir && <form className="animal-form" onSubmit={guardar}>
       <h4>Programar actividad</h4>
       <fieldset disabled={enviando || Boolean(pendiente)}>
@@ -208,5 +213,6 @@ export function AgendaSanitariaPanel(p: Props) {
       </fieldset>
       <button className="button button-primary" disabled={enviando}>{pendiente ? 'Reintentar misma actividad' : 'Programar actividad'}</button>
     </form>}
+    </div>
   </section>
 }

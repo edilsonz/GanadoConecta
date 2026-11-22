@@ -128,6 +128,8 @@ export function AnalisisPanel({ ganaderiaId, token, onSesionInvalida }: Props) {
 
   return <section className="analisis-panel" aria-labelledby="analisis-titulo">
     <h2 id="analisis-titulo">Análisis y alertas</h2>
+    <div className="analisis-workspace">
+    <div className="analisis-resumen">
     <section className="analisis-tarjeta" aria-labelledby="analisis-datos">
       <h3 id="analisis-datos">Análisis descriptivo</h3>
       <p>Estadísticas de registros confirmados. Los hallazgos describen lo registrado y no predicen resultados futuros.</p>
@@ -166,8 +168,10 @@ export function AnalisisPanel({ ganaderiaId, token, onSesionInvalida }: Props) {
           </li>)}</ul>}
       </>}
     </section>
+    </div>
     <AsistentePanel key={`${ganaderiaId}:${aplicados.animalId}:${aplicados.desde}:${aplicados.hasta}`}
       ganaderiaId={ganaderiaId} token={token} filtros={aplicados} onSesionInvalida={onSesionInvalida}
       animal={aplicados.animalId ? animales.find(a => a.animalId === aplicados.animalId)?.nombre || 'Animal seleccionado' : ''} />
+    </div>
   </section>
 }

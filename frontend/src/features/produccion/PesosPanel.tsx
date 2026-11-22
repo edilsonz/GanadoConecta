@@ -71,7 +71,9 @@ export function PesosPanel({ ganaderiaId, animalId, token, puedeEscribir, onSesi
     <div className="animals-list-heading"><h4>Peso</h4>
       <button type="button" className="button button-outline" onClick={actualizar}>Actualizar pesos</button>
     </div>
-    {estado === 'carga' && <p role="status">Consultando pesos…</p>}
+    <div className="peso-layout">
+    <div className="peso-historial">
+    {estado === 'carga' && <p className="workspace-state" role="status">Consultando pesos…</p>}
     {estado === 'error' && <p role="alert">No se pudo cargar el historial de peso.</p>}
     {estado === 'listo' && historial?.mediciones.length === 0 && <p>Aún no hay mediciones de peso.</p>}
     {historial?.ultimo && <>
@@ -84,6 +86,7 @@ export function PesosPanel({ ganaderiaId, animalId, token, puedeEscribir, onSesi
         {m.observaciones && <p>{m.observaciones}</p>}
       </li>)}</ol>
     </>}
+    </div>
     {puedeEscribir && <form className="animal-form" onSubmit={guardar}>
       <fieldset disabled={enviando || Boolean(pendiente)} style={{ minWidth: 0 }}>
         <div className="animal-fields-grid">
@@ -100,6 +103,7 @@ export function PesosPanel({ ganaderiaId, animalId, token, puedeEscribir, onSesi
       </fieldset>
       <button className="button button-primary" disabled={enviando}>{pendiente ? 'Reintentar medición' : 'Guardar peso'}</button>
     </form>}
+    </div>
     {mensaje && <p role="status">{mensaje}</p>}
   </section>
 }

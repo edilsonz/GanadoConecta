@@ -31,6 +31,7 @@ function Contenido({ datos, filtros }: { datos: ReporteGanadero; filtros: Filtro
   return (
     <>
       <p>Período consultado: {filtros.desde} a {filtros.hasta}, inclusive.</p>
+      <div className="reporte-resumen-grid">
       <section className="reporte-tarjeta" aria-labelledby="reporte-sanidad">
         <h3 id="reporte-sanidad">Reporte sanitario</h3>
         {sanidad.total === 0 ? <p>No hay eventos sanitarios confirmados para este filtro.</p> :
@@ -46,6 +47,7 @@ function Contenido({ datos, filtros }: { datos: ReporteGanadero; filtros: Filtro
           })} /> : <p>No hay registros reproductivos para este filtro.</p>}
         {filtros.animalId && <p>En partos y crías, el filtro corresponde a la madre.</p>}
       </section>
+      </div>
       <section className="reporte-tarjeta" aria-labelledby="reporte-productivo">
         <h3 id="reporte-productivo">Reporte productivo</h3>
         {!filtros.animalId ? <p>Elige un animal para consultar su evolución de peso.</p> :
@@ -54,8 +56,9 @@ function Contenido({ datos, filtros }: { datos: ReporteGanadero; filtros: Filtro
               <Indicadores filas={[[ 'Mediciones en el período', peso.total ], [ 'Último peso (kg)', peso.ultimo.kilos ]]} />
               <p>Último pesaje del período: {peso.ultimo.fecha}.</p>
               {peso.total > peso.mediciones.length && <p>Se muestran las {peso.mediciones.length} mediciones más recientes. Acota el período para consultar las anteriores.</p>}
+              <div className="reporte-peso-grid">
               <div className="reporte-grafico"><GraficoPeso mediciones={peso.mediciones} /></div>
-              <table className="reporte-pesos">
+              <table className="reporte-pesos workspace-table">
                 <caption>Mediciones y variaciones dentro del período</caption>
                 <thead><tr><th scope="col">Fecha</th><th scope="col">Peso (kg)</th><th scope="col">Variación (kg)</th></tr></thead>
                 <tbody>{peso.mediciones.map(m => <tr key={m.id}>
@@ -63,6 +66,7 @@ function Contenido({ datos, filtros }: { datos: ReporteGanadero; filtros: Filtro
                   <td>{m.variacion === null ? 'Sin anterior' : (m.variacion > 0 ? '+' : '') + numero.format(m.variacion)}</td>
                 </tr>)}</tbody>
               </table>
+              </div>
             </>}
       </section>
     </>

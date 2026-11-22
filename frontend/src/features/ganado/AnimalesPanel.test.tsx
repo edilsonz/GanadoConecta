@@ -164,13 +164,16 @@ describe('Panel de animales', () => {
     vi.mocked(consultarAnimal).mockResolvedValue(animal)
     render(<AnimalesPanel ganaderia={ganaderia} sesion={sesion} onSesionInvalida={vi.fn()} />)
 
-    fireEvent.click(await screen.findByRole('button', { name: /Luna/ }))
-    expect(await screen.findByRole('heading', { name: 'Luna' })).toBeInTheDocument()
+    const fila = await screen.findByRole('button', { name: /Luna/ })
+    fireEvent.click(fila)
+    expect(await screen.findByRole('heading', { name: 'Luna' })).toHaveFocus()
     expect(screen.getByText('Brown Swiss')).toBeInTheDocument()
     expect(screen.getByText('A-15')).toBeInTheDocument()
     expect(screen.getAllByText('rojo y blanco').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Ambas orejas')).toHaveLength(2)
     expect(consultarAnimal).toHaveBeenCalledWith(ganaderia.id, animal.animalId, sesion.accessToken)
+    fireEvent.click(screen.getByRole('button', { name: /^Cerrar$/ }))
+    expect(fila).toHaveFocus()
   })
 
   it('representa el listado vacío y exige sexo para registrar', async () => {

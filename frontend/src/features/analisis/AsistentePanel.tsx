@@ -63,10 +63,22 @@ export function AsistentePanel({ ganaderiaId, token, filtros, animal, onSesionIn
     }
   }
 
-  return <section className="analisis-tarjeta" aria-labelledby="analisis-asistente">
+  return <section className="analisis-tarjeta asistente-panel" aria-labelledby="analisis-asistente">
     <h3 id="analisis-asistente">Asistente conversacional</h3>
     <p>Consulta registros confirmados. La IA no reemplaza la valoración veterinaria.</p>
-    <p>{animal || 'Todos los animales'} · {filtros.desde} a {filtros.hasta}</p>
+    <p className="asistente-ambito">{animal || 'Todos los animales'} · {filtros.desde} a {filtros.hasta}</p>
+    <div role="log" aria-label="Conversación de esta vista" className="asistente-conversacion">
+      {turnos.map(turno => <article key={turno.id}>
+        <p className="asistente-pregunta"><strong>Tú</strong> {turno.pregunta}</p>
+        {turno.error ? <p role="alert">{turno.error}</p> : !turno.respuesta
+          ? <p role="status">Consultando el modelo local…</p> : <>
+            <p className="asistente-respuesta"><strong>Asistente</strong> {turno.respuesta.texto}</p>
+            {turno.respuesta.fuentes.length > 0 && <ul aria-label="Registros de origen">
+              {turno.respuesta.fuentes.map(f => <li key={f.registroId}>{f.tipo} · <time dateTime={f.fecha}>{f.fecha}</time></li>)}
+            </ul>}
+          </>}
+      </article>)}
+    </div>
     <form className="asistente-formulario" onSubmit={enviar}>
       <label className="form-field">Tema<select value={tema} disabled={ocupado}
         onChange={e => { setTema(e.target.value as TemaAsistente); setValidacion('') }}>
@@ -77,17 +89,5 @@ export function AsistentePanel({ ganaderiaId, token, filtros, animal, onSesionIn
       <button type="submit" className="button button-primary" disabled={ocupado}>Preguntar</button>
     </form>
     {validacion && <p role="alert">{validacion}</p>}
-    <div role="log" aria-label="Conversación de esta vista" className="asistente-conversacion">
-      {turnos.map(turno => <article key={turno.id}>
-        <p><strong>Tú</strong> {turno.pregunta}</p>
-        {turno.error ? <p role="alert">{turno.error}</p> : !turno.respuesta
-          ? <p role="status">Consultando el modelo local…</p> : <>
-            <p><strong>Asistente</strong> {turno.respuesta.texto}</p>
-            {turno.respuesta.fuentes.length > 0 && <ul aria-label="Registros de origen">
-              {turno.respuesta.fuentes.map(f => <li key={f.registroId}>{f.tipo} · <time dateTime={f.fecha}>{f.fecha}</time></li>)}
-            </ul>}
-          </>}
-      </article>)}
-    </div>
   </section>
 }

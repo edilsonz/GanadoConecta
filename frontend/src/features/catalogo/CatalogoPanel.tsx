@@ -32,7 +32,9 @@ export function CatalogoPanel({ token }: { token?: string }) {
         .catch(() => setReportes(false))
     }}>
       <summary>Ver anuncios de ganado</summary>
-      <form className="animal-form" onSubmit={e => { e.preventDefault(); void buscar(1) }}>
+      <div className="catalog-workspace">
+      <form className="animal-form catalog-filters" onSubmit={e => { e.preventDefault(); void buscar(1) }}>
+        <h2>Filtros</h2>
         <div className="catalog-grid">
           <label className="form-field">Categoría<select value={filtros.categoria ?? ''} onChange={e => cambiar('categoria',e.target.value)}>
             <option value="">Todas</option>{categoriasCatalogo.map(c => <option key={c}>{c}</option>)}
@@ -47,25 +49,34 @@ export function CatalogoPanel({ token }: { token?: string }) {
         </div>
         <button className="button button-primary" disabled={estado === 'carga'}>Buscar anuncios</button>
       </form>
-      {estado === 'carga' && <p role="status">Consultando anuncios…</p>}
-      {estado === 'error' && <p role="alert">No se pudo consultar el catálogo. Revisa los filtros y vuelve a intentar.</p>}
+      <div className="catalog-results" aria-busy={estado === 'carga'}>
+      {estado === 'carga' && <p className="workspace-state" role="status">Consultando anuncios…</p>}
+      {estado === 'error' && <p className="workspace-state" role="alert">No se pudo consultar el catálogo. Revisa los filtros y vuelve a intentar.</p>}
       {estado === 'listo' && (items.length ? <>
-        <div className="catalog-grid">{items.map(a => <article className="reader-note" key={a.id}>
-          {a.fotos.map(foto => <img key={foto} loading="lazy" src={urlFoto(a.id,foto)} alt={`Foto de ${a.titulo}`} />)}
-          <h3>{a.titulo}</h3><p>{a.caracteristicas}</p>
-          <p>{[a.categoria, a.raza, a.sexo].filter(Boolean).join(' · ')}</p>
-          <p>{a.ubicacionGeneral} · {sol.format(a.precioPen)}</p>
+        <div className="catalog-grid catalog-results-grid">{items.map(a => <article className="reader-note catalog-listing" key={a.id}>
+          {a.fotos.length > 0 && <div className="catalog-photos">
+            {a.fotos.map(foto => <img key={foto} loading="lazy" src={urlFoto(a.id,foto)} alt={`Foto de ${a.titulo}`} />)}
+          </div>}
+          <div className="catalog-card-copy">
+          <h3>{a.titulo}</h3>
+          <p className="catalog-price">{sol.format(a.precioPen)}</p>
+          <p>{a.ubicacionGeneral}</p>
+          <p className="catalog-attributes">{[a.categoria, a.raza, a.sexo].filter(Boolean).join(' · ')}</p>
+          <p>{a.caracteristicas}</p>
           {a.contacto && <p>Contacto autorizado: {a.contacto}</p>}
           {a.genealogia.length > 0 && <p>Genealogía autorizada: {a.genealogia.map(
             g => [g.relacion === 'MADRE' ? 'Madre' : 'Padre',g.categoria,g.raza].filter(Boolean).join(' ')).join(' · ')}</p>}
           {reportes && token && <ReportarAnuncio id={a.id} token={token} />}
+          </div>
         </article>)}</div>
-      </> : <p>No se encontraron anuncios para estos filtros.</p>)}
+      </> : <p className="workspace-state">No se encontraron anuncios para estos filtros.</p>)}
       {estado === 'listo' && (pagina > 1 || siguiente) && <nav className="catalog-actions" aria-label="Páginas del catálogo">
         {pagina > 1 && <button className="button button-outline" onClick={() => void buscar(pagina-1,aplicados)}>Anterior</button>}
         <span>Página {pagina}</span>
         {siguiente && <button className="button button-outline" onClick={() => void buscar(siguiente,aplicados)}>Siguiente</button>}
       </nav>}
+      </div>
+      </div>
     </details>
   </section>
 }

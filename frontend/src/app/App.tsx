@@ -78,7 +78,9 @@ export default function App() {
             <p className="hero-description">Registra tus animales, consulta sus historiales y organiza las tareas de tu ganadería en un solo lugar.</p>
             <div className="hero-actions">
               {conectado && <a className="button button-primary" href="#crear-cuenta">Crear mi cuenta <span aria-hidden="true">↗</span></a>}
-              <a className="button button-outline" href="#catalogo">Explorar catálogo</a>
+              {conectado
+                ? <a className="button button-outline" href="#iniciar-sesion">Entrar a mi cuenta</a>
+                : <a className="button button-outline" href="#catalogo">Explorar catálogo</a>}
             </div>
           </div>
           <figure className="hero-photo">
@@ -93,10 +95,12 @@ export default function App() {
           <AccesoOfflineSeguro />
         ) : (
           <>
-            <AccesoCuenta sesion={sesion} onSesionChange={setSesion} />
+            <div className={sesion ? 'account-layout account-layout-active' : 'account-layout'}>
+              <AccesoCuenta sesion={sesion} onSesionChange={setSesion} />
+              {!sesion && conectado && <RegistroCuenta />}
+            </div>
             {sesion && <GanaderiasPanel key={sesion.usuarioId} sesion={sesion}
               conectado={conectado} onSesionInvalida={invalidarSesion} />}
-            {!sesion && conectado && <RegistroCuenta />}
           </>
         )}
 

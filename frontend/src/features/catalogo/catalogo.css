@@ -27,3 +27,41 @@
   align-content:start;
   min-width:0;
 }
+
+.catalog-workspace {
+  display: grid;
+  align-items: start;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.catalog-filters h2 { margin: 0; font-size: 1.15rem; }
+.catalog-results { min-width: 0; }
+.catalog-results-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  margin-top: 0;
+}
+.catalog-results-grid .catalog-listing { padding: 0; background: var(--superficie); overflow: hidden; }
+.catalog-card-copy { padding: 15px; }
+.catalog-card-copy :is(h3, p) { margin: 0 0 6px; }
+.catalog-card-copy .catalog-price { color: var(--verde-bosque); font-size: 1.25rem; font-weight: 750; }
+.catalog-attributes { color: var(--texto-secundario); }
+.catalog-photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
+  gap: 3px;
+  padding: 4px;
+  background: var(--salvia);
+}
+.catalog-photos img {
+  width: 100%;
+  margin: 0;
+  max-height: none;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+@media (min-width: 1000px) {
+  .catalog-workspace { grid-template-columns: minmax(14rem,.75fr) minmax(0, 2fr); }
+  .catalog-filters .catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
