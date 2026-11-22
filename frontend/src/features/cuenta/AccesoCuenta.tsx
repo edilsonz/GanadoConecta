@@ -144,6 +144,7 @@ export function AccesoCuenta({ sesion, onSesionChange }: AccesoCuentaProps) {
     if (envioEnCurso.current) return
     envioEnCurso.current = true
     const usuarioId = sesion?.usuarioId
+    guardarCierrePendiente(true)
     onSesionChange(null)
     setEnviando(true)
     setMensajeError(null)

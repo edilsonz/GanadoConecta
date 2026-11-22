@@ -121,6 +121,23 @@ describe('Acceso de cuenta', () => {
     expect(localStorage.length).toBe(0)
   })
 
+  it('continúa el cierre al recargar aun cuando el bloqueo offline siga en curso', async () => {
+    vi.mocked(renovarSesionControlada).mockResolvedValue(sesion)
+    vi.mocked(bloquearContextosOfflineUsuario).mockReturnValueOnce(new Promise(() => {}))
+    const vista = renderAcceso()
+    await screen.findByText(sesion.correo)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
+    expect(cerrarSesionRemota).not.toHaveBeenCalled()
+    vista.unmount()
+    renderAcceso()
+
+    expect(await esperarFormulario()).toBeInTheDocument()
+    expect(cerrarSesionRemota).toHaveBeenCalledOnce()
+    expect(renovarSesionControlada).toHaveBeenCalledOnce()
+    expect(localStorage.length).toBe(0)
+  })
+
   it('bloquea localmente y conserva solo una marca no secreta si falla el cierre remoto', async () => {
     vi.mocked(renovarSesionControlada).mockResolvedValue(sesion)
     vi.mocked(cerrarSesionRemota).mockRejectedValue(new ErrorSesion('conexion'))
