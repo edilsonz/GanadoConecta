@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -26,14 +28,16 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import pe.ganadoconecta.modulos.identidad.adaptadores.entrada.http.AutenticacionJwtFiltro;
 import pe.ganadoconecta.modulos.identidad.adaptadores.entrada.http.ProteccionRegistroFiltro;
 
-/** Mantiene cerrada la API salvo salud y el incremento explícito de registro. */
+/** Aísla las rutas de la aplicación y habilita la documentación mediante un perfil explícito. */
 @Configuration(proxyBeanMethods = false)
 public class SeguridadConfiguracion {
+    public static final String PERFIL_OPENAPI = "openapi & !prod & !production";
+
     @Bean
     SecurityFilterChain apiSecurity(HttpSecurity http,
             ProteccionRegistroFiltro proteccionRegistro,
             ObjectProvider<AutenticacionJwtFiltro> autenticacionJwt,
-            ObjectMapper objectMapper) throws Exception {
+            ObjectMapper objectMapper, Environment entorno) throws Exception {
         CookieCsrfTokenRepository csrfRepository = new CookieCsrfTokenRepository();
         csrfRepository.setCookieName("__Host-GC-CSRF");
         csrfRepository.setHeaderName("X-CSRF-TOKEN");
@@ -55,8 +59,12 @@ public class SeguridadConfiguracion {
                     objectMapper);
         };
 
-        http.authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
+        http.authorizeHttpRequests(authorize -> {
+            if (entorno.acceptsProfiles(Profiles.of(PERFIL_OPENAPI))) {
+                authorize.requestMatchers(HttpMethod.GET, "/swagger-ui.html", "/swagger-ui/**",
+                        "/v3/api-docs", "/v3/api-docs.yaml", "/v3/api-docs/swagger-config").permitAll();
+            }
+            authorize.requestMatchers(HttpMethod.GET, "/api/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/catalogo", "/api/v1/catalogo/*/fotos/*",
                                 "/api/v1/catalogo/reportes-disponibles").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/moderacion/reportes").authenticated()
@@ -125,7 +133,8 @@ public class SeguridadConfiguracion {
                                 "/api/v1/ganaderias/*/agenda-sanitaria").authenticated()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/ganaderias/*/agenda-sanitaria/*/completar").authenticated()
-                        .anyRequest().denyAll())
+                        .anyRequest().denyAll();
+        })
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfRepository)
                         .csrfTokenRequestHandler(csrfHandler))

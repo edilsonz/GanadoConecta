@@ -1,0 +1,16 @@
+spring:
+  config:
+    activate:
+      on-profile: "!prod & !production"
+springdoc:
+  paths-to-match: /api/v1/**
+  override-with-generic-response: false
+  use-fqn: true
+  api-docs:
+    enabled: true
+    version: openapi_3_0
+  swagger-ui:
+    enabled: true
+    disable-swagger-default-url: true
+    persist-authorization: false
+    tags-sorter: alpha

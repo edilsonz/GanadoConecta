@@ -36,4 +36,11 @@ class ApiBaseIntegrationTest {
         assertThat(rest.postForEntity("/api/health", null, String.class).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
     }
+
+    @Test
+    void noPublicaLaDocumentacionSinPerfilExplicito() {
+        for (String ruta : new String[]{"/swagger-ui/index.html", "/v3/api-docs", "/v3/api-docs.yaml"}) {
+            assertThat(rest.getForEntity(ruta, String.class).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        }
+    }
 }

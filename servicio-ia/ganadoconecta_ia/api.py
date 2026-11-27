@@ -3,10 +3,24 @@ import os
 from threading import Lock
 
 from fastapi import FastAPI, Request
+from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 from starlette.responses import JSONResponse
 
-from .ollama import Consulta, MotorNoDisponible, MotorOllama
+from .ollama import Consulta, MotorNoDisponible, MotorOllama, Seleccion
+
+
+class ErrorInferencia(BaseModel):
+    codigo: str
+
+
+_ERRORES = {
+    400: 'Cuerpo o consulta inválidos.',
+    401: 'Credencial interna ausente o inválida.',
+    413: 'El cuerpo supera 8192 bytes.',
+    429: 'Ya se está procesando otra inferencia.',
+    503: 'El motor no está disponible o respondió con un resultado inválido.',
+}
 
 
 def crear_app() -> FastAPI:
@@ -18,11 +32,21 @@ def crear_app() -> FastAPI:
     if not 1 <= puerto <= 65535 or not 0 < plazo <= 25:
         raise RuntimeError('Configuración local de Ollama inválida')
 
-    app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+    app = FastAPI(title='GanadoConecta · Inferencia interna', version='1.0',
+                  docs_url=None, redoc_url=None, openapi_url=None)
     motor = MotorOllama(puerto, plazo)
     ocupado = Lock()
 
-    @app.post('/interno/v1/inferir')
+    @app.post('/interno/v1/inferir', summary='Seleccionar referencias autorizadas',
+              response_model=Seleccion,
+              responses={estado: {'model': ErrorInferencia, 'description': descripcion}
+                         for estado, descripcion in _ERRORES.items()},
+              openapi_extra={
+                  'security': [{'credencialInterna': []}],
+                  'requestBody': {'required': True, 'content': {'application/json': {
+                      'schema': {'$ref': '#/components/schemas/Consulta'},
+                  }}},
+              })
     async def inferir(request: Request):
         if not compare_digest(request.headers.get('x-gc-ia-interno', '').encode(), secreto):
             return respuesta(401, {'codigo': 'ACCESO_INTERNO_DENEGADO'})
@@ -50,6 +74,21 @@ def crear_app() -> FastAPI:
 
         return await run_in_threadpool(ejecutar)
 
+    generar = app.openapi
+
+    def contrato():
+        documento = generar()
+        componentes = documento['components']
+        consulta = Consulta.model_json_schema(ref_template='#/components/schemas/{model}')
+        esquemas = componentes['schemas']
+        esquemas.update(consulta.pop('$defs', {}))
+        esquemas['Consulta'] = consulta
+        componentes['securitySchemes'] = {
+            'credencialInterna': {'type': 'apiKey', 'in': 'header', 'name': 'X-GC-IA-Interno'},
+        }
+        return documento
+
+    app.openapi = contrato
     return app
 
 

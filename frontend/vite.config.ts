@@ -48,6 +48,10 @@ export default defineConfig(({ mode }) => {
       environment: 'happy-dom',
       setupFiles: ['./src/test/setup.ts'],
       clearMocks: true,
+      coverage: {
+        include: ['src/**/*.{ts,tsx}'],
+        exclude: ['**/*.test.{ts,tsx}', '**/*.d.ts', 'src/test/**'],
+      },
     },
   }
 })

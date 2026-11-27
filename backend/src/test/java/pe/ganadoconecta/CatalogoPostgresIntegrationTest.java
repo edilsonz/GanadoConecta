@@ -1,6 +1,7 @@
 package pe.ganadoconecta;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -9,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
@@ -24,6 +26,9 @@ import org.springframework.test.context.*;
 import org.springframework.test.web.servlet.*;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 import pe.ganadoconecta.modulos.identidad.aplicacion.TokensAcceso;
 
 @SpringBootTest(properties={"ganadoconecta.seguridad.origen-permitido=https://127.0.0.1:5173",
@@ -42,6 +47,7 @@ class CatalogoPostgresIntegrationTest extends SoporteJwtPostgres {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
     @Autowired TokensAcceso tokens;
+    @Autowired PlatformTransactionManager transacciones;
     UUID g = UUID.randomUUID(), animal = UUID.randomUUID(), usuario = UUID.randomUUID();
     String jwt;
 
@@ -150,6 +156,36 @@ class CatalogoPostgresIntegrationTest extends SoporteJwtPostgres {
                 .isEqualTo(usuario);
         jdbc.update("UPDATE identidad.permiso_moderacion SET habilitado=false WHERE usuario_id=?",usuario);
         mvc.perform(get(bandeja).header("Authorization",jwt)).andExpect(status().isForbidden());
+    }
+
+    @Test void unFalloAlCerrarAnunciosRevierteLaVentaYConservaElHistorial() throws Exception {
+        UUID anuncio = UUID.randomUUID(), operacion = UUID.randomUUID();
+        enviar(post(ruta()), datos(anuncio, 0L, false)).andExpect(status().isCreated());
+        estado(anuncio, 1, "PUBLICAR").andExpect(status().isOk());
+        jdbc.execute("""
+                ALTER TABLE catalogo.anuncio ADD CONSTRAINT prueba_ec05_cierre
+                CHECK (id <> '%s'::uuid OR estado <> 'CERRADO_VENTA')
+                """.formatted(anuncio));
+
+        // El punto de restauración aísla la venta de los datos iniciales de la prueba.
+        TransactionTemplate intento = new TransactionTemplate(transacciones);
+        intento.setPropagationBehavior(TransactionDefinition.PROPAGATION_NESTED);
+        assertThatThrownBy(() -> intento.executeWithoutResult(estado -> {
+            try {
+                enviar(post(ruta().replace("/anuncios", "/venta")), Map.of("operationId", operacion));
+            } catch (Exception fallo) {
+                throw new IllegalStateException(fallo);
+            }
+        })).hasRootCauseInstanceOf(SQLException.class).hasStackTraceContaining("prueba_ec05_cierre");
+
+        assertThat(jdbc.queryForObject("SELECT estado FROM ganado.animal WHERE id=?", String.class, animal))
+                .isEqualTo("ACTIVO");
+        assertThat(jdbc.queryForObject("SELECT observaciones FROM ganado.animal WHERE id=?", String.class, animal))
+                .isEqualTo("NO PUBLICAR");
+        assertThat(jdbc.queryForObject("SELECT estado FROM catalogo.anuncio WHERE id=?", String.class, anuncio))
+                .isEqualTo("PUBLICADO");
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM ganado.venta WHERE operacion_id=?", Long.class, operacion))
+                .isZero();
     }
 
     String ruta() { return "/api/v1/ganaderias/"+g+"/animales/"+animal+"/anuncios"; }
