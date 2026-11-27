@@ -1,0 +1,48 @@
+{
+  "fecha": "2026-11-27",
+  "medidas": {
+    "jest": {
+      "version": "30.5.2",
+      "alcance": ["formularioAnimal.ts", "solicitudPrivada.ts"],
+      "pruebasAprobadas": 11,
+      "lineas": { "cubiertas": 60, "totales": 61, "porcentaje": 98.36 },
+      "sentencias": { "cubiertas": 63, "totales": 64, "porcentaje": 98.43 },
+      "funciones": { "cubiertas": 9, "totales": 9, "porcentaje": 100 },
+      "ramas": { "cubiertas": 75, "totales": 82, "porcentaje": 91.46 },
+      "informeLocal": "frontend/coverage/jest/coverage-summary.json"
+    },
+    "vitest": {
+      "version": "5.1.0",
+      "alcance": "Código de producción en frontend/src",
+      "pruebasAprobadas": 251,
+      "lineas": { "cubiertas": 2577, "totales": 3163, "porcentaje": 81.47 },
+      "sentencias": { "cubiertas": 2976, "totales": 3963, "porcentaje": 75.09 },
+      "funciones": { "cubiertas": 772, "totales": 1037, "porcentaje": 74.44 },
+      "ramas": { "cubiertas": 2145, "totales": 3250, "porcentaje": 66 },
+      "informeLocal": "frontend/coverage/vitest/coverage-summary.json"
+    },
+    "jacoco": {
+      "version": "0.8.14",
+      "alcance": "Backend con PostgreSQL 17.12 y Flyway V1–V17",
+      "pruebasAprobadas": 185,
+      "lineas": { "cubiertas": 3047, "totales": 3338, "porcentaje": 91.28 },
+      "instrucciones": { "cubiertas": 21861, "totales": 23889, "porcentaje": 91.51 },
+      "metodos": { "cubiertos": 940, "totales": 1009, "porcentaje": 93.16 },
+      "ramas": { "cubiertas": 1117, "totales": 1632, "porcentaje": 68.44 },
+      "informeLocal": "backend/target/site/jacoco/jacoco.xml"
+    },
+    "coveragePy": {
+      "version": "7.14.1",
+      "alcance": "Servicio FastAPI con inferencia controlada en pruebas",
+      "pruebasAprobadas": 7,
+      "lineasEjecutables": { "cubiertas": 105, "totales": 122, "porcentaje": 86.07 },
+      "ramas": { "cubiertas": 16, "totales": 24, "porcentaje": 66.67 },
+      "lineasYRamas": { "cubiertas": 121, "totales": 146, "porcentaje": 82.88 },
+      "informeLocal": "servicio-ia/coverage/python/coverage.json"
+    }
+  },
+  "verificacionesAdicionales": [
+    { "caso": "EC05, fallo de cierre y reversión de la venta", "aprobadas": 1, "total": 1 },
+    { "caso": "Chrome HTTPS, SPEC-07, SPEC-08, SPEC-09 y UX/UI", "aprobadas": 4, "total": 4 }
+  ]
+}

@@ -1,0 +1,214 @@
+{
+  "components": {
+    "schemas": {
+      "Consulta": {
+        "additionalProperties": false,
+        "properties": {
+          "hechos": {
+            "items": {
+              "$ref": "#/components/schemas/Hecho"
+            },
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Hechos",
+            "type": "array"
+          },
+          "pregunta": {
+            "maxLength": 400,
+            "minLength": 1,
+            "title": "Pregunta",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pregunta",
+          "hechos"
+        ],
+        "title": "Consulta",
+        "type": "object"
+      },
+      "ErrorInferencia": {
+        "properties": {
+          "codigo": {
+            "title": "Codigo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "codigo"
+        ],
+        "title": "ErrorInferencia",
+        "type": "object"
+      },
+      "Hecho": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^H[1-8]$",
+            "title": "Id",
+            "type": "string"
+          },
+          "texto": {
+            "maxLength": 220,
+            "minLength": 1,
+            "title": "Texto",
+            "type": "string"
+          },
+          "tipo": {
+            "enum": [
+              "ULTIMO_PESAJE",
+              "PAREJA_PESAJES",
+              "VARIACION",
+              "SANIDAD",
+              "REPRODUCCION",
+              "AGENDA"
+            ],
+            "title": "Tipo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tipo",
+          "texto"
+        ],
+        "title": "Hecho",
+        "type": "object"
+      },
+      "Seleccion": {
+        "additionalProperties": false,
+        "properties": {
+          "estado": {
+            "enum": [
+              "RESPUESTA",
+              "INSUFICIENTE"
+            ],
+            "title": "Estado",
+            "type": "string"
+          },
+          "estilo": {
+            "enum": [
+              "REGISTROS",
+              "DIRECTO"
+            ],
+            "title": "Estilo",
+            "type": "string"
+          },
+          "referencias": {
+            "items": {
+              "pattern": "^H[1-8]$",
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Referencias",
+            "type": "array"
+          }
+        },
+        "required": [
+          "estado",
+          "estilo",
+          "referencias"
+        ],
+        "title": "Seleccion",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "credencialInterna": {
+        "in": "header",
+        "name": "X-GC-IA-Interno",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "title": "GanadoConecta · Inferencia interna",
+    "version": "1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/interno/v1/inferir": {
+      "post": {
+        "operationId": "inferir_interno_v1_inferir_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Consulta"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Seleccion"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorInferencia"
+                }
+              }
+            },
+            "description": "Cuerpo o consulta inválidos."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorInferencia"
+                }
+              }
+            },
+            "description": "Credencial interna ausente o inválida."
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorInferencia"
+                }
+              }
+            },
+            "description": "El cuerpo supera 8192 bytes."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorInferencia"
+                }
+              }
+            },
+            "description": "Ya se está procesando otra inferencia."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorInferencia"
+                }
+              }
+            },
+            "description": "El motor no está disponible o respondió con un resultado inválido."
+          }
+        },
+        "security": [
+          {
+            "credencialInterna": []
+          }
+        ],
+        "summary": "Seleccionar referencias autorizadas"
+      }
+    }
+  }
+}

@@ -14,8 +14,10 @@ nuevas especificaciones. Reorganizar un borrador no implica aprobarlo.
 | Identificador | Especificación | Plan | Tareas | Estado |
 |---|---|---|---|---|
 | BASE-01 | [Estructura ejecutable](BASE-01-estructura-ejecutable/spec.md) | [Plan](BASE-01-estructura-ejecutable/plan.md) | [Tareas](BASE-01-estructura-ejecutable/tasks.md) | Base y conexión PostgreSQL/JDBC verificadas. No completa SPEC-01 |
-| SPEC-01 | [Registro de ganado y sincronización](SPEC-01-registro-ganado-offline/spec.md) | [Plan](SPEC-01-registro-ganado-offline/plan.md) | [Tareas](SPEC-01-registro-ganado-offline/tasks.md) | Aprobada — Implementación en curso; flujo online, T11 y contexto local inicial T12/T15 verificados; integración, PWA y sincronización pendientes |
+| SPEC-01 | [Registro de ganado y sincronización](SPEC-01-registro-ganado-offline/spec.md) | [Plan](SPEC-01-registro-ganado-offline/plan.md) | [Tareas](SPEC-01-registro-ganado-offline/tasks.md) | Alta, listado, ficha, PWA y sincronización parcial validados. Consulta privada offline y edición versionada siguen pendientes. |
 
+| SPEC-02 | [Seguimiento sanitario](SPEC-02-seguimiento-sanitario/spec.md) | [Plan](SPEC-02-seguimiento-sanitario/plan.md) | [Tareas](SPEC-02-seguimiento-sanitario/tasks.md) | Historial, vacunación, agenda y sincronización de eventos sanitarios habilitados. Baño individual en interfaz pendiente. |
+| SPEC-03 | [Reproducción, partos y genealogía](SPEC-03-reproduccion-partos-genealogia/spec.md) | [Plan](SPEC-03-reproduccion-partos-genealogia/plan.md) | [Tareas](SPEC-03-reproduccion-partos-genealogia/tasks.md) | Registro online y genealogía auditada. Estimación automática de parto pendiente de criterios. |
 | SPEC-04 | [Acceso familiar](SPEC-04-acceso-familiar/spec.md) | [Plan](SPEC-04-acceso-familiar/plan.md) | [Tareas](SPEC-04-acceso-familiar/tasks.md) | Invitaciones manuales y administración de colaboradores. Transferencia de titularidad pendiente. |
 | SPEC-05 | [Control de peso](SPEC-05-historial-peso/spec.md) | [Plan](SPEC-05-historial-peso/plan.md) | [Tareas](SPEC-05-historial-peso/tasks.md) | Registro e historial online con gráfico. Validación manual pendiente. |
 | SPEC-06 | [Alta masiva](SPEC-06-alta-masiva/spec.md) | [Plan](SPEC-06-alta-masiva/plan.md) | [Tareas](SPEC-06-alta-masiva/tasks.md) | Alta online por tabla. Validación manual pendiente. |
@@ -29,6 +31,9 @@ nuevas especificaciones. Reorganizar un borrador no implica aprobarlo.
 RF17–RF22 y AC09 forman parte de la documentación base. La SPEC-01 fue
 aprobada el 16 de noviembre de 2026, incluida la rotación de renovación.
 Su alcance offline sigue en implementación incremental.
+
+La [matriz del Sprint 2](../docs/07-sprint-2/matriz-calidad.md) vincula los
+escenarios de calidad con decisiones, código y resultados de pruebas.
 
 Las rutas entre comillas invertidas en documentos y prompts se interpretan
 desde la raíz del repositorio. Los enlaces Markdown se resuelven desde el

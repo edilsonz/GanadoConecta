@@ -167,7 +167,13 @@ El tablero permite realizar el seguimiento de actividades, verificar avances y r
 
 **Estado:** Documentación técnica preparada para entrega y pendiente de evaluación docente.
 
-La implementación del sistema se desarrollará en etapas posteriores.
+## Sprint 02 · Implementación y validación
+
+El [primer incremento](docs/07-sprint-2/README.md) reúne la revisión
+arquitectónica, la [matriz de calidad](docs/07-sprint-2/matriz-calidad.md),
+los [contratos OpenAPI y capturas de Swagger](docs/07-sprint-2/openapi/README.md),
+las coberturas y la configuración de integración continua.
+Las mediciones de PostgreSQL, Redis y la carga con k6 quedan para el siguiente incremento.
 
 ## Alcance arquitectónico consolidado
 
@@ -184,8 +190,8 @@ público y FastAPI independiente se conservan.
 Consultar la [consolidación y pendientes](docs/05-preparacion-implementacion/05-consolidacion-arquitectonica.md)
 y la [matriz de evaluación](docs/06-evaluacion-sdd/matriz-trazabilidad.md).
 La aprobación de arquitectura no acredita implementación ni aprobación docente.
-SPEC-01 y su contrato están aprobados documentalmente; las imágenes C4 siguen siendo originales,
-sin fuentes editables encontradas en el repositorio.
+SPEC-01 y su contrato están aprobados documentalmente. Los diagramas C4
+vigentes incluyen [fuente editable Draw.io](docs/04-modelo-c4/diagramas/ganadoconecta-c4.drawio).
 
 ## Ejecutar la primera base local
 
