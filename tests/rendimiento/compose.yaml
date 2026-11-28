@@ -1,0 +1,29 @@
+name: ganadoconecta-rendimiento
+services:
+  postgres:
+    image: postgres:17.12
+    environment:
+      POSTGRES_DB: ganadoconecta_rendimiento_v4
+      POSTGRES_USER: rendimiento
+      POSTGRES_PASSWORD: ${GC_RENDIMIENTO_PASSWORD:?Define una clave sintética para esta ejecución}
+      TZ: UTC
+    command: [postgres, -c, shared_preload_libraries=pg_stat_statements, -c, pg_stat_statements.track=all]
+    ports: ["127.0.0.1:15433:5432"]
+    cpus: 2
+    mem_limit: 768m
+    healthcheck:
+      test: [CMD, pg_isready, -U, rendimiento, -d, ganadoconecta_rendimiento_v4]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+  redis:
+    image: redis:8.4.6-alpine
+    command: [redis-server, --save, "", --appendonly, "no", --maxmemory, 96mb, --maxmemory-policy, allkeys-lru]
+    ports: ["127.0.0.1:16379:6379"]
+    cpus: 1
+    mem_limit: 160m
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 2s
+      timeout: 2s
+      retries: 15

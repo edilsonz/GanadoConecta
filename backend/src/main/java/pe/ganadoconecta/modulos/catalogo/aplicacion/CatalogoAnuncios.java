@@ -51,6 +51,9 @@ public final class CatalogoAnuncios {
     @FunctionalInterface public interface PrepararFoto {
         byte[] aJpeg(byte[] archivo, String tipo);
     }
+    @FunctionalInterface public interface CachePublica {
+        Pagina obtener(Filtros filtros, Supplier<Pagina> origen);
+    }
 
     private final UnidadDeTrabajo unidad;
     private final AutorizarAccesoGanaderiaTransaccional autorizar;
@@ -58,11 +61,13 @@ public final class CatalogoAnuncios {
     private final Fotos fotos;
     private final PrepararFoto prepararFoto;
     private final Clock reloj;
+    private final CachePublica cache;
 
     public CatalogoAnuncios(UnidadDeTrabajo unidad, AutorizarAccesoGanaderiaTransaccional autorizar,
-            Repositorio repo, Fotos fotos, PrepararFoto prepararFoto, Clock reloj) {
+            Repositorio repo, Fotos fotos, PrepararFoto prepararFoto, Clock reloj, CachePublica cache) {
         this.unidad = unidad; this.autorizar = autorizar; this.repo = repo;
         this.fotos = fotos; this.prepararFoto = prepararFoto; this.reloj = reloj;
+        this.cache = cache;
     }
 
     public List<Privado> privados(Ambito a) {
@@ -138,6 +143,10 @@ public final class CatalogoAnuncios {
     public Pagina buscar(Filtros f) {
         if (f.pagina() < 1 || f.pagina() > 500 || (f.minimo() != null && f.maximo() != null
                 && f.minimo().compareTo(f.maximo()) > 0)) throw new Fallo(Error.INVALIDO);
+        return cache.obtener(f, () -> consultarPagina(f));
+    }
+
+    private Pagina consultarPagina(Filtros f) {
         var filas = repo.buscar(f, 21, (f.pagina() - 1) * 20);
         return new Pagina(filas.size() > 20 ? List.copyOf(filas.subList(0,20)) : filas,
                 filas.size() > 20 && f.pagina() < 500 ? f.pagina()+1 : null);

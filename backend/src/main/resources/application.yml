@@ -10,6 +10,18 @@ spring:
   jackson:
     deserialization:
       fail-on-unknown-properties: true
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      username: ${REDIS_USER:}
+      password: ${REDIS_PASSWORD:}
+      ssl:
+        enabled: ${REDIS_TLS:false}
+      connect-timeout: ${REDIS_CONNECT_TIMEOUT:150ms}
+      timeout: ${REDIS_COMMAND_TIMEOUT:100ms}
+      repositories:
+        enabled: false
 server:
   address: ${SERVER_ADDRESS:127.0.0.1}
   port: ${SERVER_PORT:8080}
@@ -23,6 +35,9 @@ springdoc:
   swagger-ui:
     enabled: false
 management:
+  health:
+    redis:
+      enabled: false
   endpoints:
     enabled-by-default: false
     web:
@@ -40,6 +55,10 @@ logging:
     org.springframework.web.servlet.mvc.method.annotation.RequestResponseBodyMethodProcessor: INFO
     org.springframework.web.servlet.mvc.method.annotation.HttpEntityMethodProcessor: INFO
 ganadoconecta:
+  catalogo:
+    cache:
+      habilitada: ${GANADOCONECTA_CACHE_CATALOGO:false}
+      ttl-segundos: ${GANADOCONECTA_CACHE_TTL_SEGUNDOS:30}
   seguridad:
     origen-permitido: ${GANADOCONECTA_ORIGEN_PERMITIDO:http://127.0.0.1:5173}
     jwt:

@@ -12,4 +12,6 @@ filtros/paginación. TypeScript correcto.
 Para habilitar fotos en desarrollo, crea un directorio privado fuera del
 repositorio y define `GANADOCONECTA_FOTOS_DIRECTORIO` en el entorno de Spring.
 Sin esa variable el resto del catálogo funciona y la carga devuelve 503.
-Quedan pendientes el proveedor de despliegue, Redis y k6.
+Se incorporó la caché pública Redis y la revisión transaccional V18–V19 del
+catálogo. El [informe del Sprint 2](../../docs/07-sprint-2/README.md) enlaza
+las pruebas y el arnés de rendimiento. El proveedor de despliegue queda pendiente.

@@ -13,4 +13,10 @@ El visitante consulta anuncios publicados, filtra por categoría, raza, sexo, ub
 | CA08-03 | Contacto y genealogía se proyectan solo tras autorización explícita. |
 | CA08-04 | Fotos JPEG/PNG de hasta 5 MiB y 12 megapíxeles se decodifican y reencodifican; se guardan hasta cinco por anuncio. Solo un anuncio público habilita su consulta pública. |
 
-Se mantiene el almacenamiento local como adaptador de desarrollo configurable. El proveedor definitivo y Redis con invalidación coordinada quedan pendientes. El flujo inicial no incluye pagos, negociación, transporte ni transferencias.
+El almacenamiento local usa un adaptador de desarrollo configurable. El proveedor definitivo queda pendiente. El flujo inicial excluye pagos, negociación, transporte y transferencias.
+
+La lectura pública puede usar Redis detrás del contrato de caché del catálogo.
+Debe devolver la misma proyección y paginación que PostgreSQL. Los cambios
+confirmados que alteran visibilidad o contenido invalidan la revisión anterior.
+Ante ausencia, caducidad o caída de Redis, la consulta usa PostgreSQL.
+[Diseño y criterios técnicos de caché](plan.md#caché-del-catálogo-público--adr-11)

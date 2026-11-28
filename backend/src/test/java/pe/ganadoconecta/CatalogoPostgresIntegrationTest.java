@@ -160,12 +160,13 @@ class CatalogoPostgresIntegrationTest extends SoporteJwtPostgres {
 
     @Test void unFalloAlCerrarAnunciosRevierteLaVentaYConservaElHistorial() throws Exception {
         UUID anuncio = UUID.randomUUID(), operacion = UUID.randomUUID();
-        enviar(post(ruta()), datos(anuncio, 0L, false)).andExpect(status().isCreated());
-        estado(anuncio, 1, "PUBLICAR").andExpect(status().isOk());
+        // Instalar la condición antes de encolar los triggers diferidos de la fixture.
         jdbc.execute("""
                 ALTER TABLE catalogo.anuncio ADD CONSTRAINT prueba_ec05_cierre
                 CHECK (id <> '%s'::uuid OR estado <> 'CERRADO_VENTA')
                 """.formatted(anuncio));
+        enviar(post(ruta()), datos(anuncio, 0L, false)).andExpect(status().isCreated());
+        estado(anuncio, 1, "PUBLICAR").andExpect(status().isOk());
 
         // El punto de restauración aísla la venta de los datos iniciales de la prueba.
         TransactionTemplate intento = new TransactionTemplate(transacciones);
