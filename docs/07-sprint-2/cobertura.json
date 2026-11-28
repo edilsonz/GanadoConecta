@@ -31,6 +31,16 @@
       "ramas": { "cubiertas": 1117, "totales": 1632, "porcentaje": 68.44 },
       "informeLocal": "backend/target/site/jacoco/jacoco.xml"
     },
+    "jacocoSegundoIncremento": {
+      "version": "0.8.14",
+      "alcance": "Backend con PostgreSQL 17.12, Redis 8.4.6 y Flyway V1–V19",
+      "pruebasAprobadas": 190,
+      "lineas": { "cubiertas": 3082, "totales": 3388, "porcentaje": 90.97 },
+      "instrucciones": { "cubiertas": 22079, "totales": 24178, "porcentaje": 91.32 },
+      "metodos": { "cubiertos": 950, "totales": 1020, "porcentaje": 93.14 },
+      "ramas": { "cubiertas": 1130, "totales": 1658, "porcentaje": 68.15 },
+      "informeLocal": "backend/target/site/jacoco/jacoco.xml"
+    },
     "coveragePy": {
       "version": "7.14.1",
       "alcance": "Servicio FastAPI con inferencia controlada en pruebas",

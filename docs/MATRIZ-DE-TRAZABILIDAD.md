@@ -6,6 +6,8 @@ La [consolidación de la interfaz](05-preparacion-implementacion/36-consolidacio
 
 La [auditoría funcional](AUDITORIA-FUNCIONAL.md) complementa esta matriz con el
 estado de cada RF y HU, evidencias ejecutadas y brechas observadas.
+La [matriz de calidad del Sprint 2](07-sprint-2/matriz-calidad.md) relaciona
+los escenarios EC01–EC13 con decisiones, pruebas y resultados.
 
 | RF | HU asociadas | Actores | Evidencia o alcance pendiente |
 |---|---|---|---|

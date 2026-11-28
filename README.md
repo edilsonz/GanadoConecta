@@ -125,18 +125,12 @@ restauración y cierre de sesión sin persistir el JWT. Ganaderías, membresías
 operativas, animales y funcionamiento offline continúan pendientes; el backend
 ya permite crear una ganadería con su propietario inicial mediante AU05.
 
-Se utilizará Redis como caché para consultas frecuentes del catálogo
-público de anuncios. PostgreSQL conservará los datos permanentes
-y será la fuente principal de información.
-
-Los resultados almacenados en caché tendrán un tiempo de caducidad.
-Al publicar, editar, pausar, retirar, moderar o marcar como vendido
-un anuncio, se invalidará la caché afectada después de confirmar
-el cambio en PostgreSQL.
-
-Si la información no está en caché o Redis no está disponible,
-el backend consultará PostgreSQL. La caché no almacenará
-historiales privados ni archivos de fotografías.
+Redis es una caché opcional de las páginas del catálogo público.
+PostgreSQL conserva los datos y confirma la revisión vigente. Ante
+ausencia, caducidad o caída de Redis, Spring consulta PostgreSQL.
+Para desarrollo local, usa `docker compose --profile cache up -d`
+y activa `GANADOCONECTA_CACHE_CATALOGO=true` en el entorno de Spring.
+[Configuración y verificación de Redis](docs/07-sprint-2/rendimiento/redis.md)
 
 
 ## Sprint 01: Documentación técnica del proyecto
@@ -173,7 +167,9 @@ El [primer incremento](docs/07-sprint-2/README.md) reúne la revisión
 arquitectónica, la [matriz de calidad](docs/07-sprint-2/matriz-calidad.md),
 los [contratos OpenAPI y capturas de Swagger](docs/07-sprint-2/openapi/README.md),
 las coberturas y la configuración de integración continua.
-Las mediciones de PostgreSQL, Redis y la carga con k6 quedan para el siguiente incremento.
+El [segundo incremento](docs/07-sprint-2/README.md#segundo-incremento) reúne
+los planes medidos de PostgreSQL, la caché Redis y el estado de la carga
+aislada con k6.
 
 ## Alcance arquitectónico consolidado
 

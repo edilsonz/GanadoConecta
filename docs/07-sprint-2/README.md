@@ -1,7 +1,7 @@
 # Sprint 2 · Implementación y validación de arquitectura
 
-Primer incremento, verificado el 27 de noviembre de 2026 sobre la base
-`d5d110a`. El alcance del Sprint 2 continúa en curso.
+Evidencia del 27 de noviembre de 2026. El primer incremento partió de
+`d5d110a` y el segundo de `ea72e80`.
 [Matriz de calidad](matriz-calidad.md) · [OpenAPI y Swagger](openapi/README.md) ·
 [Cobertura medida](cobertura.json) · [Auditoría funcional](../AUDITORIA-FUNCIONAL.md)
 
@@ -13,10 +13,10 @@ Primer incremento, verificado el 27 de noviembre de 2026 sobre la base
 | 2. Patrón arquitectónico | Monolito modular en Spring Boot y Clean Architecture para sus dependencias internas. Se verificó el bytecode de dominio y aplicación. |
 | 3. SDD | BASE-01 y SPEC-01–12 tienen especificación, plan y tareas. Se corrigió el índice y se vinculó la evidencia a los escenarios originales. Las brechas funcionales siguen en cada SPEC y en la auditoría. |
 | 4. REST y OpenAPI | 53 operaciones explícitas, 44 rutas y 13 módulos. Swagger UI comprobada en Chrome y especificaciones Spring y FastAPI validadas. |
-| 5. Base de datos y caché | Pendiente del incremento siguiente. La regresión SQL aislada aporta evidencia funcional de integridad, permisos y migraciones V1–V17. |
+| 5. Base de datos y caché | Planes comparables de seis consultas, paginación SQL optimizada y caché pública Redis con revisión transaccional. [PostgreSQL](rendimiento/postgresql.md) · [Redis](rendimiento/redis.md) |
 | 6. SOLID y patrones | Revisión de contratos, adaptadores y coordinación de transacciones con ejemplos de código verificables. |
-| 7. Jest, cobertura y CI | Cobertura medida localmente con Jest, Vitest, JaCoCo y coverage.py. GitHub Actions aprobó los tres trabajos y publicó tres artefactos en `3fbd3cc`. Actualización de acciones validada con actionlint. |
-| 8. Atributos y k6 | Parcial. Se verificaron escenarios funcionales y se separaron los pendientes. Falta carga progresiva hasta 2.000 usuarios virtuales y la validación con Redis. |
+| 7. Jest, cobertura y CI | Cobertura medida con Jest, Vitest, JaCoCo y coverage.py. GitHub Actions aprobó los tres trabajos y publicó tres artefactos en `ea72e80`. Las pruebas Redis se incorporaron al workflow y su ejecución remota queda pendiente. |
+| 8. Atributos y k6 | Parcial. EC01 pasó con Redis frío y poblado a 100 VU. EC03 alcanzó 1.000 VU y el umbral operativo detuvo la escalada. [Matriz EC01–EC13](matriz-calidad.md) · [Carga](rendimiento/k6.md) |
 
 ## Concordancia con el Sprint 1
 
@@ -65,8 +65,9 @@ transacción.
 En C4, los reportes y la IA seguían etiquetados como previstos y el contenedor
 PostgreSQL indicaba V1–V16. Se corrigieron la fuente editable y sus dos
 exportaciones. El diagrama del modelo de datos conserva su alcance parcial de
-V1–V16. Redis, entrega externa, almacenamiento definitivo de fotos y
-producción siguen previstos. El asistente actual tiene un plazo acotado y
+V1–V16. El segundo incremento incorporó Redis opcional. Entrega externa,
+almacenamiento definitivo de fotos y producción siguen previstos.
+El asistente actual tiene un plazo acotado y
 capacidad limitada. Las tareas persistentes de análisis y notificación de
 ADR-09 siguen pendientes de implementación.
 
@@ -200,20 +201,55 @@ en `frontend/coverage/vitest/` y `frontend/coverage/jest/`. Queda
 pendiente comprobar la publicación del artefacto en la siguiente
 ejecución de GitHub Actions.
 
-## Siguiente incremento
+### Integración continua remota
 
-1. **PostgreSQL.** Preparar un dataset sintético escalonado. Medir
-   `EXPLAIN (ANALYZE, BUFFERS)`, tiempos y recursos de listados con cursor y
-   del catálogo por filtros. Comparar con índices actuales y justificar cada
-   ajuste mediante evidencia.
-2. **Redis.** Definir en SPEC-08 el TTL, la desactualización tolerable y el
-   tratamiento de publicaciones que dejan de estar autorizadas. Implementar
-   caché pública por filtro, página y orden, con invalidación posterior a
-   confirmar y reintentos acotados. Ante caída usar PostgreSQL. Verificar
-   igualdad, TTL, ausencia, caducidad, invalidación y fallo.
-3. **k6.** Confirmar datos, mezcla, duración, error máximo y recursos antes
-   de ejecutar. Evaluar AC01 con 100 concurrentes, p95 ≤ 2 s y Redis
-   disponible con caché fría y poblada. Comparar la caída de Redis aparte.
-   Escalar después hasta 2.000 usuarios virtuales para EC03, registrando p95,
-   errores, CPU, memoria y proporción atendida por Redis. Este tramo mide
-   límites y no cambia el umbral original de AC01.
+La ejecución publicada de `ea72e80` terminó en 1 min 37 s con frontend,
+backend e IA aprobados y tres artefactos. La configuración nueva añade un
+Redis aislado al trabajo Java. La carga k6 se mantiene fuera de GitHub
+Actions. [Ejecución #46100816517](https://github.com/edilsonz/GanadoConecta/actions/runs/46100816517)
+
+## Segundo incremento
+
+[Análisis PostgreSQL](rendimiento/postgresql.md) ·
+[Estrategia Redis](rendimiento/redis.md) ·
+[Informe y evidencias de k6](rendimiento/k6.md) ·
+[Protocolo y scripts de k6](../../tests/rendimiento/README.md) ·
+[Matriz de calidad](matriz-calidad.md)
+
+Las migraciones V18–V19 agregan la revisión del catálogo. PostgreSQL sigue
+siendo la fuente de verdad. No se agregaron índices en esta iteración.
+Los diagramas C4 de contenedores y componentes y el despliegue local
+se actualizaron a partir de sus fuentes Draw.io.
+
+La regresión Java con PostgreSQL 17.12 y Redis 8.4.6 aislados pasó
+**190/190**, con cuatro pruebas nuevas de caché. JaCoCo registró 90,97 %
+de líneas y 68,15 % de ramas. En Windows el informe se generó con un
+archivo de ejecución nuevo y `-Dsurefire.exitTimeout=120` después de
+que el límite anterior interrumpiera su escritura. Se reutilizan las
+verificaciones vigentes de frontend, PWA y FastAPI del incremento anterior.
+[Cobertura completa por herramienta](cobertura.json)
+
+### Cinco entregables del docente
+
+| Entregable | Evidencia |
+|---|---|
+| 1. Código fuente según la arquitectura | [Arquitectura contrastada](#concordancia-con-el-sprint-1), [C4](../04-modelo-c4/Nivel2-DiagramaContenedores.md) y [puerto de caché](../../backend/src/main/java/pe/ganadoconecta/modulos/catalogo/aplicacion/CatalogoAnuncios.java). |
+| 2. Primera versión funcional | [Arranque local](../../README.md#ejecutar-la-primera-base-local), [auditoría funcional](../AUDITORIA-FUNCIONAL.md) y resultados de navegador. |
+| 3. API mediante Swagger | [Capturas reales y contratos Spring y FastAPI](openapi/README.md). |
+| 4. Jest y cobertura | [Pruebas y cobertura](#pruebas-y-cobertura-local), [informes por herramienta](cobertura.json) y [workflow](../../.github/workflows/integracion.yml). |
+| 5. Atributos de calidad | [Matriz EC01–EC13](matriz-calidad.md), planes, pruebas Redis y el alcance medido con k6. Los estados parciales y pendientes figuran en la matriz. |
+
+### Demostración
+
+1. Arrancar la PWA y el backend según el [README](../../README.md), con
+   PostgreSQL local. Usar el [Compose aislado](../../tests/rendimiento/README.md)
+   para demostrar rendimiento con datos sintéticos.
+2. Activar el perfil `openapi` para consultar [Swagger y sus contratos](openapi/README.md).
+3. En `frontend/`, ejecutar `npm.cmd run test:jest:coverage` y abrir
+   `coverage/jest/lcov-report/index.html`. Revisar los artefactos de la
+   [ejecución publicada](https://github.com/edilsonz/GanadoConecta/actions/runs/46100816517).
+4. Mostrar `EXPLAIN (ANALYZE, BUFFERS)` y la prueba de caída y recuperación
+   de Redis según el [protocolo aislado](../../tests/rendimiento/README.md).
+5. Ejecutar k6 en modo `smoke` y contrastar EC01 con EC03. El primero
+   tiene un umbral aprobado para 100 VU. El segundo mide la escalada y
+   sus límites en esta estación.
