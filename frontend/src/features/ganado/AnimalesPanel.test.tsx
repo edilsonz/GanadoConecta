@@ -166,7 +166,7 @@ describe('Panel de animales', () => {
 
     const fila = await screen.findByRole('button', { name: /Luna/ })
     fireEvent.click(fila)
-    expect(await screen.findByRole('heading', { name: 'Luna' })).toHaveFocus()
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Luna' })).toHaveFocus())
     expect(screen.getByText('Brown Swiss')).toBeInTheDocument()
     expect(screen.getByText('A-15')).toBeInTheDocument()
     expect(screen.getAllByText('rojo y blanco').length).toBeGreaterThan(0)

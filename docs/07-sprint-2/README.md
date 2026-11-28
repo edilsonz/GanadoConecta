@@ -172,8 +172,33 @@ actualizó `checkout` a 7.0.1, `setup-node` a 7.1.0, `setup-java` a 6.3.0,
 `setup-python` a 7.1.0 y `upload-artifact` a 7.0.2. Los cinco manifiestos
 declaran Node.js 24 como runtime de la acción. El entorno del proyecto
 conserva Node.js 22.19.0, Java Temurin 21 y Python 3.14.5. La actualización
-pasó `actionlint` 1.7.12. La desaparición de las advertencias queda por
-comprobar en la primera ejecución remota del workflow actualizado.
+pasó `actionlint` 1.7.12.
+
+### Corrección de la prueba de foco de la ficha de animales
+
+La ejecución de `0111481` aprobó los trabajos de backend e IA. Vitest
+aprobó 250 de 251 pruebas en frontend. La prueba de la ficha encontró el
+encabezado «Luna» cuando el foco todavía estaba en `body`. El fallo de
+Vitest dejó el trabajo sin el artefacto de cobertura de frontend.
+[Ejecución #46099458060](https://github.com/edilsonz/GanadoConecta/actions/runs/46099458060)
+
+La aparición del encabezado y la asignación de foco por `useEffect`
+ocurren en momentos distintos. La prueba ahora espera con `waitFor` a que
+el encabezado reciba el foco y conserva la verificación del retorno del
+foco a la fila al cerrar. El cambio se limita a la prueba.
+
+La prueba original pasó en las repeticiones directas locales. En una copia
+temporal, un `MutationObserver` permitió reproducir el fallo con Vitest al
+comprobar el foco al aparecer el encabezado. El foco seguía en `body`.
+El mismo caso pasó al esperar la condición de foco.
+
+Con Node.js 22.19.0 y `CI=true`, la prueba corregida pasó **12/12** veces
+en Windows y **6/6** en un contenedor Linux. La regresión frontend pasó
+**251/251** en Vitest y **11/11** en Jest. TypeScript y build PWA
+terminaron correctamente. Se regeneraron los resúmenes JSON y LCOV
+en `frontend/coverage/vitest/` y `frontend/coverage/jest/`. Queda
+pendiente comprobar la publicación del artefacto en la siguiente
+ejecución de GitHub Actions.
 
 ## Siguiente incremento
 
