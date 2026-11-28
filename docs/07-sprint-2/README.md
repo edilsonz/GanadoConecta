@@ -15,7 +15,7 @@ Primer incremento, verificado el 27 de noviembre de 2026 sobre la base
 | 4. REST y OpenAPI | 53 operaciones explícitas, 44 rutas y 13 módulos. Swagger UI comprobada en Chrome y especificaciones Spring y FastAPI validadas. |
 | 5. Base de datos y caché | Pendiente del incremento siguiente. La regresión SQL aislada aporta evidencia funcional de integridad, permisos y migraciones V1–V17. |
 | 6. SOLID y patrones | Revisión de contratos, adaptadores y coordinación de transacciones con ejemplos de código verificables. |
-| 7. Jest, cobertura y CI | Jest, Vitest, JaCoCo y coverage.py ejecutados localmente. Workflow configurado y validado por actionlint. La ejecución remota está pendiente. |
+| 7. Jest, cobertura y CI | Cobertura medida localmente con Jest, Vitest, JaCoCo y coverage.py. GitHub Actions aprobó los tres trabajos y publicó tres artefactos en `3fbd3cc`. Actualización de acciones validada con actionlint. |
 | 8. Atributos y k6 | Parcial. Se verificaron escenarios funcionales y se separaron los pendientes. Falta carga progresiva hasta 2.000 usuarios virtuales y la validación con Redis. |
 
 ## Concordancia con el Sprint 1
@@ -154,6 +154,26 @@ Reportes de frontend en `frontend/coverage/jest/` y
 `frontend/coverage/vitest/`, Java en `backend/target/site/jacoco/` y
 Python en `servicio-ia/coverage/python/`. [Jest y TypeScript](https://jestjs.io/docs/getting-started#using-typescript) ·
 [Servicios PostgreSQL en GitHub Actions](https://docs.github.com/en/actions/tutorials/use-containerized-services/create-postgresql-service-containers)
+
+### Primera ejecución remota
+
+El 27 de noviembre de 2026, la integración continua del commit `3fbd3cc` en
+`develop` terminó en **1 min 57 s**, con los tres trabajos y sus artefactos
+confirmados en GitHub. [Ejecución #45950155833](https://github.com/edilsonz/GanadoConecta/actions/runs/45950155833)
+
+| Trabajo | Resultado | Artefacto publicado |
+|---|---|---|
+| `frontend` | Aprobado | `cobertura-frontend` |
+| `backend` | Aprobado | `pruebas-cobertura-java` |
+| `ia` | Aprobado | `cobertura-openapi-python` |
+
+Tras las advertencias de GitHub sobre las versiones anteriores, el workflow
+actualizó `checkout` a 7.0.1, `setup-node` a 7.1.0, `setup-java` a 6.3.0,
+`setup-python` a 7.1.0 y `upload-artifact` a 7.0.2. Los cinco manifiestos
+declaran Node.js 24 como runtime de la acción. El entorno del proyecto
+conserva Node.js 22.19.0, Java Temurin 21 y Python 3.14.5. La actualización
+pasó `actionlint` 1.7.12. La desaparición de las advertencias queda por
+comprobar en la primera ejecución remota del workflow actualizado.
 
 ## Siguiente incremento
 

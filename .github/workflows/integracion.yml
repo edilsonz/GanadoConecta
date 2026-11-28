@@ -16,8 +16,8 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: '22.19.0'
           cache: npm
@@ -27,7 +27,7 @@ jobs:
       - run: npm run test:jest:coverage
       - run: npm run typecheck
       - run: npm run build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:
           name: cobertura-frontend
@@ -57,15 +57,15 @@ jobs:
       POSTGRES_USER: sprint_ci
       POSTGRES_PASSWORD: sprint_ci_sintetica
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-java@v6.3.0
         with:
           java-version: '21'
           distribution: temurin
           cache: maven
           cache-dependency-path: backend/pom.xml
       - run: mvn -B -ntp -Dganadoconecta.postgres.integration-test=true verify
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:
           name: pruebas-cobertura-java
@@ -81,8 +81,8 @@ jobs:
     env:
       COVERAGE_FILE: coverage/python/.coverage
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.1.0
         with:
           python-version: '3.14.5'
           cache: pip
@@ -100,7 +100,7 @@ jobs:
           python -m coverage xml -o coverage/python/coverage.xml
           python -m ganadoconecta_ia.exportar_openapi > coverage/python/openapi-interno.json
           python -m openapi_spec_validator coverage/python/openapi-interno.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:
           name: cobertura-openapi-python
