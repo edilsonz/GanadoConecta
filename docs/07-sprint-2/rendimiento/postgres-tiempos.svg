@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 325" role="img" aria-labelledby="titulo detalle">
+<title id="titulo">Tiempo de ejecución SQL del catálogo</title>
+<desc id="detalle">Mediana de tres ejecuciones por consulta y variante. Las cifras están en milisegundos.</desc>
+<rect width="700" height="325" fill="#f8f7f1"/>
+<g font-family="system-ui, sans-serif" font-size="13" fill="#163326">
+<text x="22" y="33" font-size="21" font-weight="700">Catálogo PostgreSQL · tiempos de ejecución</text>
+<rect x="22" y="54" width="12" height="12" fill="#8c6546"/><text x="40" y="64">Línea base</text>
+<rect x="132" y="54" width="12" height="12" fill="#26714c"/><text x="150" y="64">Proyección tras paginar</text>
+<text x="22" y="117">Primera página</text><rect x="190" y="99" width="3.5117731349620533" height="15" fill="#8c6546"/><text x="200.51177313496206" y="111">0.51 ms</text><rect x="190" y="119" width="2.745944415942824" height="15" fill="#26714c"/><text x="199.74594441594283" y="131">0.4 ms</text><text x="22" y="189">Página 3 con filtros</text><rect x="190" y="171" width="141.54722521980645" height="15" fill="#8c6546"/><text x="338.5472252198065" y="183">20.52 ms</text><rect x="190" y="191" width="136.64178180338598" height="15" fill="#26714c"/><text x="333.641781803386" y="203">19.81 ms</text><text x="22" y="261">Página 250</text><rect x="190" y="243" width="390" height="15" fill="#8c6546"/><text x="587" y="255">56.53 ms</text><rect x="190" y="263" width="264.6386682470324" height="15" fill="#26714c"/><text x="461.6386682470324" y="275">38.36 ms</text>
+</g></svg>

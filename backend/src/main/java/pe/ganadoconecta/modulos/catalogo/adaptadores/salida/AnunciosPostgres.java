@@ -18,6 +18,22 @@ public final class AnunciosPostgres implements Repositorio {
                 ARRAY(SELECT f.id FROM catalogo.foto f WHERE f.anuncio_id=a.id ORDER BY f.creada_en,f.id) fotos
             FROM catalogo.anuncio a
             """;
+    private static final String PROYECCION_PAGINA = """
+            )
+            SELECT a.id,a.titulo,a.caracteristicas,a.categoria,a.raza,a.sexo,
+                a.ubicacion_general,a.precio_pen,a.contacto,
+                ARRAY(SELECT fp.id FROM catalogo.foto fp WHERE fp.anuncio_id=a.id ORDER BY fp.creada_en,fp.id) fotos,
+                madre.categoria madre_categoria,madre.raza madre_raza,
+                padre.categoria padre_categoria,padre.raza padre_raza
+            FROM pagina a
+            LEFT JOIN reproduccion.parentesco m ON a.genealogia_autorizada AND m.ganaderia_id=a.ganaderia_id
+                AND m.animal_id=a.animal_id AND m.tipo='MADRE'
+            LEFT JOIN ganado.animal madre ON madre.id=m.progenitor_animal_id AND madre.ganaderia_id=m.ganaderia_id
+            LEFT JOIN reproduccion.parentesco p ON a.genealogia_autorizada AND p.ganaderia_id=a.ganaderia_id
+                AND p.animal_id=a.animal_id AND p.tipo='PADRE'
+            LEFT JOIN ganado.animal padre ON padre.id=p.progenitor_animal_id AND padre.ganaderia_id=p.ganaderia_id
+            ORDER BY a.publicado_en DESC,a.id DESC
+            """;
     private final JdbcTemplate jdbc;
     public AnunciosPostgres(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
@@ -86,19 +102,12 @@ public final class AnunciosPostgres implements Repositorio {
 
     @Override public List<Publico> buscar(Filtros f, int limite, int desde) {
         var sql = new StringBuilder("""
-                SELECT a.id,a.titulo,a.caracteristicas,x.categoria,x.raza,x.sexo,a.ubicacion_general,a.precio_pen,a.contacto,
-                    ARRAY(SELECT fp.id FROM catalogo.foto fp WHERE fp.anuncio_id=a.id ORDER BY fp.creada_en,fp.id) fotos,
-                    madre.categoria madre_categoria,madre.raza madre_raza,
-                    padre.categoria padre_categoria,padre.raza padre_raza
+                WITH pagina AS MATERIALIZED (
+                SELECT a.id,a.ganaderia_id,a.animal_id,a.titulo,a.caracteristicas,x.categoria,x.raza,x.sexo,
+                    a.ubicacion_general,a.precio_pen,a.contacto,a.genealogia_autorizada,a.publicado_en
                 FROM catalogo.anuncio a
                 JOIN ganado.animal x ON x.id=a.animal_id AND x.ganaderia_id=a.ganaderia_id
                 JOIN identidad.ganaderia g ON g.id=a.ganaderia_id
-                LEFT JOIN reproduccion.parentesco m ON a.genealogia_autorizada AND m.ganaderia_id=a.ganaderia_id
-                    AND m.animal_id=a.animal_id AND m.tipo='MADRE'
-                LEFT JOIN ganado.animal madre ON madre.id=m.progenitor_animal_id AND madre.ganaderia_id=m.ganaderia_id
-                LEFT JOIN reproduccion.parentesco p ON a.genealogia_autorizada AND p.ganaderia_id=a.ganaderia_id
-                    AND p.animal_id=a.animal_id AND p.tipo='PADRE'
-                LEFT JOIN ganado.animal padre ON padre.id=p.progenitor_animal_id AND padre.ganaderia_id=p.ganaderia_id
                 WHERE a.estado='PUBLICADO' AND x.estado='ACTIVO' AND g.estado='ACTIVA'
                 """);
         var parametros = new ArrayList<Object>();
@@ -108,7 +117,7 @@ public final class AnunciosPostgres implements Repositorio {
         filtro(sql,parametros," AND lower(a.ubicacion_general)=lower(?)", f.ubicacion());
         filtro(sql,parametros," AND a.precio_pen>=?", f.minimo());
         filtro(sql,parametros," AND a.precio_pen<=?", f.maximo());
-        sql.append(" ORDER BY a.publicado_en DESC,a.id DESC LIMIT ? OFFSET ?");
+        sql.append(" ORDER BY a.publicado_en DESC,a.id DESC LIMIT ? OFFSET ?\n").append(PROYECCION_PAGINA);
         parametros.add(limite);
         parametros.add(desde);
         return jdbc.query(sql.toString(),(rs,n) -> {

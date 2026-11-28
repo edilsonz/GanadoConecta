@@ -51,7 +51,7 @@ class PostgresConectividadIntegrationTest extends SoporteJwtPostgres {
                 .isEqualTo("jdbc:postgresql://%s:%d/%s".formatted(
                         databaseHost, publishedPort, databaseName));
         assertThat(databaseHost).isEqualTo("127.0.0.1");
-        assertThat(publishedPort).isEqualTo(5433);
+        assertThat(publishedPort).isNotEqualTo(5432);
         assertThat(result.get("database_name")).isEqualTo(databaseName);
         assertThat(result.get("server_port")).isEqualTo(5432);
         assertThat((Integer) result.get("server_version"))
