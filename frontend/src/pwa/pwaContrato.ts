@@ -36,7 +36,7 @@ export const MANIFEST_PWA = {
 export const CONFIGURACION_PRECACHE = {
   globPatterns: [
     '**/*.{js,css,html,svg,png,ico,woff,woff2,webmanifest}',
-    '**/pastizal-ganadero-*.jpg',
+    '**/ganado-andino-*.webp',
   ],
   globIgnores: [
     '**/*.map',

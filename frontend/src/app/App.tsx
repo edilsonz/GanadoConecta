@@ -10,8 +10,8 @@ import { consultarPermisoAdministrativo } from '../features/administracion/admin
 import type { SesionActiva } from '../features/cuenta/sesionApi'
 import { bloquearContextosOfflineUsuario } from '../offline/registroAnimalesOffline'
 import marca from '../assets/marca/ganadoconecta-marca.png'
-import pastizal from '../assets/marca/pastizal-ganadero-1280.jpg'
-import pastizalMovil from '../assets/marca/pastizal-ganadero-640.jpg'
+import ganadoAndino from '../assets/marca/ganado-andino-1280.webp'
+import ganadoAndinoMovil from '../assets/marca/ganado-andino-640.webp'
 import {
   AccesoOfflineSeguro,
   PwaEstado,
@@ -84,10 +84,9 @@ export default function App() {
             </div>
           </div>
           <figure className="hero-photo">
-            <img src={pastizal} srcSet={`${pastizalMovil} 640w, ${pastizal} 1280w`}
-              sizes="(max-width: 680px) 92vw, (max-width: 1280px) 54vw, 680px"
-              width="1280" height="853" alt="Ganado vacuno en un pastizal entre árboles y neblina" fetchPriority="high" />
-            <figcaption><a href="https://commons.wikimedia.org/wiki/File:Cattle_in_meadow_(Unsplash).jpg">Fotografía de Karsten Würth</a></figcaption>
+            <img src={ganadoAndino} srcSet={`${ganadoAndinoMovil} 640w, ${ganadoAndino} 1280w`}
+              sizes="(max-width: 900px) 92vw, (max-width: 1280px) 50vw, 680px"
+              width="1280" height="720" alt="Ilustración de ganado vacuno en un pastizal andino" fetchPriority="high" />
           </figure>
         </section>}
 
