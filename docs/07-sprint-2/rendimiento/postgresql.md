@@ -55,6 +55,15 @@ La mediana de la página 250 bajó 32,1 % en este dataset. La diferencia
 de la página filtrada fue mucho menor. Estas cifras miden ejecución
 SQL. Quedan fuera la autorización, el pool, la serialización y la red.
 
+`pg_stat_statements` acumuló 14.795 consultas paginadas de animales con
+0,062 ms de media, 4.008 proyecciones de catálogo con 10,439 ms y 11.085
+lecturas de revisión con 0,015 ms. Agrupa las pruebas de esta base y no
+atribuye resultados por tramo individual. El mayor tiempo de ejecución
+registrado para la proyección fue 147,053 ms. Las muestras durante carga
+mostraron hasta tres conexiones PostgreSQL y dos activas. Una espera
+previa a ejecutar SQL puede quedar fuera de estas mediciones.
+
 [Planes originales estructurados](postgres-planes.json) ·
 [Resumen de tiempos y buffers](postgres-resumen.json) ·
+[Estadísticas acumuladas de sentencias](postgres-sentencias.csv) ·
 [Comandos y dataset](../../../tests/rendimiento/README.md)

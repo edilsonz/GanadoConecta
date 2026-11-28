@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 690 377" role="img" aria-labelledby="titulo">
+<title id="titulo">Escalada · p95 en tramos sostenidos</title>
+<rect width="690" height="377" fill="#f8f7f1"/>
+<g font-family="system-ui, sans-serif" font-size="14" fill="#163326">
+<text x="20" y="32" font-size="20" font-weight="700">Escalada · p95 en tramos sostenidos</text>
+<text x="20" y="69">10 VU</text><rect x="185" y="52" width="3.20737082620039" height="23" fill="#26714c"/><text x="197.2073708262004" y="69">37.42 ms</text>
+<text x="20" y="121">50 VU</text><rect x="185" y="104" width="2.5893819524188606" height="23" fill="#26714c"/><text x="196.58938195241885" y="121">30.21 ms</text>
+<text x="20" y="173">100 VU</text><rect x="185" y="156" width="3.0513736347603917" height="23" fill="#26714c"/><text x="197.05137363476038" y="173">35.6 ms</text>
+<text x="20" y="225">250 VU</text><rect x="185" y="208" width="5.320189930044313" height="23" fill="#26714c"/><text x="199.3201899300443" y="225">62.07 ms</text>
+<text x="20" y="277">500 VU</text><rect x="185" y="260" width="99.99505684046393" height="23" fill="#26714c"/><text x="293.9950568404639" y="277">1,166.63 ms</text>
+<text x="20" y="329">1000 VU</text><rect x="185" y="312" width="365" height="23" fill="#26714c"/><text x="559" y="329">4,258.41 ms</text>
+</g></svg>

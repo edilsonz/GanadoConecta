@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 690 273" role="img" aria-labelledby="titulo">
+<title id="titulo">Catálogo público · p95 con 100 VU</title>
+<rect width="690" height="273" fill="#f8f7f1"/>
+<g font-family="system-ui, sans-serif" font-size="14" fill="#163326">
+<text x="20" y="32" font-size="20" font-weight="700">Catálogo público · p95 con 100 VU</text>
+<text x="20" y="69">Sin caché</text><rect x="185" y="52" width="264.04732636754767" height="23" fill="#26714c"/><text x="458.04732636754767" y="69">129.47 ms</text>
+<text x="20" y="121">Caché fría</text><rect x="185" y="104" width="242.85746214449347" height="23" fill="#26714c"/><text x="436.85746214449347" y="121">119.08 ms</text>
+<text x="20" y="173">Caché poblada</text><rect x="185" y="156" width="181.38850086606692" height="23" fill="#26714c"/><text x="375.3885008660669" y="173">88.94 ms</text>
+<text x="20" y="225">Redis caído</text><rect x="185" y="208" width="365" height="23" fill="#26714c"/><text x="559" y="225">178.97 ms</text>
+</g></svg>

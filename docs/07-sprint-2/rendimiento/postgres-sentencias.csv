@@ -1,0 +1,5 @@
+consulta,llamadas,media_ms,max_ms,filas,bloques_memoria,bloques_leidos
+animales_paginados,14795,0.062,1.728,310695,103565,0
+catalogo_proyeccion,4008,10.439,147.053,84168,20830778,0
+consulta_sesion,14844,0.035,1.881,14844,29720,0
+revision_publica,11085,0.015,0.232,11085,11085,0

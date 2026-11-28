@@ -1,0 +1,2 @@
+"segundo","java_cpu_una_cpu_pct","java_rss_mib","k6_cpu_una_cpu_pct","k6_rss_mib","vu_activos","host_disponible_mib","host_comprometida_pct","pg_conexiones","pg_activas","pg_cpu_y_memoria","redis_cpu_y_memoria"
+"2","19","437","8","30","2","2138","91","3","0","7.89% / 185.7MiB / 768MiB","4.01% / 6.438MiB / 160MiB"
