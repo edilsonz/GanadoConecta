@@ -1,0 +1,4 @@
+"segundo","java_cpu_una_cpu_pct","java_rss_mib","k6_cpu_una_cpu_pct","k6_rss_mib","vu_activos","host_disponible_mib","host_comprometida_pct","pg_conexiones","pg_activas","pg_cpu_y_memoria","redis_cpu_y_memoria","utc","pg_espera_bloqueo","pg_espera_io","tcp_establecidas","tcp_time_wait"
+"2","189","484","90","139","500","2063","87","5","0","149.91% / 79.13MiB / 768MiB","4.12% / 11.28MiB / 160MiB","2026-11-28T04:41:12.2179524Z","0","0","500","0"
+"13","20","528","7","263","500","1847","88","5","0","29.87% / 84.59MiB / 768MiB","14.57% / 11MiB / 160MiB","2026-11-28T04:41:23.0688633Z","0","0","501","0"
+"25","15","536","2","302",,"1819","88","5","3","189.36% / 87.41MiB / 768MiB","0.27% / 10.98MiB / 160MiB","2026-11-28T04:41:35.3631733Z","0","0","0","1"

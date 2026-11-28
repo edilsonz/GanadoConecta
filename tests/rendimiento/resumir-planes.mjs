@@ -1,11 +1,14 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 
 const temporal = '.cache/rendimiento-sprint2'
-const destino = 'docs/07-sprint-2/rendimiento'
+const crecimiento = process.argv.includes('--crecimiento')
+const destino = 'docs/07-sprint-2/rendimiento' + (crecimiento ? '/cierre' : '')
+const prefijo = crecimiento ? 'crecimiento' : 'postgres'
+const entrada = crecimiento ? 'crecimiento' : 'sql'
 const bruto = {}
 for (const variante of ['base', 'opt']) {
   bruto[variante] = Array.from({ length: 3 }, (_, indice) => {
-    const archivo = `${temporal}/sql-${variante}-${indice + 1}.txt`
+    const archivo = `${temporal}/${entrada}-${variante}-${indice + 1}.txt`
     const salida = readFileSync(archivo, 'utf8').replace(/^\uFEFF/, '')
     const planes = Object.fromEntries(Array.from(
       salida.matchAll(/^(animales_\w+|catalogo_\w+|reportes_\w+)\r?\n([\s\S]*?\n\])/gm),
@@ -29,8 +32,8 @@ const resumen = Object.fromEntries(Object.keys(bruto.base[0]).map(consulta => [
   })),
 ]))
 mkdirSync(destino, { recursive: true })
-writeFileSync(`${destino}/postgres-planes.json`, JSON.stringify(bruto) + '\n')
-writeFileSync(`${destino}/postgres-resumen.json`, JSON.stringify(resumen, null, 2) + '\n')
+writeFileSync(`${destino}/${prefijo}-planes.json`, JSON.stringify(bruto) + '\n')
+writeFileSync(`${destino}/${prefijo}-resumen.json`, JSON.stringify(resumen, null, 2) + '\n')
 
 const filas = Object.entries(resumen).filter(([consulta]) => consulta.startsWith('catalogo'))
 const maximo = Math.max(...filas.flatMap(([, datos]) => [datos.base.ejecucionMs, datos.opt.ejecucionMs]))
@@ -51,8 +54,8 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 325" role=
 <rect width="700" height="325" fill="#f8f7f1"/>
 <g font-family="system-ui, sans-serif" font-size="13" fill="#163326">
 <text x="22" y="33" font-size="21" font-weight="700">Catálogo PostgreSQL · tiempos de ejecución</text>
-<rect x="22" y="54" width="12" height="12" fill="#8c6546"/><text x="40" y="64">Línea base</text>
-<rect x="132" y="54" width="12" height="12" fill="#26714c"/><text x="150" y="64">Proyección tras paginar</text>
+<rect x="22" y="54" width="12" height="12" fill="#8c6546"/><text x="40" y="64">${crecimiento ? '24.000 animales' : 'Línea base'}</text>
+<rect x="${crecimiento ? 175 : 132}" y="54" width="12" height="12" fill="#26714c"/><text x="${crecimiento ? 193 : 150}" y="64">${crecimiento ? '48.000 animales' : 'Proyección tras paginar'}</text>
 ${barras}
 </g></svg>\n`
-writeFileSync(`${destino}/postgres-tiempos.svg`, svg)
+writeFileSync(`${destino}/${prefijo}-tiempos.svg`, svg)

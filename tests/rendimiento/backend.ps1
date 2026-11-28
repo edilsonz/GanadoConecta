@@ -1,4 +1,9 @@
-﻿param([string]$Jar = 'backend/target/ganadoconecta-backend-0.1.0-SNAPSHOT.jar', [switch]$Cache)
+﻿param(
+    [string]$Jar = 'backend/target/ganadoconecta-backend-0.1.0-SNAPSHOT.jar',
+    [switch]$Cache,
+    [switch]$Diagnostico,
+    [ValidateSet(3,5)][int]$Pool = 3
+)
 
 $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '../..')
@@ -25,9 +30,11 @@ $env:REDIS_TLS = 'false'
 $env:REDIS_COMMAND_TIMEOUT = '100ms'
 $env:REDIS_CONNECT_TIMEOUT = '150ms'
 $env:GANADOCONECTA_CACHE_TTL_SEGUNDOS = '30'
-$env:SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE = '10'
-$env:SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE = '4'
+$env:SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE = "$Pool"
 $env:SPRING_CONFIG_LOCATION = 'classpath:/'
 $env:SPRING_CONFIG_IMPORT = 'optional:file:.cache/rendimiento-sprint2/config.properties'
-java.exe -Xms256m -Xmx768m '-XX:ActiveProcessorCount=4' -jar $Jar --spring.profiles.active=postgres --debug=false --logging.level.root=INFO --logging.level.org.springframework.web=INFO
+$jmx = if ($Diagnostico) {
+    @('-Dspring.jmx.enabled=false','-Dserver.tomcat.mbeanregistry.enabled=true','-Dspring.datasource.hikari.register-mbeans=true')
+}
+java.exe -Xms256m -Xmx768m '-XX:ActiveProcessorCount=4' @jmx -jar $Jar --spring.profiles.active=postgres --debug=false --logging.level.root=INFO --logging.level.org.springframework.web=INFO
 exit $LASTEXITCODE

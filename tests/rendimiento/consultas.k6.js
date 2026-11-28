@@ -5,7 +5,7 @@ import exec from 'k6/execution'
 import { base, catalogo, filtros } from './consultas-sinteticas.mjs'
 
 const modo = __ENV.MODO || 'smoke'
-if (!['smoke', 'calentar', 'cien', 'progresiva'].includes(modo)) {
+if (!['smoke', 'calentar', 'cien', 'quinientos', 'progresiva'].includes(modo)) {
   throw new Error('Modo no reconocido.')
 }
 const cuentas = new SharedArray('sesiones sintéticas', () =>
@@ -22,6 +22,11 @@ if (modo === 'cien') {
   criterios['http_req_duration{operacion:animales}'] = ['p(95)<=2000']
   criterios['http_req_duration{operacion:catalogo}'] = ['p(95)<=2000']
 }
+if (modo === 'quinientos') {
+  criterios['http_req_duration{nivel:500}'] = [{ threshold: 'p(95)<4000', abortOnFail: true, delayAbortEval: '13s' }]
+  criterios['http_req_failed{nivel:500}'] = [{ threshold: 'rate<0.02', abortOnFail: true, delayAbortEval: '13s' }]
+  criterios['http_reqs{nivel:500}'] = ['count>=0']
+}
 if (modo === 'progresiva') {
   niveles.forEach((nivel, indice) => {
     const desde = `${indice * etapa + ascenso + 8}s`
@@ -30,12 +35,18 @@ if (modo === 'progresiva') {
     criterios[`http_req_failed{nivel:${nivel}}`] =
       [{ threshold: 'rate<0.02', abortOnFail: true, delayAbortEval: desde }]
     criterios[`http_reqs{nivel:${nivel}}`] = ['count>=0']
+    if (__ENV.GC_DIAGNOSTICO === 'true') {
+      for (const fase of ['waiting', 'blocked', 'connecting', 'receiving']) {
+        criterios[`http_req_${fase}{nivel:${nivel}}`] = ['p(95)>=0']
+      }
+    }
   })
 }
 const configuraciones = {
   smoke: { executor: 'constant-vus', vus: 2, duration: '5s' },
   calentar: { executor: 'constant-vus', vus: 20, duration: '15s' },
   cien: { executor: 'constant-vus', vus: 100, duration: '25s' },
+  quinientos: { executor: 'ramping-vus', startVUs: 0, stages: [{ target: 500, duration: '5s' }, { target: 500, duration: '25s' }] },
   progresiva: {
     executor: 'ramping-vus', startVUs: 0, gracefulRampDown: '0s',
     stages: niveles.flatMap(target => [{ target, duration: `${ascenso}s` }, { target, duration: `${sostenido}s` }]),
@@ -78,7 +89,8 @@ export default function () {
   const operacion = esCatalogo ? 'catalogo' : 'animales'
   const segundos = (Date.now() - exec.scenario.startTime) / 1000
   const tramo = niveles[Math.floor(segundos / etapa)]
-  const nivel = modo === 'progresiva' && segundos % etapa >= ascenso && tramo ? String(tramo) : 'transicion'
+  const nivel = modo === 'quinientos' && segundos >= ascenso ? '500'
+    : modo === 'progresiva' && segundos % etapa >= ascenso && tramo ? String(tramo) : 'transicion'
   const tags = { name: operacion, operacion, nivel }
   const [filtro, categoria, ubicacion] = filtros[(id + Math.floor(turno / 2)) % filtros.length]
   const pagina = 1 + ((id + Math.floor(turno / 2)) % 3)

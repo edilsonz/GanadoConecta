@@ -1,0 +1,86 @@
+{
+  "animales_primera": {
+    "base": {
+      "planMs": 0.199,
+      "ejecucionMs": 0.054,
+      "buffersHit": 7,
+      "buffersRead": 0
+    },
+    "opt": {
+      "planMs": 0.207,
+      "ejecucionMs": 0.065,
+      "buffersHit": 7,
+      "buffersRead": 0
+    }
+  },
+  "animales_cursor": {
+    "base": {
+      "planMs": 0.14,
+      "ejecucionMs": 0.1,
+      "buffersHit": 7,
+      "buffersRead": 0
+    },
+    "opt": {
+      "planMs": 0.149,
+      "ejecucionMs": 0.1,
+      "buffersHit": 7,
+      "buffersRead": 0
+    }
+  },
+  "catalogo_primera": {
+    "base": {
+      "planMs": 2.697,
+      "ejecucionMs": 0.672,
+      "buffersHit": 91,
+      "buffersRead": 0
+    },
+    "opt": {
+      "planMs": 2.587,
+      "ejecucionMs": 0.559,
+      "buffersHit": 88,
+      "buffersRead": 0
+    }
+  },
+  "catalogo_filtros": {
+    "base": {
+      "planMs": 1.674,
+      "ejecucionMs": 20.394,
+      "buffersHit": 14712,
+      "buffersRead": 0
+    },
+    "opt": {
+      "planMs": 1.889,
+      "ejecucionMs": 44.484,
+      "buffersHit": 26517,
+      "buffersRead": 0
+    }
+  },
+  "catalogo_profunda": {
+    "base": {
+      "planMs": 1.2,
+      "ejecucionMs": 44.87,
+      "buffersHit": 719,
+      "buffersRead": 0
+    },
+    "opt": {
+      "planMs": 1.6,
+      "ejecucionMs": 18.529,
+      "buffersHit": 15442,
+      "buffersRead": 0
+    }
+  },
+  "reportes_mes": {
+    "base": {
+      "planMs": 1.996,
+      "ejecucionMs": 2.483,
+      "buffersHit": 374,
+      "buffersRead": 0
+    },
+    "opt": {
+      "planMs": 2.782,
+      "ejecucionMs": 6.519,
+      "buffersHit": 708,
+      "buffersRead": 0
+    }
+  }
+}

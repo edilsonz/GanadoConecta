@@ -1,0 +1,407 @@
+{
+  "calentamiento": {
+    "vusActivos": 20,
+    "segundos": 16.3,
+    "solicitudes": 271,
+    "reqsPorSegundo": 16.62,
+    "p50Ms": 18.82,
+    "p95Ms": 117.16,
+    "p99Ms": 1174.22,
+    "p95AnimalesMs": null,
+    "p95CatalogoMs": null,
+    "erroresPct": 0,
+    "comprobacionesPct": 100,
+    "fallos": [],
+    "datosRedis": {},
+    "jmx": {
+      "muestras": 0,
+      "hilosOcupados": null,
+      "hilosLimite": null,
+      "tcpTomcat": null,
+      "tcpLimite": null,
+      "colaConfigurada": null,
+      "hikariActivas": null,
+      "hikariTotal": null,
+      "hikariEsperando": null,
+      "heapMiB": 0
+    },
+    "recursos": {
+      "cpuJavaPct": 107,
+      "cpuK6Pct": 7,
+      "javaRssMiB": 562,
+      "k6RssMiB": 42,
+      "pgActivas": 0,
+      "pgBloqueadas": 0,
+      "pgEsperaIo": 0,
+      "tcpEstablecidas": 21,
+      "tcpTimeWait": 0,
+      "memoriaDisponibleMiB": 2633
+    },
+    "etapas": []
+  },
+  "fria": {
+    "vusActivos": 100,
+    "segundos": 26.32,
+    "solicitudes": 2225,
+    "reqsPorSegundo": 84.53,
+    "p50Ms": 15.11,
+    "p95Ms": 46.26,
+    "p99Ms": 511.25,
+    "p95AnimalesMs": 47.11,
+    "p95CatalogoMs": 42.33,
+    "erroresPct": 0,
+    "comprobacionesPct": 100,
+    "fallos": [],
+    "datosRedis": {
+      "antes": {
+        "aciertos": 115,
+        "ausencias": 19,
+        "getLlamadas": 134,
+        "getMicrosegundos": 920
+      },
+      "despues": {
+        "aciertos": 1200,
+        "ausencias": 44,
+        "getLlamadas": 1244,
+        "getMicrosegundos": 8240
+      }
+    },
+    "jmx": {
+      "muestras": 0,
+      "hilosOcupados": null,
+      "hilosLimite": null,
+      "tcpTomcat": null,
+      "tcpLimite": null,
+      "colaConfigurada": null,
+      "hikariActivas": null,
+      "hikariTotal": null,
+      "hikariEsperando": null,
+      "heapMiB": 0
+    },
+    "recursos": {
+      "cpuJavaPct": 131,
+      "cpuK6Pct": 36,
+      "javaRssMiB": 588,
+      "k6RssMiB": 85,
+      "pgActivas": 0,
+      "pgBloqueadas": 0,
+      "pgEsperaIo": 0,
+      "tcpEstablecidas": 101,
+      "tcpTimeWait": 0,
+      "memoriaDisponibleMiB": 2656
+    },
+    "etapas": []
+  },
+  "poblada": {
+    "vusActivos": 100,
+    "segundos": 26.38,
+    "solicitudes": 2243,
+    "reqsPorSegundo": 85.03,
+    "p50Ms": 15.52,
+    "p95Ms": 62.52,
+    "p99Ms": 245.52,
+    "p95AnimalesMs": 57.25,
+    "p95CatalogoMs": 69.67,
+    "erroresPct": 0,
+    "comprobacionesPct": 100,
+    "fallos": [],
+    "datosRedis": {
+      "antes": {
+        "aciertos": 1200,
+        "ausencias": 56,
+        "getLlamadas": 1256,
+        "getMicrosegundos": 8283
+      },
+      "despues": {
+        "aciertos": 2319,
+        "ausencias": 56,
+        "getLlamadas": 2375,
+        "getMicrosegundos": 16896
+      }
+    },
+    "jmx": {
+      "muestras": 0,
+      "hilosOcupados": null,
+      "hilosLimite": null,
+      "tcpTomcat": null,
+      "tcpLimite": null,
+      "colaConfigurada": null,
+      "hikariActivas": null,
+      "hikariTotal": null,
+      "hikariEsperando": null,
+      "heapMiB": 0
+    },
+    "recursos": {
+      "cpuJavaPct": 68,
+      "cpuK6Pct": 38,
+      "javaRssMiB": 507,
+      "k6RssMiB": 85,
+      "pgActivas": 0,
+      "pgBloqueadas": 0,
+      "pgEsperaIo": 0,
+      "tcpEstablecidas": 101,
+      "tcpTimeWait": 0,
+      "memoriaDisponibleMiB": 2617
+    },
+    "etapas": []
+  },
+  "progresiva": {
+    "vusActivos": 2000,
+    "segundos": 159.03,
+    "solicitudes": 31817,
+    "reqsPorSegundo": 200.06,
+    "p50Ms": 1433.52,
+    "p95Ms": 4208.63,
+    "p99Ms": 5001.36,
+    "p95AnimalesMs": null,
+    "p95CatalogoMs": null,
+    "erroresPct": 2.05,
+    "comprobacionesPct": 97.95,
+    "fallos": [
+      "http_req_failed{nivel:2000}: rate<0.02",
+      "checks: rate>0.98",
+      "http_req_duration{nivel:2000}: p(95)<4000",
+      "http_req_failed: rate<0.02"
+    ],
+    "datosRedis": {
+      "antes": {
+        "aciertos": 2319,
+        "ausencias": 68,
+        "getLlamadas": 2387,
+        "getMicrosegundos": 16942
+      },
+      "despues": {
+        "aciertos": 18908,
+        "ausencias": 225,
+        "getLlamadas": 19133,
+        "getMicrosegundos": 135454
+      }
+    },
+    "jmx": {
+      "muestras": 0,
+      "hilosOcupados": null,
+      "hilosLimite": null,
+      "tcpTomcat": null,
+      "tcpLimite": null,
+      "colaConfigurada": null,
+      "hikariActivas": null,
+      "hikariTotal": null,
+      "hikariEsperando": null,
+      "heapMiB": 0
+    },
+    "recursos": {
+      "cpuJavaPct": 20,
+      "cpuK6Pct": 204,
+      "javaRssMiB": 622,
+      "k6RssMiB": 1076,
+      "pgActivas": 1,
+      "pgBloqueadas": 0,
+      "pgEsperaIo": 0,
+      "tcpEstablecidas": 1809,
+      "tcpTimeWait": 2,
+      "memoriaDisponibleMiB": 1730
+    },
+    "etapas": [
+      {
+        "vu": 10,
+        "segundos": 16,
+        "reqsPorSegundo": 8.5,
+        "p50Ms": 14.98,
+        "p95Ms": 21.91,
+        "p99Ms": 29.42,
+        "esperaMs": 17.79,
+        "conexionMs": 0,
+        "bloqueoMs": 0,
+        "recepcionMs": 5.61,
+        "erroresPct": 0,
+        "jmx": {
+          "muestras": 0,
+          "hilosOcupados": null,
+          "hilosLimite": null,
+          "tcpTomcat": null,
+          "tcpLimite": null,
+          "colaConfigurada": null,
+          "hikariActivas": null,
+          "hikariTotal": null,
+          "hikariEsperando": null,
+          "heapMiB": 0
+        }
+      },
+      {
+        "vu": 50,
+        "segundos": 16,
+        "reqsPorSegundo": 43.69,
+        "p50Ms": 14.04,
+        "p95Ms": 18.57,
+        "p99Ms": 21.37,
+        "esperaMs": 13.84,
+        "conexionMs": 0,
+        "bloqueoMs": 0,
+        "recepcionMs": 5.25,
+        "erroresPct": 0,
+        "jmx": {
+          "muestras": 0,
+          "hilosOcupados": null,
+          "hilosLimite": null,
+          "tcpTomcat": null,
+          "tcpLimite": null,
+          "colaConfigurada": null,
+          "hikariActivas": null,
+          "hikariTotal": null,
+          "hikariEsperando": null,
+          "heapMiB": 0
+        }
+      },
+      {
+        "vu": 100,
+        "segundos": 16,
+        "reqsPorSegundo": 88.19,
+        "p50Ms": 14.58,
+        "p95Ms": 21.47,
+        "p99Ms": 39.93,
+        "esperaMs": 17.23,
+        "conexionMs": 0,
+        "bloqueoMs": 0,
+        "recepcionMs": 5.9,
+        "erroresPct": 0,
+        "jmx": {
+          "muestras": 0,
+          "hilosOcupados": null,
+          "hilosLimite": null,
+          "tcpTomcat": null,
+          "tcpLimite": null,
+          "colaConfigurada": null,
+          "hikariActivas": null,
+          "hikariTotal": null,
+          "hikariEsperando": null,
+          "heapMiB": 0
+        }
+      },
+      {
+        "vu": 250,
+        "segundos": 16,
+        "reqsPorSegundo": 218.44,
+        "p50Ms": 17.81,
+        "p95Ms": 48.62,
+        "p99Ms": 89.89,
+        "esperaMs": 41.98,
+        "conexionMs": 0,
+        "bloqueoMs": 0,
+        "recepcionMs": 8.66,
+        "erroresPct": 0,
+        "jmx": {
+          "muestras": 0,
+          "hilosOcupados": null,
+          "hilosLimite": null,
+          "tcpTomcat": null,
+          "tcpLimite": null,
+          "colaConfigurada": null,
+          "hikariActivas": null,
+          "hikariTotal": null,
+          "hikariEsperando": null,
+          "heapMiB": 0
+        }
+      },
+      {
+        "vu": 500,
+        "segundos": 16,
+        "reqsPorSegundo": 327.56,
+        "p50Ms": 284.44,
+        "p95Ms": 985.39,
+        "p99Ms": 1337.62,
+        "esperaMs": 980.86,
+        "conexionMs": 0,
+        "bloqueoMs": 0,
+        "recepcionMs": 11.71,
+        "erroresPct": 0,
+        "jmx": {
+          "muestras": 0,
+          "hilosOcupados": null,
+          "hilosLimite": null,
+          "tcpTomcat": null,
+          "tcpLimite": null,
+          "colaConfigurada": null,
+          "hikariActivas": null,
+          "hikariTotal": null,
+          "hikariEsperando": null,
+          "heapMiB": 0
+        }
+      },
+      {
+        "vu": 1000,
+        "segundos": 16,
+        "reqsPorSegundo": 344.63,
+        "p50Ms": 1727.78,
+        "p95Ms": 2495.3,
+        "p99Ms": 3005.39,
+        "esperaMs": 2486.76,
+        "conexionMs": 0,
+        "bloqueoMs": 0,
+        "recepcionMs": 11.34,
+        "erroresPct": 0.02,
+        "jmx": {
+          "muestras": 0,
+          "hilosOcupados": null,
+          "hilosLimite": null,
+          "tcpTomcat": null,
+          "tcpLimite": null,
+          "colaConfigurada": null,
+          "hikariActivas": null,
+          "hikariTotal": null,
+          "hikariEsperando": null,
+          "heapMiB": 0
+        }
+      },
+      {
+        "vu": 1500,
+        "segundos": 16,
+        "reqsPorSegundo": 378.63,
+        "p50Ms": 2700.72,
+        "p95Ms": 3458.07,
+        "p99Ms": 4010.09,
+        "esperaMs": 3449.98,
+        "conexionMs": 0,
+        "bloqueoMs": 0,
+        "recepcionMs": 11.15,
+        "erroresPct": 0.02,
+        "jmx": {
+          "muestras": 0,
+          "hilosOcupados": null,
+          "hilosLimite": null,
+          "tcpTomcat": null,
+          "tcpLimite": null,
+          "colaConfigurada": null,
+          "hikariActivas": null,
+          "hikariTotal": null,
+          "hikariEsperando": null,
+          "heapMiB": 0
+        }
+      },
+      {
+        "vu": 2000,
+        "segundos": 7.03,
+        "reqsPorSegundo": 16.21,
+        "p50Ms": 5001.61,
+        "p95Ms": 5008.89,
+        "p99Ms": 5018.02,
+        "esperaMs": 5008.79,
+        "conexionMs": 0,
+        "bloqueoMs": 0,
+        "recepcionMs": 0,
+        "erroresPct": 96.49,
+        "jmx": {
+          "muestras": 0,
+          "hilosOcupados": null,
+          "hilosLimite": null,
+          "tcpTomcat": null,
+          "tcpLimite": null,
+          "colaConfigurada": null,
+          "hikariActivas": null,
+          "hikariTotal": null,
+          "hikariEsperando": null,
+          "heapMiB": 0
+        }
+      }
+    ]
+  }
+}

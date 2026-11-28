@@ -1,7 +1,8 @@
 ﻿param(
     [Parameter(Mandatory)][string]$K6,
-    [Parameter(Mandatory)][ValidateSet('smoke','calentar','cien','progresiva')][string]$Modo,
-    [Parameter(Mandatory)][ValidatePattern('^[a-z0-9-]+$')][string]$Nombre
+    [Parameter(Mandatory)][ValidateSet('smoke','calentar','cien','quinientos','progresiva')][string]$Modo,
+    [Parameter(Mandatory)][ValidatePattern('^[a-z0-9-]+$')][string]$Nombre,
+    [switch]$Diagnostico
 )
 $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '../..')
@@ -10,6 +11,7 @@ $env:GC_RENDIMIENTO_PASSWORD = [IO.File]::ReadAllText((Resolve-Path "$gcCarpeta/
 $env:K6_NO_USAGE_REPORT = 'true'
 Remove-Item Env:SSLKEYLOGFILE -ErrorAction SilentlyContinue
 $env:MODO = $Modo
+$env:GC_DIAGNOSTICO = $Diagnostico.IsPresent.ToString().ToLowerInvariant()
 $env:RESULTADO = "$gcCarpeta/$Nombre.json"
 $gcLinea = netstat -ano -p tcp | Select-String '127.0.0.1:18083\s+.*LISTENING\s+(\d+)' | Select-Object -First 1
 if (-not $gcLinea) { throw 'No está escuchando el backend aislado.' }
@@ -55,7 +57,7 @@ try {
             $gcLibre = $gcMemoria.AvailableMBytes
             $gcJavaCpu = 100 * ($gcJava.CPU - $gcCpuApi) / $gcSegundos
             $gcK6Cpu = 100 * ($gcCarga.CPU - $gcCpuK6) / $gcSegundos
-            $gcSql = "SELECT count(*)||','||count(*) FILTER (WHERE state='active') FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid()"
+            $gcSql = "SELECT count(*)||','||count(*) FILTER (WHERE state='active')||','||count(*) FILTER (WHERE wait_event_type='Lock')||','||count(*) FILTER (WHERE state='active' AND wait_event_type='IO') FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid()"
             $gcDatos = docker compose -f tests/rendimiento/compose.yaml exec -T postgres psql -qAt -U rendimiento -d ganadoconecta_rendimiento_v4 -c $gcSql
             if ($LASTEXITCODE -ne 0) { throw 'No se pudo muestrear PostgreSQL.' }
             $gcContenedores = docker stats --no-stream --format '{{.CPUPerc}} / {{.MemUsage}}' ganadoconecta-rendimiento-postgres-1
@@ -64,7 +66,7 @@ try {
             $gcVu = try {
                 (Invoke-RestMethod -Method Get -Uri $gcControl -TimeoutSec 2).data.attributes.vus
             } catch { $null }
-            [pscustomobject]@{
+            $gcFila = [ordered]@{
                 segundo = [int]($gcAhora - $gcInicio).TotalSeconds
                 java_cpu_una_cpu_pct = [int]$gcJavaCpu
                 java_rss_mib = [int]($gcJava.WorkingSet64 / 1MB)
@@ -77,7 +79,16 @@ try {
                 pg_activas = ($gcDatos -split ',')[1]
                 pg_cpu_y_memoria = $gcContenedores
                 redis_cpu_y_memoria = $gcRedisUso
-            } | Export-Csv -LiteralPath $gcCsv -NoTypeInformation -Append
+            }
+            if ($Diagnostico) {
+                $gcFila['utc'] = $gcAhora.ToUniversalTime().ToString('o')
+                $gcFila['pg_espera_bloqueo'] = ($gcDatos -split ',')[2]
+                $gcFila['pg_espera_io'] = ($gcDatos -split ',')[3]
+                $gcTcp = @(netstat -ano -p tcp | Select-String '^\s+TCP\s+127.0.0.1:18083\s+')
+                $gcFila['tcp_establecidas'] = @($gcTcp | Select-String '\bESTABLISHED\b').Count
+                $gcFila['tcp_time_wait'] = @($gcTcp | Select-String '\bTIME_WAIT\b').Count
+            }
+            [pscustomobject]$gcFila | Export-Csv -LiteralPath $gcCsv -NoTypeInformation -Append
             $gcCpuApi = $gcJava.CPU
             $gcCpuK6 = $gcCarga.CPU
             $gcInstanteAnterior = $gcAhora
@@ -111,7 +122,7 @@ try {
     $gcProceso.WaitForExit()
 }
 if ($gcParada) {
-    $gcParada | Set-Content -LiteralPath "$gcCarpeta/$Nombre-parada.txt"
+    $gcParada | Set-Content -Encoding utf8 -LiteralPath "$gcCarpeta/$Nombre-parada.txt"
     Write-Output $gcParada
     exit 3
 }

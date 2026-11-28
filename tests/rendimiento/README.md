@@ -30,7 +30,8 @@ En otra terminal en la raíz, ejecutar
 `./tests/rendimiento/backend.ps1` sin argumentos para la línea base o con
 `-Cache` para habilitar Redis. Usar el mismo jar en ambas mediciones.
 El backend limita la JVM a 4 CPU lógicas, heap inicial de 256 MiB y máximo
-de 768 MiB. Hikari usa hasta 10 conexiones y 4 inactivas como mínimo.
+de 768 MiB. El adaptador de PostgreSQL fija Hikari a 3 conexiones
+y un plazo de adquisición de 3.000 ms.
 
 ```powershell
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
@@ -111,3 +112,41 @@ Get-Content -Encoding utf8 -Raw tests/rendimiento/sentencias.sql |
 El [informe académico](../../docs/07-sprint-2/README.md) enlaza la evidencia
 seleccionada. Para cerrar, detener solo el proceso Spring de esta prueba y
 usar `docker compose -f tests/rendimiento/compose.yaml stop`.
+
+## Diagnóstico con JMX local
+
+Arrancar el backend con `./tests/rendimiento/backend.ps1 -Cache -Diagnostico`.
+El lanzador registra métricas de Tomcat y Hikari. El colector usa el
+conector local del JDK y queda restringido al proceso de prueba.
+El lanzador admite `-Pool 5` para la comparación acotada con cinco
+conexiones. El valor habitual se conserva en tres.
+
+```powershell
+./tests/rendimiento/diagnostico.ps1 -K6 $k6 -Serie cierre-instrumentado
+node tests/rendimiento/resumir-diagnostico.mjs cierre-instrumentado
+```
+
+El diagnóstico comprueba EC01 en ambas condiciones antes de escalar.
+Mide tiempos HTTP por fase, hilos y solicitudes de Tomcat, conexiones y
+esperas Hikari, memoria y GC, conexiones TCP, esperas PostgreSQL y
+estadísticas Redis. Para repetir EC02, renueva las sesiones sintéticas
+y detén Redis exclusivamente en este Compose. Ejecuta
+`node tests/rendimiento/continuidad-redis.mjs` y reinicia Redis después.
+Esa prueba agrega un animal sintético. Ejecútala tras las comparaciones
+de carga para conservar el volumen del dataset medido.
+
+Para repetir la comparación de tamaño, detener el backend temporal y
+crear una segunda base a partir de la semilla aislada.
+
+```powershell
+docker compose -f tests/rendimiento/compose.yaml exec -T postgres createdb -U rendimiento -T ganadoconecta_rendimiento_v4 ganadoconecta_rendimiento_crecimiento
+$OutputEncoding = [Text.UTF8Encoding]::new($false)
+Get-Content -Encoding utf8 -Raw tests/rendimiento/semilla.sql |
+  docker compose -f tests/rendimiento/compose.yaml exec -T postgres psql -q -U rendimiento -d ganadoconecta_rendimiento_crecimiento -v animales_por_ganaderia=6000 -v anuncios_por_ganaderia=3000 -v eventos_por_animal=4
+```
+
+Alternar tres pares del mismo `planes.mjs` en ambas bases. Guardar los
+planes de la base de 24.000 animales como `crecimiento-base-1.txt` a
+`crecimiento-base-3.txt` y los de 48.000 como `crecimiento-opt-1.txt`
+a `crecimiento-opt-3.txt` bajo `.cache/rendimiento-sprint2/`. Generar
+las evidencias con `node tests/rendimiento/resumir-planes.mjs --crecimiento`.

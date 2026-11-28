@@ -1,8 +1,8 @@
 \set ON_ERROR_STOP on
-SELECT current_database() = 'ganadoconecta_rendimiento_v4' AS aislada \gset
+SELECT current_database() IN ('ganadoconecta_rendimiento_v4', 'ganadoconecta_rendimiento_crecimiento') AS aislada \gset
 \if :aislada
 \else
-  \echo 'La semilla requiere la base aislada ganadoconecta_rendimiento_v4.'
+  \echo 'La semilla requiere una base aislada de rendimiento.'
   \quit 3
 \endif
 
