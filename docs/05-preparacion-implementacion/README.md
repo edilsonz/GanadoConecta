@@ -69,9 +69,8 @@
 1. Conserva una copia del repositorio original antes de incorporar cambios.
 2. Abre la raíz del repositorio GanadoConecta en VS Code/Codex. El archivo [AGENTS.md](../../AGENTS.md) original se conserva sin modificaciones.
 3. Lee `docs/05-preparacion-implementacion/` en el orden numérico.
-4. Usa `prompts-codex/01-validacion-arquitectura.md` como **primera tarea de Codex**. Es una revisión y actualización de documentación, no la implementación completa.
-5. Revisa el resultado y aprueba o ajusta las diferencias con los documentos originales (`docs/01-` a `docs/04-`).
-6. Solo después utiliza `02-proyecto-base.md` y `03-primer-flujo.md`, en tareas independientes.
+4. Consulta la [consolidación arquitectónica](05-consolidacion-arquitectonica.md) y su relación con los documentos originales (`docs/01-` a `docs/04-`).
+5. Sigue la secuencia del trabajo realizado mediante [BASE-01](06-base-ejecutable.md), [SPEC-01](../../specs/SPEC-01-registro-ganado-offline/spec.md) y la [matriz de trazabilidad](../06-evaluacion-sdd/matriz-trazabilidad.md).
 
 ## Material nuevo agregado
 
@@ -81,9 +80,6 @@
 - `docs/05-preparacion-implementacion/03-interfaces-y-navegacion.md`
 - `docs/05-preparacion-implementacion/04-plan-codex.md`
 - `specs/SPEC-01-registro-ganado-offline/spec.md`
-- `prompts-codex/01-validacion-arquitectura.md`
-- `prompts-codex/02-proyecto-base.md`
-- `prompts-codex/03-primer-flujo.md`
 
 ## Documentación original
 

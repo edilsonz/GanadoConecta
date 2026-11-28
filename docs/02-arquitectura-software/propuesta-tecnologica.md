@@ -1,5 +1,11 @@
 # Propuesta tecnológica de GanadoConecta
 
+Este documento conserva la propuesta original. El estado de las tecnologías
+implementadas y verificadas, junto con sus limitaciones, figura en el
+[informe del Sprint 2](../07-sprint-2/README.md). La
+[consolidación arquitectónica](../05-preparacion-implementacion/05-consolidacion-arquitectonica.md)
+registra las decisiones aprobadas y sus pendientes.
+
 ## 1. Objetivo
 
 Definir las tecnologías que se utilizarán para implementar

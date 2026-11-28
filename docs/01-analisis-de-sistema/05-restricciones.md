@@ -47,8 +47,8 @@ Las tecnologías seleccionadas para la propuesta son:
 - PostgreSQL para la persistencia.
 - Python con FastAPI para el servicio propio de IA.
 
-Su justificación se documentará en
-tecnologia/propuesta-tecnologica.md.
+La [propuesta tecnológica original](../02-arquitectura-software/propuesta-tecnologica.md)
+documenta su justificación.
 
 El proveedor de notificaciones y la solución de almacenamiento
 de fotografías están pendientes de selección.

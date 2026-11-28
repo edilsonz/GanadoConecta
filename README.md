@@ -68,15 +68,13 @@ fotografías están pendientes de selección.
 | Carpeta | Contenido |
 |---|---|
 | docs/01-analisis-de-sistema/ | Análisis y requisitos del sistema |
-| docs/02-arquitectura-software/ | Propuesta arquitectónica |
+| docs/02-arquitectura-software/ | Arquitectura y [propuesta tecnológica original](docs/02-arquitectura-software/propuesta-tecnologica.md) |
 | docs/03-diseno-de-software/ | Diseño interno del software |
 | docs/04-modelo-c4/ | Documentación de los modelos C4 |
 | docs/05-preparacion-implementacion/ | Propuestas de preparación; pendientes de revisión |
 | docs/06-evaluacion-sdd/ | Ruta SDD y criterios de evaluación |
 | img/ | [Índice de recursos gráficos y archivo histórico](img/README.md) |
-| tecnologia/ | Propuesta tecnológica |
 | specs/ | Una carpeta por funcionalidad con spec.md, plan.md y tasks.md; plantilla original conservada |
-| prompts-codex/ | Instrucciones reutilizables para tareas de Codex |
 
 Consultar la [guía de preparación](docs/05-preparacion-implementacion/README.md),
 la [ruta SDD](docs/06-evaluacion-sdd/ruta-sdd-rubrica.md) y las

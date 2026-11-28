@@ -8,12 +8,12 @@ conciliaron con registros sintéticos conocidos de esa base.
 
 | Vista | Ancho | Antes | Después |
 |---|---:|---|---|
-| Portada | 360 px | [Captura](antes-portada-360.png) | [Captura](despues-portada-360.png) |
-| Portada | 768 px | [Captura](antes-portada-768.png) | [Captura](despues-portada-768.png) |
-| Portada | 1440 px | [Captura](antes-portada-1440.png) | [Captura](despues-portada-1440.png) |
+| Portada | 360 px | [Captura](../identidad-2026-11-21/portada-360.png) | [Captura](despues-portada-360.png) |
+| Portada | 768 px | [Captura](../identidad-2026-11-21/portada-768.png) | [Captura](despues-portada-768.png) |
+| Portada | 1440 px | [Captura](../identidad-2026-11-21/portada-1440.png) | [Captura](despues-portada-1440.png) |
 | Panel de ganadería | 360 px | [Captura](antes-panel-360.png) | [Captura](despues-panel-360.png) |
 | Panel de ganadería | 768 px | [Captura](antes-panel-768.png) | [Captura](despues-panel-768.png) |
-| Panel de ganadería | 1440 px | [Captura](antes-panel-1440.png) | [Captura](despues-panel-1440.png) |
+| Panel de ganadería | 1440 px | [Captura](../identidad-2026-11-21/panel-1440.png) | [Captura](despues-panel-1440.png) |
 
 [Ficha de escritorio](ficha-1440.png) · [Ficha y peso en móvil](ficha-360.png) ·
 [Agenda](agenda-1440.png) · [Catálogo con foto sintética](catalogo-1440.png) ·
