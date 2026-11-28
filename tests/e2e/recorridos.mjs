@@ -343,10 +343,15 @@ async function venta() {
 }
 
 async function interfaz() {
+  const anuncio = `Anuncio responsivo ${id}`
+  const ubicacion = `Zona responsiva ${id}`
+  await abrirAnuncios(segundo)
+  await guardarAnuncio(anuncio, ubicacion)
   for (const ancho of [1440, 768, 360]) {
-    const p = await navegador.pagina({ ancho, alto: ancho === 360 ? 800 : 980, movil: ancho === 360 })
-    const comprobarAncho = async () => {
-      const vista = await p.evaluar(`({ancho:innerWidth, util:document.documentElement.clientWidth,
+    const opciones = { ancho, alto: ancho === 360 ? 800 : 980, movil: ancho === 360 }
+    const p = await navegador.pagina(opciones)
+    const comprobarAncho = async pagina => {
+      const vista = await pagina.evaluar(`({ancho:innerWidth, util:document.documentElement.clientWidth,
         desplazamiento:document.documentElement.scrollWidth})`)
       assert.equal(vista.ancho, ancho, 'Viewport distinto del esperado')
       assert.ok(vista.desplazamiento <= vista.util, `Desborde a ${ancho} px: ${vista.desplazamiento} > ${vista.util}`)
@@ -357,12 +362,12 @@ async function interfaz() {
       await navegar(p, 'ganado', ancho)
       await esperarElemento(p, 'h3', 'Mis animales')
       for (const selector of ['#animal-sexo', '#animal-nombre', '#animal-observaciones']) await esperarElemento(p, selector)
-      await comprobarAncho()
+      await comprobarAncho(p)
       await ficha(p, primero)
       for (const tab of ['General', 'Sanidad', 'Reproducción', 'Peso', 'Genealogía', 'Anuncios']) {
         await pulsar(p, '[role=tab]', tab)
         await esperarElemento(p, '[role=tab][aria-selected=true]', tab)
-        await comprobarAncho()
+        await comprobarAncho(p)
       }
       await pulsar(p, '[role=tab]', 'General')
       await p.cdp('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'ArrowRight', code: 'ArrowRight' })
@@ -373,11 +378,18 @@ async function interfaz() {
       await captura(p, `ux-${ancho}-ficha`)
       for (const destino of ['sanidad', 'reproduccion', 'produccion', 'calendario', 'anuncios', 'familia', 'inicio']) {
         await navegar(p, destino, ancho)
-        await comprobarAncho()
+        await comprobarAncho(p)
         assert.equal(await p.evaluar(`Boolean(${elemento('[role=alert]', '')})`), false, `Alerta visible en ${destino}`)
       }
       assert.equal(p.excepciones.length, 0, `Excepciones JavaScript a ${ancho} px`)
     } finally { await p.cerrar() }
+    const visita = await navegador.pagina(opciones)
+    try {
+      await catalogoPublico(visita, ubicacion)
+      await esperarElemento(visita, '#catalogo article', anuncio)
+      await comprobarAncho(visita)
+      await captura(visita, `ux-${ancho}-catalogo`)
+    } finally { await visita.cerrar() }
   }
 }
 

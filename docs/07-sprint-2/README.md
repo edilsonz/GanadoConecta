@@ -1,7 +1,7 @@
 # Sprint 2 · Implementación y validación de arquitectura
 
 Evidencia del 27 de noviembre de 2026. El primer incremento partió de
-`d5d110a` y el segundo de `ea72e80`.
+`d5d110a`, el segundo de `ea72e80` y el cierre de `632c566`.
 [Matriz de calidad](matriz-calidad.md) · [OpenAPI y Swagger](openapi/README.md) ·
 [Cobertura medida](cobertura.json) · [Auditoría funcional](../AUDITORIA-FUNCIONAL.md)
 
@@ -15,8 +15,8 @@ Evidencia del 27 de noviembre de 2026. El primer incremento partió de
 | 4. REST y OpenAPI | 53 operaciones explícitas, 44 rutas y 13 módulos. Swagger UI comprobada en Chrome y especificaciones Spring y FastAPI validadas. |
 | 5. Base de datos y caché | Planes comparables de seis consultas, paginación SQL optimizada y caché pública Redis con revisión transaccional. [PostgreSQL](rendimiento/postgresql.md) · [Redis](rendimiento/redis.md) |
 | 6. SOLID y patrones | Revisión de contratos, adaptadores y coordinación de transacciones con ejemplos de código verificables. |
-| 7. Jest, cobertura y CI | Cobertura medida con Jest, Vitest, JaCoCo y coverage.py. GitHub Actions aprobó los tres trabajos y publicó tres artefactos en `ea72e80`. Las pruebas Redis se incorporaron al workflow y su ejecución remota queda pendiente. |
-| 8. Atributos y k6 | Parcial. EC01 pasó con Redis frío y poblado a 100 VU. EC03 alcanzó 1.000 VU y el umbral operativo detuvo la escalada. [Matriz EC01–EC13](matriz-calidad.md) · [Carga](rendimiento/k6.md) |
+| 7. Jest, cobertura y CI | Cobertura medida con Jest, Vitest, JaCoCo y coverage.py. GitHub Actions aprobó los tres trabajos y publicó tres artefactos en `632c566`, con las pruebas Redis habilitadas. |
+| 8. Atributos y k6 | Parcial. EC01 volvió a pasar. Se alcanzaron 2.000 VU y el corte operativo impidió sostener el tramo. [Matriz EC01–EC13](matriz-calidad.md) · [Diagnóstico y carga](rendimiento/cierre/README.md) |
 
 ## Concordancia con el Sprint 1
 
@@ -203,10 +203,12 @@ ejecución de GitHub Actions.
 
 ### Integración continua remota
 
-La ejecución publicada de `ea72e80` terminó en 1 min 37 s con frontend,
-backend e IA aprobados y tres artefactos. La configuración nueva añade un
-Redis aislado al trabajo Java. La carga k6 se mantiene fuera de GitHub
-Actions. [Ejecución #46100816517](https://github.com/edilsonz/GanadoConecta/actions/runs/46100816517)
+La ejecución publicada de `632c566` terminó en **1 min 44 s**. Se comprobaron
+los tres trabajos aprobados, incluidos PostgreSQL y Redis en Java, y los
+artefactos `cobertura-frontend`, `pruebas-cobertura-java` y
+`cobertura-openapi-python`. k6 se ejecuta localmente. La ejecución remota
+del cierre se comprobará tras publicarlo.
+[Ejecución #46106485585](https://github.com/edilsonz/GanadoConecta/actions/runs/46106485585)
 
 ## Segundo incremento
 
@@ -247,9 +249,17 @@ verificaciones vigentes de frontend, PWA y FastAPI del incremento anterior.
 2. Activar el perfil `openapi` para consultar [Swagger y sus contratos](openapi/README.md).
 3. En `frontend/`, ejecutar `npm.cmd run test:jest:coverage` y abrir
    `coverage/jest/lcov-report/index.html`. Revisar los artefactos de la
-   [ejecución publicada](https://github.com/edilsonz/GanadoConecta/actions/runs/46100816517).
+   [ejecución publicada](https://github.com/edilsonz/GanadoConecta/actions/runs/46106485585).
 4. Mostrar `EXPLAIN (ANALYZE, BUFFERS)` y la prueba de caída y recuperación
    de Redis según el [protocolo aislado](../../tests/rendimiento/README.md).
 5. Ejecutar k6 en modo `smoke` y contrastar EC01 con EC03. El primero
    tiene un umbral aprobado para 100 VU. El segundo mide la escalada y
    sus límites en esta estación.
+
+## Cierre de validación
+
+La [medición de cierre](rendimiento/cierre/README.md) reúne las repeticiones
+de k6, las muestras del servidor, los gráficos, el crecimiento de datos
+y las evidencias adicionales de calidad. Para la sustentación se puede
+mostrar la comprobación EC01 y luego el gráfico de escalada. Cada tramo
+distingue el máximo activo del máximo sostenido.

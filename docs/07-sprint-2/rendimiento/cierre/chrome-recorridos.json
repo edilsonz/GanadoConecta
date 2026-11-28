@@ -1,0 +1,26 @@
+{
+  "origen": "https://127.0.0.1:15173",
+  "base": "ganadoconecta_e2e_cierre",
+  "resultados": [
+    {
+      "prueba": "Preparación por HTTPS",
+      "resultado": "aprobada"
+    },
+    {
+      "prueba": "SPEC-07",
+      "resultado": "aprobada"
+    },
+    {
+      "prueba": "SPEC-08",
+      "resultado": "aprobada"
+    },
+    {
+      "prueba": "SPEC-09",
+      "resultado": "aprobada"
+    },
+    {
+      "prueba": "UX/UI",
+      "resultado": "aprobada"
+    }
+  ]
+}

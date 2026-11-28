@@ -81,6 +81,13 @@ vuelve a consultar tras la recarga. Usa `--familia` o `--alertas` para repetir e
 caso indicado y su preparación. Guarda resultados y capturas en
 `.cache/e2e-auditoria/<id>/`. Si ejecutas varios recorridos, usa el mismo directorio
 privado previamente creado para las fotografías de prueba.
+
+Con `--revocacion-offline`, el editor sintético prepara su dispositivo,
+crea un pendiente real en IndexedDB y queda desconectado mientras el
+propietario lo revoca. Al volver, «Sincronizar pendientes» avisa del cambio
+de permiso sin intentar enviar el alta. La prueba reenvía el payload
+exacto por separado y exige HTTP 403. Comprueba que el propietario no
+encuentre el animal y que IndexedDB conserve la operación original.
 [Informe de auditoría](../../docs/AUDITORIA-FUNCIONAL.md) ·
 [Resultados E2E](evidencia/auditoria-2026-11-21/resultado.json).
 

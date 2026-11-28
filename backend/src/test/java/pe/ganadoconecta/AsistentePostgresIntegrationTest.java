@@ -1,22 +1,32 @@
 package pe.ganadoconecta;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.net.httpserver.HttpServer;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -24,17 +34,20 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
 import pe.ganadoconecta.modulos.analisis.aplicacion.ConsultarAsistente.*;
+import pe.ganadoconecta.modulos.analisis.adaptadores.salida.MotorAsistenteLocal;
 import pe.ganadoconecta.modulos.identidad.aplicacion.TokensAcceso;
 
 @SpringBootTest(properties = "ganadoconecta.seguridad.origen-permitido=https://127.0.0.1:5173")
 @AutoConfigureMockMvc(print = MockMvcPrint.NONE)
 @ActiveProfiles("postgres")
 @EnabledIfSystemProperty(named = "ganadoconecta.postgres.integration-test", matches = "true")
+@ExtendWith(OutputCaptureExtension.class)
 @Transactional
 class AsistentePostgresIntegrationTest extends SoporteJwtPostgres {
     @Autowired JdbcTemplate jdbc;
     @Autowired MockMvc mvc;
     @Autowired TokensAcceso tokens;
+    @Autowired ObjectMapper json;
     @MockitoBean Motor motor;
     private UUID propietario;
     private UUID lector;
@@ -103,6 +116,59 @@ class AsistentePostgresIntegrationTest extends SoporteJwtPostgres {
             mvc.perform(consulta(ganaderia, animal).with(csrf().asHeader())).andExpect(status().isServiceUnavailable())
                     .andExpect(content().string(""));
         }
+    }
+
+    @Test void respuestaHttpInvalidaYCaidaDelMotorDejanDisponiblesLasOperacionesPrincipales(
+            CapturedOutput salida) throws Exception {
+        pesos();
+        var servidor = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        var cuerpo = new AtomicReference<String>();
+        String secreto = UUID.randomUUID().toString().replace("-", "");
+        var adaptador = new MotorAsistenteLocal(servidor.getAddress().getPort(), secreto, json);
+        when(motor.inferir(anyString(), anyList())).thenAnswer(
+                invocacion -> adaptador.inferir(invocacion.getArgument(0), invocacion.getArgument(1)));
+        servidor.createContext("/interno/v1/inferir", intercambio -> {
+            try {
+                intercambio.getRequestBody().readAllBytes();
+                byte[] bytes = cuerpo.get().getBytes(StandardCharsets.UTF_8);
+                intercambio.sendResponseHeaders(200, bytes.length);
+                intercambio.getResponseBody().write(bytes);
+            } finally {
+                intercambio.close();
+            }
+        });
+        servidor.start();
+        try {
+            for (String invalida : List.of("{", "{}", "{\"estado\":\"AJENO\"}",
+                    "{\"estado\":\"RESPUESTA\",\"estilo\":\"DIRECTO\",\"referencias\":[\"H99\"]}")) {
+                cuerpo.set(invalida);
+                mvc.perform(consulta(ganaderia, animal).with(csrf().asHeader()))
+                        .andExpect(status().isServiceUnavailable()).andExpect(content().string(""));
+            }
+        } finally {
+            servidor.stop(0);
+        }
+        mvc.perform(consulta(ganaderia, animal).with(csrf().asHeader()))
+                .andExpect(status().isServiceUnavailable()).andExpect(content().string(""));
+        assertThat(salida.getAll().lines().filter(linea -> linea.contains("Asistente interno: resultado no disponible")).count())
+                .as("advertencias de fallos del motor").isGreaterThanOrEqualTo(5);
+        assertThat(salida.getAll().contains(secreto)).as("credencial interna ausente de los registros").isFalse();
+
+        String ruta = "/api/v1/ganaderias/" + ganaderia + "/animales";
+        String credencial = sesion(propietario);
+        UUID alta = UUID.randomUUID();
+        mvc.perform(post(ruta).header("Authorization", credencial).header("Origin", "https://127.0.0.1:5173")
+                .with(csrf().asHeader()).contentType("application/json").content("""
+                    {"animalId":"%s","operationId":"%s","tipo":"CREAR_ANIMAL","schemaVersion":2,
+                     "baseVersion":0,"sexo":"HEMBRA","nombre":"Continuidad sintética"}
+                    """.formatted(alta, UUID.randomUUID()))).andExpect(status().isCreated());
+        mvc.perform(get(ruta + "/" + alta).header("Authorization", credencial))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.nombre").value("Continuidad sintética"));
+        mvc.perform(get(ruta + "/" + animal + "/eventos-sanitarios").header("Authorization", credencial))
+                .andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
+        mvc.perform(get("/api/v1/catalogo")).andExpect(status().isOk()).andExpect(jsonPath("$.items").isArray());
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM ganado.medicion_peso WHERE animal_id=?", Long.class, animal))
+                .isEqualTo(3);
     }
 
     private MockHttpServletRequestBuilder consulta(UUID finca, UUID animalId) {

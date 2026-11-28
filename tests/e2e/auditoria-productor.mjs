@@ -7,7 +7,8 @@ import { abrirChrome, campo, elemento, esperarElemento, hasta, literal, pulsar }
 const base = process.env.GC_E2E_DB ?? ''
 const origen = process.env.GC_E2E_URL ?? 'https://127.0.0.1:15173'
 const cert = process.env.GC_E2E_CERT
-const filtro = process.argv.includes('--familia') ? /^(A · registro|B ·|C ·)/
+const revocacionOffline = process.argv.includes('--revocacion-offline')
+const filtro = revocacionOffline || process.argv.includes('--familia') ? /^(A · registro|B ·|C ·)/
   : process.argv.includes('--alertas') ? /^(A · registro|B ·|L ·)/ : null
 assert.match(base, /^ganadoconecta_e2e_[a-z0-9]+$/)
 assert.ok(/^https:\/\/127\.0\.0\.1:(?!5173$)\d+$/.test(origen) && cert)
@@ -31,15 +32,20 @@ async function pagina() {
   // Guarda el bearer en memoria del perfil de prueba. La API y PostgreSQL responden normalmente.
   await p.cdp('Page.addScriptToEvaluateOnNewDocument', { source: `(() => {
     const enviar = window.fetch.bind(window);
-    let auth, alta;
+    let auth, alta, intentosAlta = 0;
     window.fetch = (url, init) => {
       const credencial = new Headers(init?.headers).get('Authorization');
       if (credencial && String(url).startsWith('/api/v1/')) auth = credencial;
-      if (init?.method === 'POST' && String(url).endsWith('/animales')) alta = [url, init.body];
+      if (init?.method === 'POST' && String(url).endsWith('/animales')) {
+        alta = [url, init.body];
+        intentosAlta++;
+      }
       return enviar(url, init);
     };
     window.gcAuditoria = async (ruta, metodo, datos) => {
-      if (!ruta.startsWith('/api/v1/ganaderias/')) throw Error('Ruta sintética fuera del ámbito');
+      if (!ruta.startsWith('/api/v1/ganaderias/') && ruta !== '/api/v1/invitaciones/aceptar') {
+        throw Error('Ruta sintética fuera del ámbito');
+      }
       const h = new Headers(auth ? {Authorization:auth} : {});
       if (metodo) {
         const r = await enviar('/api/v1/auth/csrf', {cache:'no-store', credentials:'same-origin'});
@@ -51,6 +57,7 @@ async function pagina() {
       return {estado:r.status, datos:await r.json().catch(()=>null)};
     };
     window.gcAuditoriaRepetir = () => alta && window.gcAuditoria(alta[0], 'POST', JSON.parse(alta[1]));
+    window.gcAuditoriaIntentosAlta = () => intentosAlta;
   })()` })
   return p
 }
@@ -87,15 +94,21 @@ async function ficha(p, nombre) {
   await esperarElemento(p, '.animal-detail-heading h4', nombre)
 }
 
-function operacionesLocales(p) {
+function operacionesLocales(p, incluirPayload = false) {
   return p.evaluar(`new Promise((resolve,reject)=>{
     const r=indexedDB.open('ganadoconecta-offline'); r.onerror=()=>reject(r.error);
     r.onsuccess=()=>{ const db=r.result;const q=db.transaction('operacionesPendientes').objectStore('operacionesPendientes').getAll();
-      q.onsuccess=()=>{resolve(q.result.filter(x=>x.payload?.nombre===${literal(local)}).map(x=>({estado:x.estado,id:x.operationId})));db.close()};
+      q.onsuccess=()=>{resolve(q.result.filter(x=>x.payload?.nombre===${literal(local)}).map(x=>({
+        estado:x.estado,id:x.operationId,...(${incluirPayload} ? {payload:x.payload} : {})
+      })));db.close()};
       q.onerror=()=>reject(q.error);
     };
   })`)
 }
+
+const cambiarRed = (p, offline) => p.cdp('Network.emulateNetworkConditions', {
+  offline, latency: 0, downloadThroughput: offline ? 0 : -1, uploadThroughput: offline ? 0 : -1,
+})
 
 async function caso(id, ejecutar) {
   if (filtro && !filtro.test(id)) return
@@ -162,40 +175,95 @@ try {
     assert.ok(idMadre && idCria && idMadre !== idCria)
   })
 
-  await caso('C · invitación, roles, acceso ajeno y revocación', async () => {
+  await caso(revocacionOffline ? 'C · revocación remota con una alta en IndexedDB'
+    : 'C · invitación, roles, acceso ajeno y revocación', async () => {
     segundaTab = await pagina()
     await registrar(segundaTab, familiar)
     await iniciar(segundaTab, familiar)
     assert.equal((await api(segundaTab, ruta + '/acceso')).estado, 403)
-    await nav(titularTab, 'Acceso familiar')
     const panel = '.farm-family-panel'
-    await pulsar(titularTab, 'summary', 'Acceso familiar', panel)
-    await dato(titularTab, 'input[type=email]', familiar.correo, panel)
-    await boton(titularTab, 'Generar invitación', panel)
-    const codigo = await hasta(() => titularTab.evaluar(`document.querySelector('${panel} input[readonly]')?.value`), 'No se emitió el código de prueba')
-    await pulsar(segundaTab, 'summary', 'Aceptar invitación familiar')
-    await dato(segundaTab, 'details[open] input', codigo)
-    await boton(segundaTab, 'Aceptar invitación')
-    await texto(segundaTab, 'Invitación aceptada.')
-    await seleccionar(segundaTab)
-    assert.equal((await api(segundaTab, ruta + '/acceso')).datos.rol, 'LECTOR')
     const peticion = { animalId: randomUUID(), operationId: randomUUID(), tipo: 'CREAR_ANIMAL',
       schemaVersion: 2, baseVersion: 0, sexo: 'HEMBRA', nombre: 'Alta del editor sintético' }
-    assert.equal((await api(segundaTab, ruta + '/animales', 'POST', peticion)).estado, 403)
-    await boton(titularTab, 'Actualizar integrantes', panel)
-    await texto(titularTab, `${familiar.correo} · LECTOR · ACTIVA`, panel)
-    const selectorRol = 'div.form-field select:not(:disabled)'
-    await esperarElemento(titularTab, selectorRol, '', panel)
-    // Este selector controlado conserva el rol anterior hasta que responde la API.
-    await titularTab.evaluar(`(() => {
-      const select = ${elemento(selectorRol, '', panel)};
-      select.value = 'EDITOR';
-      select.dispatchEvent(new Event('change', { bubbles: true }));
-    })()`)
-    await texto(titularTab, `${familiar.correo} · EDITOR · ACTIVA`, panel)
+    let editorId
+    if (revocacionOffline) {
+      const emision = await api(titularTab, ruta + '/familia/invitaciones', 'POST', { correo: familiar.correo, rol: 'EDITOR' })
+      assert.equal(emision.estado, 201, 'No se creó la invitación sintética por la API')
+      const aceptacion = await api(segundaTab, '/api/v1/invitaciones/aceptar', 'POST', { codigo: emision.datos.codigo })
+      assert.equal(aceptacion.estado, 200)
+      const directorio = await api(titularTab, ruta + '/familia')
+      editorId = directorio.datos?.integrantes.find(x => x.correo === familiar.correo)?.usuarioId
+      assert.match(editorId ?? '', /^[a-f\d-]{36}$/)
+    } else {
+      await nav(titularTab, 'Acceso familiar')
+      await pulsar(titularTab, 'summary', 'Acceso familiar', panel)
+      await dato(titularTab, 'input[type=email]', familiar.correo, panel)
+      await boton(titularTab, 'Generar invitación', panel)
+      const codigo = await hasta(() => titularTab.evaluar(`document.querySelector('${panel} input[readonly]')?.value`), 'No se emitió el código de prueba')
+      await pulsar(segundaTab, 'summary', 'Aceptar invitación familiar')
+      await dato(segundaTab, 'details[open] input', codigo)
+      await boton(segundaTab, 'Aceptar invitación')
+      await texto(segundaTab, 'Invitación aceptada.')
+      await seleccionar(segundaTab)
+      assert.equal((await api(segundaTab, ruta + '/acceso')).datos.rol, 'LECTOR')
+      assert.equal((await api(segundaTab, ruta + '/animales', 'POST', peticion)).estado, 403)
+      await boton(titularTab, 'Actualizar integrantes', panel)
+      await texto(titularTab, `${familiar.correo} · LECTOR · ACTIVA`, panel)
+      const selectorRol = 'div.form-field select:not(:disabled)'
+      await esperarElemento(titularTab, selectorRol, '', panel)
+      await titularTab.evaluar(`(() => {
+        const select = ${elemento(selectorRol, '', panel)};
+        select.value = 'EDITOR';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      })()`)
+      await texto(titularTab, `${familiar.correo} · EDITOR · ACTIVA`, panel)
+    }
     assert.equal((await api(segundaTab, ruta + '/animales', 'POST', peticion)).estado, 201)
-    await boton(titularTab, 'Revocar acceso', panel)
-    await texto(titularTab, 'REVOCADA', panel)
+    let pendiente
+    if (revocacionOffline) {
+      await segundaTab.abrir(origen)
+      await seleccionar(segundaTab)
+      await nav(segundaTab, 'Mi ganado')
+      await boton(segundaTab, 'Preparar trabajo sin conexión')
+      await texto(segundaTab, 'Trabajo sin conexión preparado')
+      await segundaTab.cdp('Network.enable')
+      await cambiarRed(segundaTab, true)
+    }
+    try {
+      if (revocacionOffline) {
+        await hasta(() => segundaTab.evaluar('!navigator.onLine'), 'Chrome no entró en modo desconectado')
+        await alta(segundaTab, local)
+        await texto(segundaTab, local, '.local-pending-list')
+        const operaciones = await operacionesLocales(segundaTab, true)
+        assert.equal(operaciones.length, 1)
+        pendiente = operaciones[0]
+        assert.equal(pendiente.estado, 'PENDIENTE')
+        assert.equal(pendiente.id, pendiente.payload.operationId)
+      }
+      if (revocacionOffline) {
+        assert.equal((await api(titularTab, ruta + '/membresias/' + editorId, 'DELETE')).estado, 204)
+      } else {
+        await boton(titularTab, 'Revocar acceso', panel)
+        await texto(titularTab, 'REVOCADA', panel)
+      }
+    } finally {
+      if (revocacionOffline) await cambiarRed(segundaTab, false)
+    }
+    if (pendiente) {
+      await hasta(() => segundaTab.evaluar('navigator.onLine'), 'Chrome no recuperó conexión')
+      const intentosPrevios = await segundaTab.evaluar('window.gcAuditoriaIntentosAlta()')
+      await boton(segundaTab, 'Sincronizar pendientes')
+      await esperarElemento(segundaTab, '.animals-notice[role=status]', 'Tu acceso a esta ganadería cambió.')
+      assert.equal(await segundaTab.evaluar('window.gcAuditoriaIntentosAlta()'), intentosPrevios,
+        'La aplicación intentó enviar el alta tras revocar el acceso')
+      const reenvio = await api(segundaTab, ruta + '/animales', 'POST', pendiente.payload)
+      assert.equal(reenvio.estado, 403)
+      const [conservada] = await operacionesLocales(segundaTab, true)
+      assert.equal(conservada.id, pendiente.id)
+      assert.notEqual(conservada.estado, 'SINCRONIZADO')
+      assert.deepEqual(conservada.payload, pendiente.payload)
+      assert.equal((await api(titularTab, ruta + '/animales/' + pendiente.payload.animalId)).estado, 404)
+      assert.equal((await api(titularTab, ruta + '/animales/' + peticion.animalId)).estado, 200)
+    }
     assert.equal((await api(segundaTab, ruta + '/animales')).estado, 403)
   })
 
@@ -300,8 +368,7 @@ try {
     await boton(titularTab, 'Preparar trabajo sin conexión')
     await texto(titularTab, 'Trabajo sin conexión preparado')
     await titularTab.cdp('Network.enable')
-    const red = offline => titularTab.cdp('Network.emulateNetworkConditions', { offline, latency: 0,
-      downloadThroughput: offline ? 0 : -1, uploadThroughput: offline ? 0 : -1 })
+    const red = offline => cambiarRed(titularTab, offline)
     let idOperacion
     await red(true)
     try {

@@ -1,0 +1,16 @@
+{
+  "resultados": [
+    {
+      "id": "A · registro, acceso y restauración HTTPS",
+      "resultado": "APROBADO"
+    },
+    {
+      "id": "B · creación, listado y selección de ganadería",
+      "resultado": "APROBADO"
+    },
+    {
+      "id": "C · revocación remota con una alta en IndexedDB",
+      "resultado": "APROBADO"
+    }
+  ]
+}

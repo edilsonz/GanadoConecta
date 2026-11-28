@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.CacheControl;
@@ -28,6 +30,7 @@ import pe.ganadoconecta.modulos.sanidad.aplicacion.PersistenciaSanitariaExceptio
 @Profile("postgres")
 @RequestMapping("/api/v1/ganaderias/{ganaderiaId}/asistente")
 class AsistenteControlador {
+    private static final Logger LOG = LoggerFactory.getLogger(AsistenteControlador.class);
     private static final int MAX_SOLICITUD = 4096;
     private final ConsultarAsistente asistente;
     private final ObjectMapper json;
@@ -65,7 +68,13 @@ class AsistenteControlador {
     @ExceptionHandler(Ocupado.class)
     ResponseEntity<Void> ocupado() { return respuesta(429, null); }
 
-    @ExceptionHandler({Indisponible.class, DataAccessException.class, PersistenciaIdentidadException.class,
+    @ExceptionHandler(Indisponible.class)
+    ResponseEntity<Void> motorIndisponible() {
+        LOG.warn("Asistente interno: resultado no disponible o inválido.");
+        return respuesta(503, null);
+    }
+
+    @ExceptionHandler({DataAccessException.class, PersistenciaIdentidadException.class,
             PersistenciaAnimalException.class, PersistenciaReproductivaException.class, PersistenciaSanitariaException.class})
     ResponseEntity<Void> indisponible() { return respuesta(503, null); }
 

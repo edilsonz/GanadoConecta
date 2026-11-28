@@ -27,6 +27,10 @@ fueron 0,00 y 5.008,79 ms, respectivamente.
 | Poblada a 100 VU | 15,52 | 62,52 | 245,52 | 57,25 / 69,67 | 85,03 | 0 % / 100 % |
 | Escalada | 1.433,52 | 4.208,63 | 5.001,36 | — | 200,06 | 2,05 % / 97,95 % |
 
+El tramo completo de 1.500 VU registró p95 de 3.458,07 ms, 378,63
+solicitudes por segundo y 0,02 % de errores. El umbral EC01 se aplica
+a 100 VU. El corte operativo de la escalada tiene su propio límite.
+
 El primer intento de muestreo JMX careció del MBean Hikari. Las
 mediciones de cliente, PostgreSQL, Redis y TCP de ese recorrido siguen
 disponibles. Al revisar la configuración se confirmó que el adaptador
@@ -118,3 +122,26 @@ resultado depende del plan y la distribución sintética.
 
 [Planes SQL originales](crecimiento-planes.json) ·
 [Resumen de tiempos y buffers](crecimiento-resumen.json)
+
+## Escenarios de calidad en el cierre
+
+| Escenario | Verificación ejecutada | Alcance pendiente |
+|---|---|---|
+| EC02 | Alta HTTP 201 y ficha, historial y catálogo HTTP 200 con Redis detenido. Una prueba Java repitió alta, historial y catálogo tras detener el motor HTTP local de IA. [Resultados Redis](continuidad-redis.json). | Continuidad y reintentos con el proveedor externo de notificaciones. |
+| EC06 | Cinco pruebas del núcleo de publicación con dobles y sin servicios. La comprobación `jdeps` verificó la dirección de las dependencias. | Métricas adicionales de esfuerzo para futuras modificaciones. |
+| EC07 | Spring Boot rechazó cuatro respuestas inválidas de IA y la caída del motor con HTTP 503. Se verificó que el aviso omita credenciales y que el historial persista. | Pruebas con el proveedor externo de notificaciones una vez integrado. |
+| EC08 | Chrome headless sobre HTTPS, Spring Boot y PostgreSQL aislados. Los cuatro recorridos aprobaron, incluida la navegación privada, el foco por teclado y la búsqueda anónima a 360, 768 y 1440 px. [Resultados](chrome-recorridos.json). | Evaluación con personas, dispositivos físicos y lector de pantalla. |
+| EC12 | Tres pasos aprobados en Chrome, incluida la revocación de un editor con un alta pendiente en IndexedDB. Al reconectar, «Sincronizar pendientes» informó el cambio de permisos y no intentó el alta. El reenvío directo del payload original recibió HTTP 403. Se comprobó ausencia del alta remota y conservación local. El arnés preparó la membresía sintética mediante la API real. [Resultados](chrome-revocacion.json). | Validar conflictos de edición cuando exista ese flujo versionado. |
+
+Pasaron 22 pruebas Java dirigidas de arquitectura, publicación,
+catálogo, Redis, JDBC y asistente. El primer grupo tuvo un fallo en
+la aserción del texto del log por codificación. Se ajustó la aserción
+y el caso pasó en una repetición individual. Las dos pruebas JDBC
+también pasaron tras el cambio de configuración de Hikari. Pasaron
+7 pruebas Python y 36 pruebas Vitest de autorización y persistencia
+offline. Los resultados completos anteriores de Java y GitHub Actions
+corresponden a la [base publicada](../../README.md#integración-continua-remota).
+
+[Captura sintética del catálogo a 360 px](ux-360-catalogo.png) ·
+[Captura sintética de la ficha a 1440 px](ux-1440-ficha.png) ·
+[Matriz EC01–EC13](../../matriz-calidad.md)
